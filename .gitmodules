@@ -1,0 +1,12 @@
+[submodule "lib/libstratosphere/libstratosphere"]
+	path = lib/libstratosphere/libstratosphere
+	url = https://github.com/Atmosphere-NX/Atmosphere-libs.git
+[submodule "lib/imgui/imgui"]
+	path = lib/imgui/imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "lib/glfw/glfw"]
+	path = lib/glfw/glfw
+	url = https://github.com/averne/glfw.git
+[submodule "lib/inih/inih"]
+	path = lib/inih/inih
+	url = https://github.com/benhoyt/inih.git
