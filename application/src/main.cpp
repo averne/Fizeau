@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
 
             // Active checkbox
             ImGui::Separator();
-            if (ImGui::Checkbox("Overlay active", &config.active)) {
+            if (ImGui::Checkbox(!config.has_active_override ? "Overlay active" : "Overlay active (overridden)", &config.active)) {
                 TRY_GOTO(rc = fizeauSetIsActive(config.active), error);
                 config.has_active_override = true;
             }
