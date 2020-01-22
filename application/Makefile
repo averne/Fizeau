@@ -9,7 +9,7 @@ TOPDIR           ?=    $(CURDIR)
 APP_TITLE         =    Fizeau
 APP_AUTHOR        =    averne
 APP_ICON          =    $(CURDIR)/icon.jpg
-APP_VERSION       =    0.0.0
+APP_VERSION       =    $(FZ_VERSION)
 APP_TITLEID       =
 
 TARGET            =    Fizeau
