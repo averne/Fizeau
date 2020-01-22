@@ -40,14 +40,14 @@ class Screen {
         Framebuffer framebuf;
 
     public:
-        Result initialize(utils::Vec2u fb_sz, utils::Vec2f layer_pos, utils::Vec2i layer_sz,
+        Result initialize(Vec2u fb_sz, Vec2f layer_pos, Vec2i layer_sz,
             std::uint32_t format = PIXEL_FORMAT_RGBA_4444, std::uint32_t num_fbs = 2);
         void finalize();
 
         inline u32    get_window_width()  const { return this->window.width; }
         inline u32    get_window_height() const { return this->window.height; }
-        inline Result set_window_pos(utils::Vec2f pos)  { return viSetLayerPosition(&this->layer, pos.x, pos.y); }
-        inline Result set_window_size(utils::Vec2ul sz) { return viSetLayerSize(&this->layer, sz.w, sz.h); }
+        inline Result set_window_pos(Vec2f pos)  { return viSetLayerPosition(&this->layer, pos.x, pos.y); }
+        inline Result set_window_size(Vec2ul sz) { return viSetLayerSize(&this->layer, sz.w, sz.h); }
 
         inline u32 get_framebuffer_width()  const { return this->framebuf.width_aligned; }
         inline u32 get_framebuffer_height() const { return this->framebuf.height_aligned; }

@@ -59,7 +59,7 @@ extern "C" void __libnx_exception_handler(ThreadExceptionDump *ctx) {
 }
 
 extern "C" void __appInit(void) {
-    fz::utils::do_with_sm_session([] {
+    fz::do_with_sm_session([] {
         SERV_INIT(time);
     });
 }
@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
     static constexpr std::size_t max_sessions = 2;
     static constexpr std::size_t num_servers  = 1;
     static ams::sf::hipc::ServerManager<num_servers, ams::sf::hipc::DefaultServerManagerOptions, max_sessions> server_manager;
-    R_ASSERT(server_manager.RegisterServer<fz::ipc::FizeauService>(service_name, max_sessions));
+    R_ASSERT(server_manager.RegisterServer<fz::FizeauService>(service_name, max_sessions));
     server_manager.LoopProcess();
 
     time_update_thread.Join();

@@ -26,9 +26,9 @@ extern "C" u64 __nx_vi_layer_id;
 
 namespace fz {
 
-Result Screen::initialize(utils::Vec2u fb_sz, utils::Vec2f layer_pos, utils::Vec2i layer_sz,
+Result Screen::initialize(Vec2u fb_sz, Vec2f layer_pos, Vec2i layer_sz,
         std::uint32_t format, std::uint32_t num_fb) {
-    return utils::do_with_sm_session([&]() -> Result {
+    return do_with_sm_session([&]() -> Result {
         TRY_GOTO(viInitialize(ViServiceType_Manager), end);
         TRY_GOTO(viOpenDefaultDisplay(&display), close_serv);
         TRY_GOTO(viCreateManagedLayer(&display, static_cast<ViLayerFlags>(0), 0, &__nx_vi_layer_id), close_display); // flag 0 allows non-fullscreen layer

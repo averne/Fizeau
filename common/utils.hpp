@@ -52,7 +52,7 @@
 #   define LOG(fmt, ...) ({})
 #endif
 
-namespace fz::utils {
+namespace fz {
 
 template <typename T>
 struct Vec2X {

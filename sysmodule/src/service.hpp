@@ -21,7 +21,7 @@
 #include <stratosphere.hpp>
 #include <common.hpp>
 
-namespace fz::ipc {
+namespace fz {
 
 class FizeauService final: public ams::sf::IServiceObject {
     public:
@@ -62,5 +62,5 @@ class FizeauService final: public ams::sf::IServiceObject {
         };
 };
 
-} // namespace fz::ipc
+} // namespace fz
 

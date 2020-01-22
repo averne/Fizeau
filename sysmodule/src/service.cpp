@@ -23,7 +23,7 @@
 
 #include "service.hpp"
 
-namespace fz::ipc {
+namespace fz {
 
 static inline Layer *layer() {
     return Layer::instance;
@@ -74,4 +74,4 @@ ams::Result FizeauService::EasterEgg() {
     return ams::ResultSuccess();
 }
 
-} // namespace fz::ipc
+} // namespace fz
