@@ -41,6 +41,8 @@ Result fizeauGetDawnTime(Time *time);
 Result fizeauSetDawnTime(Time time);
 Result fizeauGetColor(uint16_t *color);
 Result fizeauSetColor(uint16_t color);
+Result fizeauGetBrightness(float *brightness);
+Result fizeauSetBrightness(float brightness);
 Result fizeauEasterEgg(void);
 
 #ifdef __cplusplus

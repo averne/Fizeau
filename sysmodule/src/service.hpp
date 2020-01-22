@@ -34,7 +34,9 @@ class FizeauService final: public ams::sf::IServiceObject {
             SetDawnTime     = 5,
             GetColor        = 6,
             SetColor        = 7,
-            EasterEgg       = 8,
+            GetBrightness   = 8,
+            SetBrightness   = 9,
+            EasterEgg       = 10,
         };
 
     protected:
@@ -46,6 +48,8 @@ class FizeauService final: public ams::sf::IServiceObject {
         ams::Result SetDawnTime(Time time);
         ams::Result GetColor(ams::sf::Out<std::uint16_t> color);
         ams::Result SetColor(std::uint16_t color);
+        ams::Result GetBrightness(ams::sf::Out<float> color);
+        ams::Result SetBrightness(float color);
         ams::Result EasterEgg();
 
     public:
@@ -58,6 +62,8 @@ class FizeauService final: public ams::sf::IServiceObject {
             MAKE_SERVICE_COMMAND_META(SetDawnTime),
             MAKE_SERVICE_COMMAND_META(GetColor),
             MAKE_SERVICE_COMMAND_META(SetColor),
+            MAKE_SERVICE_COMMAND_META(GetBrightness),
+            MAKE_SERVICE_COMMAND_META(SetBrightness),
             MAKE_SERVICE_COMMAND_META(EasterEgg),
         };
 };

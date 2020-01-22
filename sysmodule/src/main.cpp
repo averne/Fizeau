@@ -60,12 +60,14 @@ extern "C" void __libnx_exception_handler(ThreadExceptionDump *ctx) {
 
 extern "C" void __appInit(void) {
     fz::do_with_sm_session([] {
-        SERV_INIT(time);
+        R_ASSERT(timeInitialize());
+        R_ASSERT(lblInitialize());
     });
 }
 
 extern "C" void __appExit(void) {
     SERV_EXIT(time);
+    SERV_EXIT(lbl);
 }
 
 int main(int argc, char **argv) {

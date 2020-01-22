@@ -155,6 +155,11 @@ R"(Temperature/color:
         especially visible with dark colors.
     - Additionally, the layer is not visible in screenshots/recordings.
 
+Brightness:
+    - Use the brightness slider to set the desired screen brightness.
+    - This is not redundant with the built-in setting, as the value will be set
+        at dusk time.
+
 Dawn/dusk:
     - When set, Fizeau will start at the "dusk" time and shutdown at the "dawn"
         time.

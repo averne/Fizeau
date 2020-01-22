@@ -69,6 +69,16 @@ ams::Result FizeauService::SetColor(std::uint16_t color) {
     return ams::ResultSuccess();
 }
 
+ams::Result FizeauService::GetBrightness(ams::sf::Out<float> brightness) {
+    brightness.SetValue(layer()->get_brightness());
+    return ams::ResultSuccess();
+}
+
+ams::Result FizeauService::SetBrightness(float brightness) {
+    layer()->set_brightness(brightness);
+    return ams::ResultSuccess();
+}
+
 ams::Result FizeauService::EasterEgg() {
     layer()->easter_egg();
     return ams::ResultSuccess();

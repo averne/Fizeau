@@ -32,7 +32,9 @@ typedef enum {
     FizeauCmdId_SetDawnTime     = 5,
     FizeauCmdId_GetColor        = 6,
     FizeauCmdId_SetColor        = 7,
-    FizeauCmdId_EasterEgg       = 8,
+    FizeauCmdId_GetBrightness   = 8,
+    FizeauCmdId_SetBrightness   = 9,
+    FizeauCmdId_EasterEgg       = 10,
 } FizeauCmdId;
 
 static Service g_fizeau_srv;
@@ -97,6 +99,18 @@ Result fizeauGetColor(uint16_t *color) {
 
 Result fizeauSetColor(uint16_t color) {
     return serviceDispatchIn(&g_fizeau_srv, FizeauCmdId_SetColor, color);
+}
+
+Result fizeauGetBrightness(float *brightness) {
+    float tmp;
+    Result rc = serviceDispatchOut(&g_fizeau_srv, FizeauCmdId_GetBrightness, tmp);
+    if (R_SUCCEEDED(rc) && brightness)
+        *brightness = tmp;
+    return rc;
+}
+
+Result fizeauSetBrightness(float brightness) {
+    return serviceDispatchIn(&g_fizeau_srv, FizeauCmdId_SetBrightness, brightness);
 }
 
 Result fizeauEasterEgg(void) {

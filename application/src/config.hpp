@@ -29,6 +29,7 @@ struct Config {
     Time dusk{}, dawn{};
     Temp temp = min_temp;
     rgba4444_t color = transparent;
+    float brightness = 0.0f;
 
     bool has_active_override = false;
 };

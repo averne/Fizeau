@@ -31,6 +31,7 @@ void Layer::activate() {
         return;
     this->is_active = true;
     set_color(this->color);
+    set_brightness(this->brightness);
 }
 
 void Layer::deactivate() {

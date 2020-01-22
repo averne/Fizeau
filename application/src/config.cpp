@@ -48,6 +48,8 @@ static int ini_handler(void *user, const char *section, const char *name, const 
         config->dawn.minute = std::atoi(value + 3);
     } else if (MATCH_ENTRY("", "temperature")) {
         config->temp = std::atof(value);
+    } else if (MATCH_ENTRY("", "brightness")) {
+        config->brightness = std::atof(value);
     } else if (MATCH(section, "color")) {
         if (MATCH(name, "red"))
             config->color.r = std::atoi(value);
@@ -87,6 +89,11 @@ inline std::string make_config(const Config &config) {
     stream << "temperature    = " << std::fixed << std::setprecision(1) << config.temp << '\n';
     stream << '\n';
 
+    stream << COMMENT " Controls brightness of the display\n";
+    stream << COMMENT " Value has to be >0.0, and <1.0\n";
+    stream << "brightness     = " << std::fixed << std::setprecision(1) << config.brightness << '\n';
+    stream << '\n';
+
     stream << COMMENT " If present, overrides temperature\n";
     stream << COMMENT " Values have to be <16\n";
     stream << "[color]\n";
@@ -94,6 +101,7 @@ inline std::string make_config(const Config &config) {
     stream << "green          = " << std::to_string(config.color.g) << '\n';
     stream << "blue           = " << std::to_string(config.color.b) << '\n';
     stream << "alpha          = " << std::to_string(config.color.a) << '\n';
+    stream << '\n';
 
     return stream.str();
 }

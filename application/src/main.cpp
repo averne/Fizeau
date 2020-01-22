@@ -36,7 +36,7 @@ extern "C" void userAppInit() {
     socketInitializeDefault();
     nxlinkStdio();
 #endif
-    SERV_INIT(pl);
+    plInitialize();
 }
 
 extern "C" void userAppExit(void) {
@@ -65,23 +65,26 @@ int main(int argc, char **argv) {
     // Restore state after reboot
     bool tmp_active;
     Time tmp_dawn, tmp_dusk;
-    TRY_GOTO(rc = fizeauGetIsActive(&tmp_active), error);
-    TRY_GOTO(rc = fizeauGetDawnTime(&tmp_dawn), error);
-    TRY_GOTO(rc = fizeauGetDuskTime(&tmp_dusk), error);
+    TRY_GOTO(rc = fizeauGetIsActive(&tmp_active),              error);
+    TRY_GOTO(rc = fizeauGetDawnTime(&tmp_dawn),                error);
+    TRY_GOTO(rc = fizeauGetDuskTime(&tmp_dusk),                error);
     if (!tmp_active && (tmp_dawn == Time{0, 0, 0}) && (tmp_dusk == Time{0, 0, 0})) {
-        TRY_GOTO(rc = fizeauSetIsActive(config.active), error);
-        TRY_GOTO(rc = fizeauSetDuskTime(config.dusk), error);
-        TRY_GOTO(rc = fizeauSetDawnTime(config.dawn), error);
-        TRY_GOTO(rc = fizeauSetColor(config.color), error);
+        TRY_GOTO(rc = fizeauSetIsActive(config.active),        error);
+        TRY_GOTO(rc = fizeauSetDuskTime(config.dusk),          error);
+        TRY_GOTO(rc = fizeauSetDawnTime(config.dawn),          error);
         if (config.has_active_override) // Reapply override
-            TRY_GOTO(rc = fizeauSetIsActive(config.active), error);
+            TRY_GOTO(rc = fizeauSetIsActive(config.active),    error);
+        TRY_GOTO(rc = fizeauSetColor(config.color),            error);
     }
+    TRY_GOTO(rc = fizeauSetBrightness(config.brightness),      error);
 
     while (!glfwWindowShouldClose(window)) {
-        TRY_GOTO(rc = fizeauGetIsActive(&config.active), error);
-        TRY_GOTO(rc = fizeauGetDuskTime(&config.dusk), error);
-        TRY_GOTO(rc = fizeauGetDawnTime(&config.dawn), error);
-        TRY_GOTO(rc = fizeauGetColor(&config.color.rgba), error);
+        // Update state
+        TRY_GOTO(rc = fizeauGetIsActive(&config.active),       error);
+        TRY_GOTO(rc = fizeauGetDuskTime(&config.dusk),         error);
+        TRY_GOTO(rc = fizeauGetDawnTime(&config.dawn),         error);
+        TRY_GOTO(rc = fizeauGetColor(&config.color.rgba),      error);
+        TRY_GOTO(rc = fizeauGetBrightness(&config.brightness), error);
 
         // New frame
         glfwPollEvents();
@@ -106,8 +109,9 @@ int main(int argc, char **argv) {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {10.0f, 10.0f});
         if (ImGui::Begin("Fizeau, version " VERSION "-" COMMIT, nullptr, ImGuiWindowFlags_NoResize |
                 ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove)) {
-            ImGui::SetWindowPos({300.0f, 150.0f}, ImGuiCond_Once);
-            ImGui::SetWindowSize({700.0f, 450.0f}, ImGuiCond_Once);
+
+            ImGui::SetWindowPos({300.0f, 120.0f}, ImGuiCond_Once);
+            ImGui::SetWindowSize({700.0f, 520.0f}, ImGuiCond_Once);
 
             // Time & FPS
             auto time = fz::get_time();
@@ -210,6 +214,15 @@ int main(int argc, char **argv) {
                 config.color = overlay_col;
                 TRY_GOTO(rc = fizeauSetColor(config.color.rgba), error);
             }
+
+            // Brightness slider
+            ImGui::Separator();
+            ImGui::TextUnformatted("Brightness");
+            ImGui::PushItemWidth(ImGui::GetWindowWidth() - 50.0f);
+            has_changed  = ImGui::SliderFloat("##bright", &config.brightness, 0.0f, 1.0f, "%.1f");
+            has_changed |= fz::handle_swkbd(  "##bright", fz::swkbd_input_f, &config.brightness, 0.0f, 1.0f);
+            if (has_changed)
+                TRY_GOTO(rc = fizeauSetBrightness(config.brightness), error);
         }
         ImGui::End();
         ImGui::PopStyleVar();
@@ -229,6 +242,9 @@ error:
             break;
         glClearColor(0.18f, 0.2f, 0.25f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        if (R_SUCCEEDED(rc))
+            break;
 
         fz::imgui::begin_frame(window);
         fz::imgui::draw_error_window(rc);
