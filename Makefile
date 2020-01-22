@@ -37,7 +37,7 @@ $(DIST_TARGET): application/out/Fizeau.nro sysmodule/out/Fizeau.nsp misc/default
 
 	@7z a $@ ./out/atmosphere ./out/switch >/dev/null
 	@rm -r out/atmosphere out/switch
-	@echo "Compressed release to $@.zip"
+	@echo Compressed release to $@
 
 clean:
 	@rm -rf out

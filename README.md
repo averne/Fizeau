@@ -1,10 +1,22 @@
 # Fizeau
 
-<p align="center"><img src="https://github.com/averne/Fizeau/blob/master/application/icon.jpg?raw=true"></p>
+<p align="center"><img src="https://i.imgur.com/7VUvZhe.png" height=300></p>
 
 Adjust the color of the screen of your Nintendo Switch.
 
-# Overview
+# Features:
+  - Creates a layer which color you can adjust.
+  - Preset values for color temperature (f.lux/redshift-like).
+  - Control screen brightness.
+  - Save dusk/dawn times & screen brightness, and apply settings automatically.
+
+# Images
+<p align="center"><img src="https://i.imgur.com/bJ3xi86.gif"></p>
+<p align="center"><img src="https://i.imgur.com/FVZKAWo.jpg"></p>
+<p align="center"><img src="https://i.imgur.com/FkNRrOM.jpg"></p>
+<p align="center"><img src="https://i.imgur.com/LZamspx.jpg"></p>
+
+# How to use
 
 ## Temperature/color:
   - Use the temperature slider to select the desired shading.
@@ -15,6 +27,11 @@ Adjust the color of the screen of your Nintendo Switch.
         color to it. However, this can lead to an overall increase of luminosity,
         especially visible with dark colors.
   - Additionally, the layer is not visible in screenshots/recordings.
+
+## Brightness:
+  - Use the brightness slider to set the desired screen brightness.
+  - This is not redundant with the built-in setting, as the value will be set
+        at dusk time.
 
 ## Dawn/dusk:
   - When set, Fizeau will start at the "dusk" hour and shutdown at the "dawn"
@@ -27,12 +44,6 @@ Adjust the color of the screen of your Nintendo Switch.
   - To reduce the memory usage of the sysmodule, settings are not read
         continually. Instead, they are applied on application launch.
   - Thus, you will need to launch the client after a reboot to restart Fizeau.
-
-# Images
-
-<p align="center"><img src="https://i.imgur.com/bJ3xi86.gif"></p>
-<p align="center"><img src="https://i.imgur.com/6t26Ufa.jpg"></p>
-<p align="center"><img src="https://i.imgur.com/I4yov0m.jpg"></p>
 
 # Installing
   - Download the [latest release](https://github.com/averne/Fizeau/releases), unzip it to the root of your SD card, and reboot.
