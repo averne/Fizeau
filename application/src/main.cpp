@@ -133,10 +133,10 @@ int main(int argc, char **argv) {
             ImGui::TextUnformatted("Dusk:");
             ImGui::SameLine();
             ImGui::SetCursorPosX(100.0f);
-            has_changed  = ImGui::DragScalar("##bh", ImGuiDataType_U8, &config.dusk.h, 0.125f, &min_h, &max_h, "%02dh");
+            has_changed  = ImGui::DragScalar("##bh", ImGuiDataType_U8, &config.dusk.h, 0.05f, &min_h, &max_h, "%02dh");
             has_changed |= fz::handle_swkbd( "##bh", fz::swkbd_input_u8, &config.dusk.h, min_h, max_h);
             ImGui::SameLine();
-            has_changed |= ImGui::DragScalar("##bm", ImGuiDataType_U8, &config.dusk.m, 0.125f, &min_m, &max_m, "%02dm");
+            has_changed |= ImGui::DragScalar("##bm", ImGuiDataType_U8, &config.dusk.m, 0.05f, &min_m, &max_m, "%02dm");
             has_changed |= fz::handle_swkbd( "##bm", fz::swkbd_input_u8, &config.dusk.m, min_m, max_m);
             if (has_changed) {
                 TRY_GOTO(rc = fizeauSetDuskTime(config.dusk), error);
@@ -145,10 +145,10 @@ int main(int argc, char **argv) {
             ImGui::TextUnformatted("Dawn:  ");
             ImGui::SameLine();
             ImGui::SetCursorPosX(100.0f);
-            has_changed  = ImGui::DragScalar("##eh", ImGuiDataType_U8, &config.dawn.h, 0.125f, &min_h, &max_h, "%02dh");
+            has_changed  = ImGui::DragScalar("##eh", ImGuiDataType_U8, &config.dawn.h, 0.05f, &min_h, &max_h, "%02dh");
             has_changed |= fz::handle_swkbd( "##eh", fz::swkbd_input_u8, &config.dawn.h, min_h, max_h);
             ImGui::SameLine();
-            has_changed |= ImGui::DragScalar("##em", ImGuiDataType_U8, &config.dawn.m, 0.125f, &min_m, &max_m, "%02dm");
+            has_changed |= ImGui::DragScalar("##em", ImGuiDataType_U8, &config.dawn.m, 0.05f, &min_m, &max_m, "%02dm");
             has_changed |= fz::handle_swkbd( "##em", fz::swkbd_input_u8, &config.dawn.m, min_m, max_m);
             if (has_changed) {
                 TRY_GOTO(rc = fizeauSetDawnTime(config.dawn), error);
