@@ -10,20 +10,19 @@ OUT               =    lib
 BUILD             =    build
 SOURCES           =    libstratosphere/libstratosphere/source/sf libstratosphere/libstratosphere/source/sm      \
                        libstratosphere/libstratosphere/source/os libstratosphere/libstratosphere/source/hos     \
-					   libstratosphere/libstratosphere/source/spl                                               \
+                       libstratosphere/libstratosphere/source/spl                                               \
                        libstratosphere/libstratosphere/source/result                                            \
-					   libstratosphere/libstratosphere/source/ams/ams_exosphere_api.cpp                         \
-					   libstratosphere/libstratosphere/source/ams/ams_environment.cpp
+                       libstratosphere/libstratosphere/source/ams/ams_exosphere_api.cpp                         \
+                       libstratosphere/libstratosphere/source/ams/ams_environment.cpp
 INCLUDES          =    libstratosphere/libstratosphere/include libstratosphere/libvapours/include
 LIBS              =
 
 DEFINES           =    __SWITCH__ ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_SWITCH
-ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie                         \
-                       -fno-strict-aliasing -fwrapv -fno-asynchronous-unwind-tables                             \
-                       -fno-unwind-tables -fno-stack-protector
-FLAGS             =    -Wall -pipe -g -O2 -ffunction-sections -fdata-sections
-CFLAGS            =    -std=gnu11
-CXXFLAGS          =    -std=gnu++17
+ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
+FLAGS             =    -Wall -pipe -g -Os -ffunction-sections -fdata-sections
+CFLAGS            =    -std=gnu11 -fno-stack-protector -fno-common -flto
+CXXFLAGS          =    -std=gnu++17 -fno-rtti -fno-exceptions -fno-non-call-exceptions -fno-threadsafe-statics  \
+                       -fno-use-cxa-atexit -fno-asynchronous-unwind-tables -fno-unwind-tables
 ASFLAGS           =
 ARFLAGS           =    -rc
 
@@ -54,7 +53,7 @@ LIB_TARGET        =    $(if $(OUT:=), $(OUT)/$(TARGET).$(EXTENSION), .$(OUT)/$(T
 
 DEFINE_FLAGS      =    $(addprefix -D,$(DEFINES))
 INCLUDE_FLAGS     =    $(addprefix -I$(CURDIR)/,$(INCLUDES)) $(foreach dir,$(CUSTOM_LIBS),-I$(CURDIR)/$(dir)/include) \
-					   $(foreach dir,$(filter-out $(CUSTOM_LIBS),$(LIBS)),-I$(dir)/include)
+                       $(foreach dir,$(filter-out $(CUSTOM_LIBS),$(LIBS)),-I$(dir)/include)
 
 # -----------------------------------------------
 

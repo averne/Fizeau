@@ -20,7 +20,7 @@
 #include <cstdio>
 #include <algorithm>
 #include <type_traits>
-#include <initializer_list>
+#include <array>
 #include <switch.h>
 #include <stratosphere.hpp>
 
@@ -70,8 +70,8 @@ struct Vec2X {
 
     constexpr inline Vec2X() = default;
     constexpr inline Vec2X(T x, T y = 0): x(x), y(y) { }
-    constexpr inline Vec2X(std::initializer_list<T> list) {
-        std::copy_n(list.begin(), 2, &this->x);
+    constexpr inline Vec2X(std::array<T, 2> list) {
+        std::copy(list.begin(), list.end(), &this->x);
     }
 
     constexpr inline T &operator[](std::size_t idx) {

@@ -19,28 +19,29 @@ CUSTOM_LIBS       =    ../lib/libstratosphere
 NPDM_JSON         =    config.json
 
 DEFINES           =    __SWITCH__
-ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie             \
-                       -fno-strict-aliasing -fwrapv -fno-asynchronous-unwind-tables                 \
-                       -fno-unwind-tables -fno-stack-protector
-FLAGS             =    -Wall -pipe -g -O2 -ffunction-sections -fdata-sections
-CFLAGS            =    -std=gnu11
-CXXFLAGS          =    -std=gnu++17 -fno-rtti -fno-exceptions
+ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
+FLAGS             =    -Wall -pipe -g -Os -ffunction-sections -fdata-sections
+CFLAGS            =    -std=gnu11 -fno-stack-protector -fno-common -flto
+CXXFLAGS          =    -std=gnu++17 -fno-rtti -fno-exceptions -fno-non-call-exceptions              \
+                       -fno-threadsafe-statics -fno-use-cxa-atexit                                  \
+                       -fno-asynchronous-unwind-tables -fno-unwind-tables
 ASFLAGS           =
-LDFLAGS           =     -Wl,--wrap,__cxa_pure_virtual                                               \
-                        -Wl,--wrap,__cxa_throw                                                      \
-                        -Wl,--wrap,__cxa_rethrow                                                    \
-                        -Wl,--wrap,__cxa_allocate_exception                                         \
-                        -Wl,--wrap,__cxa_free_exception                                             \
-                        -Wl,--wrap,__cxa_begin_catch                                                \
-                        -Wl,--wrap,__cxa_end_catch                                                  \
-                        -Wl,--wrap,__cxa_call_unexpected                                            \
-                        -Wl,--wrap,__cxa_call_terminate                                             \
-                        -Wl,--wrap,__gxx_personality_v0                                             \
-                        -Wl,--wrap,_Unwind_Resume                                                   \
-                        -Wl,--wrap,_ZSt19__throw_logic_errorPKc                                     \
-                        -Wl,--wrap,_ZSt20__throw_length_errorPKc                                    \
-                        -Wl,--wrap,_ZNSt11logic_errorC2EPKc                                         \
-                        -Wl,-pie -specs=$(DEVKITPRO)/libnx/switch.specs -g
+LDFLAGS           =    -Wl,--wrap,__cxa_pure_virtual                                                \
+                       -Wl,--wrap,__cxa_throw                                                       \
+                       -Wl,--wrap,__cxa_rethrow                                                     \
+                       -Wl,--wrap,__cxa_allocate_exception                                          \
+                       -Wl,--wrap,__cxa_free_exception                                              \
+                       -Wl,--wrap,__cxa_begin_catch                                                 \
+                       -Wl,--wrap,__cxa_end_catch                                                   \
+                       -Wl,--wrap,__cxa_call_unexpected                                             \
+                       -Wl,--wrap,__cxa_call_terminate                                              \
+                       -Wl,--wrap,__gxx_personality_v0                                              \
+                       -Wl,--wrap,_Unwind_Resume                                                    \
+                       -Wl,--wrap,_ZSt19__throw_logic_errorPKc                                      \
+                       -Wl,--wrap,_ZSt20__throw_length_errorPKc                                     \
+                       -Wl,--wrap,_ZNSt11logic_errorC2EPKc                                          \
+                       -Wl,-pie -specs=$(DEVKITPRO)/libnx/switch.specs -g -Os                       \
+                       -flto -fuse-linker-plugin
 LINKS             =    -lstratosphere -lnx
 
 PREFIX            =    aarch64-none-elf-
@@ -74,7 +75,7 @@ NPDM_TARGET       =    $(if $(OUT:=), $(OUT)/$(TARGET).npdm, .$(OUT)/$(TARGET).n
 
 DEFINE_FLAGS      =    $(addprefix -D,$(DEFINES))
 INCLUDE_FLAGS     =    $(addprefix -I$(CURDIR)/,$(INCLUDES)) $(foreach dir,$(CUSTOM_LIBS),-I$(CURDIR)/$(dir)/include) \
-					   $(foreach dir,$(filter-out $(CUSTOM_LIBS),$(LIBS)),-I$(dir)/include)
+                       $(foreach dir,$(filter-out $(CUSTOM_LIBS),$(LIBS)),-I$(dir)/include)
 LIB_FLAGS         =    $(foreach dir,$(LIBS),-L$(dir)/lib)
 
 # -----------------------------------------------
