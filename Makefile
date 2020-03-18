@@ -43,6 +43,8 @@ clean:
 	@rm -rf out
 
 mrproper: clean
+	@$(MAKE) --no-print-directory -C application mrproper
+	@$(MAKE) --no-print-directory -C sysmodule mrproper
 
 application:
 	@$(MAKE) -C $@ $(filter-out $@,$(MAKECMDGOALS)) --no-print-directory

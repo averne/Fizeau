@@ -12,12 +12,14 @@ SOURCES           =    libstratosphere/libstratosphere/source/sf libstratosphere
                        libstratosphere/libstratosphere/source/os libstratosphere/libstratosphere/source/hos     \
                        libstratosphere/libstratosphere/source/spl                                               \
                        libstratosphere/libstratosphere/source/result                                            \
+                       libstratosphere/libstratosphere/source/diag                                              \
                        libstratosphere/libstratosphere/source/ams/ams_exosphere_api.cpp                         \
                        libstratosphere/libstratosphere/source/ams/ams_environment.cpp
 INCLUDES          =    libstratosphere/libstratosphere/include libstratosphere/libvapours/include
 LIBS              =
 
-DEFINES           =    __SWITCH__ ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_SWITCH
+DEFINES           =    __SWITCH__ ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_NX ATMOSPHERE_ARCH_ARM64 \
+                       ATMOSPHERE_OS_HORIZON
 ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
 FLAGS             =    -Wall -pipe -g -Os -ffunction-sections -fdata-sections
 CFLAGS            =    -std=gnu11 -fno-stack-protector -fno-common -flto

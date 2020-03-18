@@ -14,11 +14,13 @@ EXTENSION         =    nsp
 OUT               =    out
 BUILD             =    build
 SOURCES           =    src ../common
-INCLUDES          =    include ../common/ ../lib/libstratosphere/libstratosphere/libvapours/include
+INCLUDES          =    include ../common/ ../lib/libstratosphere/libstratosphere/libvapours/include \
+                       ../lib/libstratosphere/libstratosphere/libstratosphere/include
 CUSTOM_LIBS       =    ../lib/libstratosphere
 NPDM_JSON         =    config.json
 
-DEFINES           =    __SWITCH__
+DEFINES           =    __SWITCH__ ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_NX           \
+                       ATMOSPHERE_ARCH_ARM64 ATMOSPHERE_OS_HORIZON
 ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
 FLAGS             =    -Wall -pipe -g -Os -ffunction-sections -fdata-sections
 CFLAGS            =    -std=gnu11 -fno-stack-protector -fno-common -flto

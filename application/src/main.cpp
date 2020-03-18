@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
             TRY_GOTO(rc = fizeauEasterEgg(), error);
 
         // Leave edit field, or it will pop the swkbd again
-        ImGui::GetCurrentContext()->TempInputTextId = 0;
+        ImGui::GetCurrentContext()->TempInputId = 0;
 
         fz::imgui::begin_frame(window);
         fz::imgui::draw_controls_window();

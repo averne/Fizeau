@@ -60,8 +60,8 @@ extern "C" void __libnx_exception_handler(ThreadExceptionDump *ctx) {
 
 extern "C" void __appInit(void) {
     fz::do_with_sm_session([] {
-        R_ASSERT(timeInitialize());
-        R_ASSERT(lblInitialize());
+        R_ABORT_UNLESS(timeInitialize());
+        R_ABORT_UNLESS(lblInitialize());
     });
 }
 
@@ -85,13 +85,13 @@ int main(int argc, char **argv) {
         reinterpret_cast<void *>(&layer),
         0x3f
     );
-    R_ASSERT(time_update_thread.Start());
+    R_ABORT_UNLESS(time_update_thread.Start());
 
     static constexpr auto service_name = ams::sm::ServiceName::Encode("fizeau");
     static constexpr std::size_t max_sessions = 2;
     static constexpr std::size_t num_servers  = 1;
     static ams::sf::hipc::ServerManager<num_servers, ams::sf::hipc::DefaultServerManagerOptions, max_sessions> server_manager;
-    R_ASSERT(server_manager.RegisterServer<fz::FizeauService>(service_name, max_sessions));
+    R_ABORT_UNLESS(server_manager.RegisterServer<fz::FizeauService>(service_name, max_sessions));
     server_manager.LoopProcess();
 
     time_update_thread.Join();
