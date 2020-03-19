@@ -60,23 +60,31 @@ int main(int argc, char **argv) {
 
     auto config = fz::read_config(fz::config_path);
 
+    if (!fizeauIsServiceActive()) {
+        LOG("Service not active\n");
+        rc = 1;
+        goto error;
+    }
+
     TRY_GOTO(rc = fizeauInitialize(), error);
 
     // Restore state after reboot
-    bool tmp_active;
-    Time tmp_dawn, tmp_dusk;
-    TRY_GOTO(rc = fizeauGetIsActive(&tmp_active),              error);
-    TRY_GOTO(rc = fizeauGetDawnTime(&tmp_dawn),                error);
-    TRY_GOTO(rc = fizeauGetDuskTime(&tmp_dusk),                error);
-    if (!tmp_active && (tmp_dawn == Time{0, 0, 0}) && (tmp_dusk == Time{0, 0, 0})) {
-        TRY_GOTO(rc = fizeauSetIsActive(config.active),        error);
-        TRY_GOTO(rc = fizeauSetDuskTime(config.dusk),          error);
-        TRY_GOTO(rc = fizeauSetDawnTime(config.dawn),          error);
-        if (config.has_active_override) // Reapply override
-            TRY_GOTO(rc = fizeauSetIsActive(config.active),    error);
-        TRY_GOTO(rc = fizeauSetColor(config.color),            error);
+    {
+        bool tmp_active;
+        Time tmp_dawn, tmp_dusk;
+        TRY_GOTO(rc = fizeauGetIsActive(&tmp_active),              error);
+        TRY_GOTO(rc = fizeauGetDawnTime(&tmp_dawn),                error);
+        TRY_GOTO(rc = fizeauGetDuskTime(&tmp_dusk),                error);
+        if (!tmp_active && (tmp_dawn == Time{0, 0, 0}) && (tmp_dusk == Time{0, 0, 0})) {
+            TRY_GOTO(rc = fizeauSetIsActive(config.active),        error);
+            TRY_GOTO(rc = fizeauSetDuskTime(config.dusk),          error);
+            TRY_GOTO(rc = fizeauSetDawnTime(config.dawn),          error);
+            if (config.has_active_override) // Reapply override
+                TRY_GOTO(rc = fizeauSetIsActive(config.active),    error);
+            TRY_GOTO(rc = fizeauSetColor(config.color),            error);
+        }
+        TRY_GOTO(rc = fizeauSetBrightness(config.brightness),      error);
     }
-    TRY_GOTO(rc = fizeauSetBrightness(config.brightness),      error);
 
     while (!glfwWindowShouldClose(window)) {
         // Update state

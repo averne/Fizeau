@@ -1,0 +1,5 @@
+{
+    "name"  : "Fizeau",
+    "tid"   : "0100000000000F12",
+    "requires_reboot": true
+}

@@ -33,6 +33,7 @@ $(DIST_TARGET): application/out/Fizeau.nro sysmodule/out/Fizeau.nsp misc/default
 
 	@mkdir -p out/atmosphere/contents/$(FZ_TID)/flags
 	@cp sysmodule/out/Fizeau.nsp out/atmosphere/contents/$(FZ_TID)/exefs.nsp
+	@cp sysmodule/toolbox.json out/atmosphere/contents/$(FZ_TID)/toolbox.json
 	@touch out/atmosphere/contents/$(FZ_TID)/flags/boot2.flag
 
 	@7z a $@ ./out/atmosphere ./out/switch >/dev/null

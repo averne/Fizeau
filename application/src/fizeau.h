@@ -28,6 +28,8 @@
 extern "C" {
 #endif
 
+bool fizeauIsServiceActive(void);
+
 Result fizeauInitialize();
 void fizeauExit();
 
