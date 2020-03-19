@@ -84,7 +84,7 @@ static bool swkbd_input_u16(std::uint16_t *val, std::uint16_t min, std::uint16_t
 
 template <typename F, typename ...Args>
 static inline bool handle_swkbd(const char *label, F f, Args ...args) {
-    if (ImGui::TempInputIsActive(ImGui::GetCurrentWindow()->GetID(label)))
+    if (fz::imgui::TempInputIsActive(fz::imgui::GetCurrentWindow()->GetID(label)))
         return f(args...);
     return false;
 }

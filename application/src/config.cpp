@@ -32,7 +32,7 @@ namespace fz {
 #define MATCH_ENTRY(s, n) (MATCH(section, (s)) && MATCH(name, (n)))
 
 static int ini_handler(void *user, const char *section, const char *name, const char *value) {
-    Config *config = reinterpret_cast<Config *>(user);
+    Config *config = static_cast<Config *>(user);
 
     if (MATCH_ENTRY("", "active")) {
         config->has_active_override = true;

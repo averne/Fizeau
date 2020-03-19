@@ -19,6 +19,10 @@
             "problemMatcher": {
                 "base": "$gcc",
                 "fileLocation": "absolute"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
             }
         },
         {
@@ -55,8 +59,6 @@
             "type": "shell",
             "command": "make",
             "args": [
-                "application",
-                "sysmodule",
                 "mrproper"
             ],
             "presentation": {
@@ -82,10 +84,6 @@
             "problemMatcher": {
                 "base": "$gcc",
                 "fileLocation": "absolute"
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": true
             }
         },
         {

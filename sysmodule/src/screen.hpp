@@ -55,14 +55,14 @@ class Screen {
 
         inline rgba4444_t *get_cur_buffer() {
             return reinterpret_cast<rgba4444_t *>
-                (reinterpret_cast<std::uint8_t *>(this->framebuf.buf) + get_framebuffer_size() * this->window.cur_slot);
+                (static_cast<std::uint8_t *>(this->framebuf.buf) + this->get_framebuffer_size() * this->window.cur_slot);
         }
 
-        inline rgba4444_t *dequeue() { return reinterpret_cast<rgba4444_t *>(framebufferBegin(&this->framebuf, NULL)); }
+        inline rgba4444_t *dequeue() { return static_cast<rgba4444_t *>(framebufferBegin(&this->framebuf, NULL)); }
         inline void flush() { framebufferEnd(&this->framebuf); }
 
         inline void fill(rgba4444_t color) {
-            std::fill_n(reinterpret_cast<rgba4444_t *>(get_cur_buffer()), get_framebuffer_size(), color);
+            std::fill_n(this->get_cur_buffer(), this->get_framebuffer_size(), color);
         }
 };
 

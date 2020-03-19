@@ -30,8 +30,8 @@ void Layer::activate() {
     if (this->is_active)
         return;
     this->is_active = true;
-    set_color(this->color);
-    set_brightness(this->brightness);
+    this->set_color(this->color);
+    this->set_brightness(this->brightness);
 }
 
 void Layer::deactivate() {
@@ -39,7 +39,7 @@ void Layer::deactivate() {
     if (!this->is_active)
         return;
     auto c = this->color;
-    set_color(transparent);
+    this->set_color(transparent);
     this->color = c;
     this->is_active = false;
 }
@@ -51,14 +51,14 @@ void Layer::update(const Time &time) {
     auto dusk = to_timestamp(this->dusk_time), dawn = to_timestamp(this->dawn_time), ts = to_timestamp(time);
     if (dusk > dawn) {
         if ((dusk > ts) && (ts >= dawn))
-            deactivate();
+            this->deactivate();
         else
-            activate();
+            this->activate();
     } else {
         if ((dawn >= ts) && (ts > dusk))
-            activate();
+            this->activate();
         else
-            deactivate();
+            this->deactivate();
     }
 }
 

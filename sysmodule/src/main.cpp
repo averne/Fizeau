@@ -79,10 +79,10 @@ int main(int argc, char **argv) {
         +[](void *args) {
             while (true) {
                 svcSleepThread(2e+8l);
-                reinterpret_cast<fz::Layer *>(args)->update(fz::get_time());
+                static_cast<fz::Layer *>(args)->update(fz::get_time());
             }
         },
-        reinterpret_cast<void *>(&layer),
+        static_cast<void *>(&layer),
         0x3f
     );
     R_ABORT_UNLESS(time_update_thread.Start());

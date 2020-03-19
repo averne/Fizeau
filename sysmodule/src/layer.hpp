@@ -32,7 +32,7 @@ class Layer {
 
         Layer(std::shared_ptr<Screen> &screen): screen(screen) {
             this->instance = this;
-            set_color(this->color);
+            this->set_color(this->color);
         }
 
         ~Layer() {
@@ -53,7 +53,7 @@ class Layer {
             this->is_active_overriden = true;
             if (this->is_active == active)
                 return;
-            active ? activate() : deactivate();
+            active ? this->activate() : this->deactivate();
         }
 
         inline const Time get_dusk_time() {
@@ -67,7 +67,7 @@ class Layer {
             if (this->dusk_time == dusk_time)
                 return;
             this->dusk_time = dusk_time;
-            update(get_time());
+            this->update(get_time());
         }
 
         inline const Time get_dawn_time() {
@@ -81,7 +81,7 @@ class Layer {
             if (this->dawn_time == dawn_time)
                 return;
             this->dawn_time = dawn_time;
-            update(get_time());
+            this->update(get_time());
         }
 
         inline const rgba4444_t &get_color() {

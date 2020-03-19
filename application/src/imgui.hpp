@@ -26,6 +26,8 @@
 
 namespace fz::imgui {
 
+using namespace ImGui;
+
 namespace impl {
 
 static inline bool is_controls_focused = false, is_help_focused = false;
