@@ -60,20 +60,20 @@ extern "C" void __libnx_exception_handler(ThreadExceptionDump *ctx) {
 
 extern "C" void __appInit(void) {
     fz::do_with_sm_session([] {
+        R_ABORT_UNLESS(viInitialize(ViServiceType_Manager));
         R_ABORT_UNLESS(timeInitialize());
         R_ABORT_UNLESS(lblInitialize());
     });
 }
 
 extern "C" void __appExit(void) {
+    SERV_EXIT(vi);
     SERV_EXIT(time);
     SERV_EXIT(lbl);
 }
 
 int main(int argc, char **argv) {
-    static auto screen = std::make_shared<fz::Screen>();
-    TRY_FATAL(screen->initialize({32, 128}, {0, 0}, {fz::Screen::width, fz::Screen::height}));
-    static auto layer = fz::Layer(screen);
+    static auto layer = fz::Layer();
 
     static auto time_update_thread = ams::os::StaticThread<2 * ams::os::MemoryPageSize>(
         +[](void *args) {
@@ -95,7 +95,6 @@ int main(int argc, char **argv) {
     server_manager.LoopProcess();
 
     time_update_thread.Join();
-    screen->finalize();
 
     return 0;
 }

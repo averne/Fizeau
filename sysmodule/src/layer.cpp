@@ -29,7 +29,7 @@ void Layer::activate() {
     std::scoped_lock lk(this->screen_mutex);
     if (this->is_active)
         return;
-    this->is_active = true;
+    this->is_active = R_SUCCEEDED(this->screen.initialize({32, 128}, {0, 0}, {fz::Screen::width, fz::Screen::height}));
     this->set_color(this->color);
     this->set_brightness(this->brightness);
 }
@@ -38,9 +38,7 @@ void Layer::deactivate() {
     std::scoped_lock lk(this->screen_mutex);
     if (!this->is_active)
         return;
-    auto c = this->color;
-    this->set_color(transparent);
-    this->color = c;
+    this->screen.finalize();
     this->is_active = false;
 }
 
@@ -67,9 +65,9 @@ void Layer::set_color(const rgba4444_t &col) {
     this->color = col;
     if (!this->is_active)
         return;
-    this->screen->dequeue();
-    this->screen->fill(col);
-    this->screen->flush();
+    this->screen.dequeue();
+    this->screen.fill(col);
+    this->screen.flush();
 }
 
 void Layer::easter_egg() {
@@ -78,8 +76,8 @@ void Layer::easter_egg() {
     // Force active
     this->is_active = true;
 
-    auto *buf = this->screen->dequeue();
-    auto size = this->screen->get_framebuffer_size() / Screen::fb_bpp;
+    auto *buf = this->screen.dequeue();
+    auto size = this->screen.get_framebuffer_size() / Screen::fb_bpp;
 
     static constexpr std::array<rgba4444_t, 8> colors = {
         rgba4444_t{6,  0, 10, 0},
@@ -99,7 +97,7 @@ void Layer::easter_egg() {
         if ((i + 1) % (size / colors.size()) == 0)
             ++cur_color;
     }
-    this->screen->flush();
+    this->screen.flush();
 }
 
 } // namespace fz

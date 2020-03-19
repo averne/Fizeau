@@ -30,12 +30,13 @@ class Layer {
     public:
         static inline Layer *instance = nullptr;
 
-        Layer(std::shared_ptr<Screen> &screen): screen(screen) {
+        Layer() {
             this->instance = this;
             this->set_color(this->color);
         }
 
         ~Layer() {
+            this->deactivate();
             this->instance = nullptr;
         }
 
@@ -106,7 +107,7 @@ class Layer {
         void easter_egg();
 
     private:
-        std::shared_ptr<Screen> screen;
+        Screen screen;
 
         ams::os::RecursiveMutex screen_mutex;
 

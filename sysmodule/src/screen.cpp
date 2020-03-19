@@ -29,16 +29,16 @@ namespace fz {
 Result Screen::initialize(Vec2u fb_sz, Vec2f layer_pos, Vec2i layer_sz,
         std::uint32_t format, std::uint32_t num_fb) {
     return do_with_sm_session([&]() -> Result {
-        TRY_GOTO(viInitialize(ViServiceType_Manager), end);
-        TRY_GOTO(viOpenDefaultDisplay(&this->display), close_serv);
-        TRY_GOTO(viCreateManagedLayer(&this->display, static_cast<ViLayerFlags>(0), 0, &__nx_vi_layer_id), close_display); // flag 0 allows non-fullscreen layer
-        TRY_GOTO(viCreateLayer(&this->display, &this->layer), close_managed_layer);
-        TRY_GOTO(viSetLayerScalingMode(&this->layer, ViScalingMode_FitToLayer), close_managed_layer);
-        TRY_GOTO(viSetLayerZ(&this->layer, 100), close_managed_layer); // Arbitrary z index
-        TRY_GOTO(viSetLayerSize(&this->layer, layer_sz.w, layer_sz.h), close_managed_layer);
-        TRY_GOTO(viSetLayerPosition(&this->layer, layer_pos.x, layer_pos.y), close_managed_layer);
-        TRY_GOTO(nwindowCreateFromLayer(&this->window, &this->layer), close_managed_layer);
-        TRY_GOTO(framebufferCreate(&this->framebuf, &this->window, fb_sz.w, fb_sz.h, format, num_fb), close_window);
+        Result rc;
+        TRY_GOTO(rc = viOpenDefaultDisplay(&this->display), end);
+        TRY_GOTO(rc = viCreateManagedLayer(&this->display, static_cast<ViLayerFlags>(0), 0, &__nx_vi_layer_id), close_display); // flag 0 allows non-fullscreen layer
+        TRY_GOTO(rc = viCreateLayer(&this->display, &this->layer), close_managed_layer);
+        TRY_GOTO(rc = viSetLayerScalingMode(&this->layer, ViScalingMode_FitToLayer), close_managed_layer);
+        TRY_GOTO(rc = viSetLayerZ(&this->layer, 100), close_managed_layer); // Arbitrary z index
+        TRY_GOTO(rc = viSetLayerSize(&this->layer, layer_sz.w, layer_sz.h), close_managed_layer);
+        TRY_GOTO(rc = viSetLayerPosition(&this->layer, layer_pos.x, layer_pos.y), close_managed_layer);
+        TRY_GOTO(rc = nwindowCreateFromLayer(&this->window, &this->layer), close_managed_layer);
+        TRY_GOTO(rc = framebufferCreate(&this->framebuf, &this->window, fb_sz.w, fb_sz.h, format, num_fb), close_window);
 
         return 0;
 
@@ -48,10 +48,8 @@ Result Screen::initialize(Vec2u fb_sz, Vec2f layer_pos, Vec2i layer_sz,
             viDestroyManagedLayer(&this->layer);
         close_display:
             viCloseDisplay(&this->display);
-        close_serv:
-            viExit();
         end:
-            return 1;
+            return rc;
     });
 }
 
@@ -60,7 +58,6 @@ void Screen::finalize() {
     nwindowClose(&this->window);
     viDestroyManagedLayer(&this->layer);
     viCloseDisplay(&this->display);
-    viExit();
 }
 
 } // namespace fz
