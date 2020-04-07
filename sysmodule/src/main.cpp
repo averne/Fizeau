@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
     static auto time_update_thread = ams::os::StaticThread<2 * ams::os::MemoryPageSize>(
         +[](void *args) {
             while (true) {
-                svcSleepThread(2e+8l);
+                svcSleepThread(1e+9l); // Sleep 1 second
                 static_cast<fz::Layer *>(args)->update(fz::get_time());
             }
         },

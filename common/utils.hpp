@@ -70,6 +70,7 @@ struct Vec2X {
 
     constexpr inline Vec2X() = default;
     constexpr inline Vec2X(T x, T y = 0): x(x), y(y) { }
+    template <typename U> constexpr inline Vec2X(const Vec2X<U> &v): x(static_cast<T>(v.x)), y(static_cast<T>(v.y)) { }
     constexpr inline Vec2X(std::array<T, 2> list) {
         std::copy(list.begin(), list.end(), &this->x);
     }

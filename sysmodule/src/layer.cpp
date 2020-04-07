@@ -27,9 +27,13 @@ static inline constexpr Timestamp to_timestamp(const Time &time) {
 
 void Layer::activate() {
     std::scoped_lock lk(this->screen_mutex);
-    if (this->is_active)
+    if (this->is_active) {
+        // Forcefully reset size and z index (which are mesed up if the layer was created while the console was sleeping)
+        this->screen.set_layer_size(Vec2ul(dims::size));
+        this->screen.set_layer_z(100);
         return;
-    this->is_active = R_SUCCEEDED(this->screen.initialize({32, 128}, {0, 0}, {fz::Screen::width, fz::Screen::height}));
+    }
+    this->is_active = R_SUCCEEDED(this->screen.initialize({32, 128}, dims::position, dims::size));
     this->set_color(this->color);
     this->set_brightness(this->brightness);
 }
@@ -77,7 +81,7 @@ void Layer::easter_egg() {
     this->is_active = true;
 
     auto *buf = this->screen.dequeue();
-    auto size = this->screen.get_framebuffer_size() / Screen::fb_bpp;
+    auto size = this->screen.get_framebuffer_size() / dims::fb_bpp;
 
     static constexpr std::array<rgba4444_t, 8> colors = {
         rgba4444_t{6,  0, 10, 0},

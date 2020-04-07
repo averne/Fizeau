@@ -25,14 +25,17 @@
 
 namespace fz {
 
+namespace dims {
+
+// Handheld and docked
+static constexpr Vec2f position = {0.0f, 0.0f};
+static constexpr Vec2i size     = {1920, 1080};
+
+static constexpr std::uint32_t fb_bpp = sizeof(rgba4444_t);
+
+} // namespace dims
+
 class Screen {
-    public:
-        // Handheld and docked
-        static constexpr inline std::uint32_t width  = 1920;
-        static constexpr inline std::uint32_t height = 1080;
-
-        static constexpr inline std::uint32_t fb_bpp = sizeof(rgba4444_t);
-
     private:
         ViDisplay   display;
         ViLayer     layer;
@@ -44,10 +47,9 @@ class Screen {
             std::uint32_t format = PIXEL_FORMAT_RGBA_4444, std::uint32_t num_fbs = 2);
         void finalize();
 
-        inline u32    get_window_width()  const { return this->window.width; }
-        inline u32    get_window_height() const { return this->window.height; }
-        inline Result set_window_pos(Vec2f pos)  { return viSetLayerPosition(&this->layer, pos.x, pos.y); }
-        inline Result set_window_size(Vec2ul sz) { return viSetLayerSize(&this->layer, sz.w, sz.h); }
+        inline Result set_layer_pos(Vec2f pos)    { return viSetLayerPosition(&this->layer, pos.x, pos.y); }
+        inline Result set_layer_size(Vec2ul sz)   { return viSetLayerSize(&this->layer, sz.w, sz.h); }
+        inline Result set_layer_z(std::int32_t z) { return viSetLayerZ(&this->layer, z); }
 
         inline u32 get_framebuffer_width()  const { return this->framebuf.width_aligned; }
         inline u32 get_framebuffer_height() const { return this->framebuf.height_aligned; }
