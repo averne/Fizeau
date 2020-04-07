@@ -1,4 +1,4 @@
-export FZ_VERSION =    1.2.1
+export FZ_VERSION =    1.3.0
 export FZ_COMMIT  =    $(shell git rev-parse --short HEAD)
 export FZ_TID     =    0100000000000F12
 
@@ -18,7 +18,10 @@ DIST_TARGET       =    $(OUT)/Fizeau-$(FZ_VERSION)-$(FZ_COMMIT).zip
 
 # -----------------------------------------------
 
-.PHONY: application sysmodule dist clean mrproper
+.PHONY: all application sysmodule dist clean mrproper
+
+all: application sysmodule
+	@:
 
 dist: $(DIST_TARGET)
 	@:
