@@ -35,7 +35,8 @@ void Layer::activate() {
     }
     this->is_active = R_SUCCEEDED(this->screen.initialize({32, 128}, dims::position, dims::size));
     this->set_color(this->color);
-    this->set_brightness(this->brightness);
+    this->prev_brightness = this->get_cur_brightness();
+    this->set_cur_brightness(this->brightness);
 }
 
 void Layer::deactivate() {
@@ -43,6 +44,8 @@ void Layer::deactivate() {
     if (!this->is_active)
         return;
     this->screen.finalize();
+    if (this->get_cur_brightness() == this->brightness)
+        this->set_cur_brightness(this->prev_brightness);
     this->is_active = false;
 }
 

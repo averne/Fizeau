@@ -92,6 +92,16 @@ class Layer {
 
         void set_color(const rgba4444_t &col);
 
+        inline float get_cur_brightness() const {
+            float brightness = 0.0f;
+            lblGetCurrentBrightnessSetting(&brightness);
+            return brightness;
+        }
+
+        inline void set_cur_brightness(float brightness) const {
+            lblSetCurrentBrightnessSetting(brightness);
+        }
+
         inline float get_brightness() {
             std::scoped_lock lk(this->screen_mutex);
             return this->brightness;
@@ -101,7 +111,7 @@ class Layer {
             std::scoped_lock lk(this->screen_mutex);
             this->brightness = brightness;
             if (this->is_active)
-                lblSetCurrentBrightnessSetting(brightness);
+                this->set_cur_brightness(brightness);
         }
 
         void easter_egg();
@@ -114,7 +124,7 @@ class Layer {
         bool is_active = false, is_active_overriden = true;
         rgba4444_t color = transparent;
         Time dusk_time{}, dawn_time{};
-        float brightness = 0.0f;
+        float prev_brightness = 0.0f, brightness = 0.0f;
 };
 
 } // namespace fz
