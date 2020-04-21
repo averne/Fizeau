@@ -36,7 +36,7 @@ extern "C" void userAppInit() {
     socketInitializeDefault();
     nxlinkStdio();
 #endif
-    plInitialize();
+    plInitialize(PlServiceType_User);
 }
 
 extern "C" void userAppExit(void) {
@@ -60,8 +60,10 @@ int main(int argc, char **argv) {
 
     auto config = fz::read_config(fz::config_path);
 
-    if (!fizeauIsServiceActive()) {
-        LOG("Service not active\n");
+    bool is_active;
+    rc = fizeauIsServiceActive(&is_active);
+    if (R_FAILED(rc) || !is_active) {
+        LOG("Service not active: rc %#x, active %d\n", rc, is_active);
         rc = 1;
         goto error;
     }

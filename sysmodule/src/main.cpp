@@ -29,7 +29,7 @@
 extern "C" {
     u32 __nx_applet_type = AppletType_None;
 
-    #define INNER_HEAP_SIZE (0x1e * ams::os::MemoryPageSize)
+    #define INNER_HEAP_SIZE (0x20 * ams::os::MemoryPageSize)
     size_t nx_inner_heap_size = INNER_HEAP_SIZE;
     char nx_inner_heap[INNER_HEAP_SIZE];
 
@@ -60,6 +60,15 @@ extern "C" void __libnx_exception_handler(ThreadExceptionDump *ctx) {
 
 extern "C" void __appInit(void) {
     fz::do_with_sm_session([] {
+        auto rc = setsysInitialize();
+        if (R_SUCCEEDED(rc)) {
+            SetSysFirmwareVersion fw;
+            rc = setsysGetFirmwareVersion(&fw);
+            if (R_SUCCEEDED(rc))
+                hosversionSet(MAKEHOSVERSION(fw.major, fw.minor, fw.micro));
+            setsysExit();
+        }
+
         R_ABORT_UNLESS(viInitialize(ViServiceType_Manager));
         R_ABORT_UNLESS(timeInitialize());
         R_ABORT_UNLESS(lblInitialize());
@@ -75,26 +84,29 @@ extern "C" void __appExit(void) {
 int main(int argc, char **argv) {
     static auto layer = fz::Layer();
 
-    static auto time_update_thread = ams::os::StaticThread<2 * ams::os::MemoryPageSize>(
-        +[](void *args) {
-            while (true) {
-                svcSleepThread(1e+9l); // Sleep 1 second
-                static_cast<fz::Layer *>(args)->update(fz::get_time());
-            }
-        },
-        static_cast<void *>(&layer),
-        0x3f
-    );
-    R_ABORT_UNLESS(time_update_thread.Start());
+    static Thread update_thread;
+    constexpr std::size_t update_thread_stack_size = 2 * ams::os::MemoryPageSize;
+    alignas(ams::os::ThreadStackAlignment) static std::uint8_t update_thread_stack[update_thread_stack_size];
+    static auto update_thread_func = +[](void *args) {
+        while (true) {
+            svcSleepThread(1e+9l); // 1 second
+            static_cast<fz::Layer *>(args)->update(fz::get_time());
+        }
+    };
+
+    R_ABORT_UNLESS(threadCreate(&update_thread, update_thread_func, static_cast<void *>(&layer),
+        update_thread_stack, update_thread_stack_size, 0x3f, -2));
+    R_ABORT_UNLESS(threadStart(&update_thread));
 
     static constexpr auto service_name = ams::sm::ServiceName::Encode("fizeau");
-    static constexpr std::size_t max_sessions = 2;
     static constexpr std::size_t num_servers  = 1;
+    static constexpr std::size_t max_sessions = 2;
     static ams::sf::hipc::ServerManager<num_servers, ams::sf::hipc::DefaultServerManagerOptions, max_sessions> server_manager;
     R_ABORT_UNLESS(server_manager.RegisterServer<fz::FizeauService>(service_name, max_sessions));
     server_manager.LoopProcess();
 
-    time_update_thread.Join();
+    R_ABORT_UNLESS(threadWaitForExit(&update_thread));
+    R_ABORT_UNLESS(threadClose(&update_thread));
 
     return 0;
 }

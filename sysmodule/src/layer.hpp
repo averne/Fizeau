@@ -119,7 +119,7 @@ class Layer {
     private:
         Screen screen;
 
-        ams::os::RecursiveMutex screen_mutex;
+        ams::os::Mutex screen_mutex = ams::os::Mutex(true);
 
         bool is_active = false, is_active_overriden = true;
         rgba4444_t color = transparent;

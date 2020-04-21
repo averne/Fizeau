@@ -41,15 +41,13 @@ static Service g_fizeau_srv;
 
 NX_GENERATE_SERVICE_GUARD(fizeau);
 
-bool fizeauIsServiceActive(void) {
-    Handle handle;
-    Result rc = smRegisterService(&handle, smEncodeName("fizeau"), false, 1);
-    svcCloseHandle(handle);
-
-    if (R_SUCCEEDED(rc))
-        smUnregisterService(smEncodeName("fizeau"));
-
-    return R_FAILED(rc);
+Result fizeauIsServiceActive(bool *out) {
+    bool tmp;
+    SmServiceName name = smEncodeName("fizeau");
+    Result rc = serviceDispatchInOut(smGetServiceSession(), 65100, name, tmp);
+    if (R_SUCCEEDED(rc) && out)
+        *out = tmp;
+    return rc;
 }
 
 Result _fizeauInitialize(void) {

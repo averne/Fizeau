@@ -18,13 +18,14 @@ OUT               =    out
 BUILD             =    build
 SOURCES           =    src ../common
 INCLUDES          =    include ../common \
-                       ../lib/libstratosphere/libstratosphere/libstratosphere/include \
+                       ../lib/libstratosphere/libstratosphere/libstratosphere/include    \
                        ../lib/libstratosphere/libstratosphere/libvapours/include # libstrat expects it...
 CUSTOM_LIBS       =    ../lib/glfw ../lib/glad ../lib/imgui ../lib/inih
 ROMFS             =
 
-DEFINES           =    __SWITCH__ VERSION=\"$(FZ_VERSION)\" COMMIT=\"$(FZ_COMMIT)\" \
-                       ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_NX ATMOSPHERE_ARCH_ARM64
+DEFINES           =    __SWITCH__ VERSION=\"$(FZ_VERSION)\" COMMIT=\"$(FZ_COMMIT)\"      \
+                       ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_NX           \
+                       ATMOSPHERE_ARCH_ARM64 ATMOSPHERE_OS_HORIZON
 ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
 FLAGS             =    -Wall -pipe -g -O2 -ffunction-sections -fdata-sections
 CFLAGS            =    -std=gnu11
