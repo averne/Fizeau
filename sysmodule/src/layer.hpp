@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include <mutex>
+#include <atomic>
 #include <memory>
 #include <stratosphere.hpp>
 #include <common.hpp>
@@ -45,12 +45,10 @@ class Layer {
         void update(const Time &time);
 
         inline const bool get_is_active() {
-            std::scoped_lock lk(this->screen_mutex);
             return this->is_active;
         }
 
         inline void set_is_active(bool active) {
-            std::scoped_lock lk(this->screen_mutex);
             this->is_active_overriden = true;
             if (this->is_active == active)
                 return;
@@ -58,12 +56,10 @@ class Layer {
         }
 
         inline const Time get_dusk_time() {
-            std::scoped_lock lk(this->screen_mutex);
             return this->dusk_time;
         }
 
         inline const void set_dusk_time(Time dusk_time) {
-            std::scoped_lock lk(this->screen_mutex);
             this->is_active_overriden = false;
             if (this->dusk_time == dusk_time)
                 return;
@@ -72,12 +68,10 @@ class Layer {
         }
 
         inline const Time get_dawn_time() {
-            std::scoped_lock lk(this->screen_mutex);
             return this->dawn_time;
         }
 
         inline const void set_dawn_time(Time dawn_time) {
-            std::scoped_lock lk(this->screen_mutex);
             this->is_active_overriden = false;
             if (this->dawn_time == dawn_time)
                 return;
@@ -86,7 +80,6 @@ class Layer {
         }
 
         inline const rgba4444_t &get_color() {
-            std::scoped_lock lk(this->screen_mutex);
             return this->color;
         }
 
@@ -103,12 +96,10 @@ class Layer {
         }
 
         inline float get_brightness() {
-            std::scoped_lock lk(this->screen_mutex);
             return this->brightness;
         }
 
         inline void set_brightness(float brightness) {
-            std::scoped_lock lk(this->screen_mutex);
             this->brightness = brightness;
             if (this->is_active)
                 this->set_cur_brightness(brightness);
@@ -119,12 +110,12 @@ class Layer {
     private:
         Screen screen;
 
-        ams::os::Mutex screen_mutex = ams::os::Mutex(true);
-
-        bool is_active = false, is_active_overriden = true;
+        std::atomic_bool is_active = false, is_active_overriden = true;
+        std::atomic<float> prev_brightness = 0.0f, brightness = 0.0f;
         rgba4444_t color = transparent;
         Time dusk_time{}, dawn_time{};
-        float prev_brightness = 0.0f, brightness = 0.0f;
 };
+
+static_assert(std::atomic<float>::is_always_lock_free);
 
 } // namespace fz

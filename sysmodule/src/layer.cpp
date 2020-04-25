@@ -26,9 +26,8 @@ static inline constexpr Timestamp to_timestamp(const Time &time) {
 }
 
 void Layer::activate() {
-    std::scoped_lock lk(this->screen_mutex);
     if (this->is_active) {
-        // Forcefully reset size and z index (which are mesed up if the layer was created while the console was sleeping)
+        // Forcefully reset size and z index (which are messed up if the layer was created while the console was sleeping)
         this->screen.set_layer_size(Vec2ul(dims::size));
         this->screen.set_layer_z(100);
         return;
@@ -40,7 +39,6 @@ void Layer::activate() {
 }
 
 void Layer::deactivate() {
-    std::scoped_lock lk(this->screen_mutex);
     if (!this->is_active)
         return;
     this->screen.finalize();
@@ -50,7 +48,6 @@ void Layer::deactivate() {
 }
 
 void Layer::update(const Time &time) {
-    std::scoped_lock lk(this->screen_mutex);
     if (this->is_active_overriden)
         return;
     auto dusk = to_timestamp(this->dusk_time), dawn = to_timestamp(this->dawn_time), ts = to_timestamp(time);
@@ -68,7 +65,6 @@ void Layer::update(const Time &time) {
 }
 
 void Layer::set_color(const rgba4444_t &col) {
-    std::scoped_lock lk(this->screen_mutex);
     this->color = col;
     if (!this->is_active)
         return;
@@ -78,8 +74,6 @@ void Layer::set_color(const rgba4444_t &col) {
 }
 
 void Layer::easter_egg() {
-    std::scoped_lock lk(this->screen_mutex);
-
     // Force active
     this->is_active = true;
 
