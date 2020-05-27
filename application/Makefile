@@ -29,7 +29,7 @@ DEFINES           =    __SWITCH__ VERSION=\"$(FZ_VERSION)\" COMMIT=\"$(FZ_COMMIT
 ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
 FLAGS             =    -Wall -pipe -g -O2 -ffunction-sections -fdata-sections
 CFLAGS            =    -std=gnu11
-CXXFLAGS          =    -std=gnu++17 -fno-rtti -fno-exceptions
+CXXFLAGS          =    -std=gnu++20 -fno-rtti -fno-exceptions
 ASFLAGS           =
 LDFLAGS           =    -Wl,-pie -specs=$(DEVKITPRO)/libnx/switch.specs -g
 LINKS             =    -lglfw -lEGL -lglapi -ldrm_nouveau -lm -lglad -limgui -linih -lnx

@@ -36,9 +36,9 @@
                 "ATMOSPHERE_BOARD_NINTENDO_SWITCH"
             ],
             "compilerPath": "${DEVKITPRO}/devkitA64/bin/aarch64-none-elf-gcc",
-            "cStandard": "c11",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "gcc-x64"
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++20",
+            "intelliSenseMode": "gcc-arm64"
         }
     ],
     "version": 4
