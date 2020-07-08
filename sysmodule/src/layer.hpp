@@ -64,7 +64,7 @@ class Layer {
             if (this->dusk_time == dusk_time)
                 return;
             this->dusk_time = dusk_time;
-            this->update(get_time());
+            this->update(Clock::get_current_time());
         }
 
         inline const Time get_dawn_time() {
@@ -76,7 +76,7 @@ class Layer {
             if (this->dawn_time == dawn_time)
                 return;
             this->dawn_time = dawn_time;
-            this->update(get_time());
+            this->update(Clock::get_current_time());
         }
 
         inline const rgba4444_t &get_color() {

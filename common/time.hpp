@@ -25,18 +25,30 @@
 
 namespace fz {
 
-inline u64 get_timestamp() {
-    u64 ts = 0;
-    timeGetCurrentTime(TimeType_LocalSystemClock, &ts);
-    return ts;
-}
+class Clock {
+    public:
+        static Result initialize() {
+            return do_with_sm_session([]() -> Result {
+                TRY_RETURN(timeInitialize());
+                ON_SCOPE_EXIT { timeExit(); };
 
-inline Time get_time() {
-    Time time = {};
-    TimeCalendarTime caltime;
-    TRY_RETURNV(timeToCalendarTimeWithMyRule(get_timestamp(), &caltime, nullptr), time);
-    time.hour = caltime.hour, time.minute = caltime.minute, time.second = caltime.second;
-    return time;
-}
+                std::uint64_t time;
+                TimeCalendarTime caltime;
+                TRY_RETURN(timeGetCurrentTime(TimeType_Default, &time));
+                TRY_RETURN(timeToCalendarTimeWithMyRule(time, &caltime, nullptr));
+                timestamp = ams::TimeSpan::FromSeconds(60 * 60 * caltime.hour + 60 * caltime.minute + caltime.second);
+                return 0;
+            });
+        }
+
+        static inline Time get_current_time() {
+            auto ts = timestamp + ams::TimeSpan::FromNanoSeconds(armTicksToNs(armGetSystemTick()));
+            return {static_cast<std::uint8_t>(ts.GetHours() % 24),
+                static_cast<std::uint8_t>(ts.GetMinutes() % 60), static_cast<std::uint8_t>(ts.GetSeconds() % 60)};
+        }
+
+    private:
+        static inline ams::TimeSpan timestamp = 0;
+};
 
 } // namespace fz

@@ -88,6 +88,8 @@ int main(int argc, char **argv) {
         TRY_GOTO(rc = fizeauSetBrightness(config.brightness),      error);
     }
 
+    TRY_GOTO(rc = fz::Clock::initialize(), error);
+
     while (!glfwWindowShouldClose(window)) {
         // Update state
         TRY_GOTO(rc = fizeauGetIsActive(&config.active),       error);
@@ -124,7 +126,7 @@ int main(int argc, char **argv) {
             fz::imgui::SetWindowSize({700.0f, 520.0f}, ImGuiCond_Once);
 
             // Time & FPS
-            auto time = fz::get_time();
+            auto time = fz::Clock::get_current_time();
             fz::imgui::SetCursorPosX(fz::imgui::GetCursorPosX() + 180.0f);
             fz::imgui::Text("Time: %02d:%02d:%02d - Fps: %.2f", time.hour, time.minute, time.second, fz::imgui::GetIO().Framerate);
 

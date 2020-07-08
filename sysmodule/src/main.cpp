@@ -63,7 +63,6 @@ extern "C" void __appInit(void) {
 
     fz::do_with_sm_session([] {
         R_ABORT_UNLESS(viInitialize(ViServiceType_Manager));
-        R_ABORT_UNLESS(timeInitialize());
         R_ABORT_UNLESS(lblInitialize());
     });
 
@@ -72,12 +71,13 @@ extern "C" void __appInit(void) {
 
 extern "C" void __appExit(void) {
     SERV_EXIT(vi);
-    SERV_EXIT(time);
     SERV_EXIT(lbl);
 }
 
 int main(int argc, char **argv) {
     static auto layer = fz::Layer();
+
+    R_ABORT_UNLESS(fz::Clock::initialize());
 
     static Thread update_thread;
     constexpr std::size_t update_thread_stack_size = 2 * ams::os::MemoryPageSize;
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
     static auto update_thread_func = +[](void *args) {
         while (true) {
             svcSleepThread(1e+9l); // 1 second
-            static_cast<fz::Layer *>(args)->update(fz::get_time());
+            static_cast<fz::Layer *>(args)->update(fz::Clock::get_current_time());
         }
     };
 
