@@ -1,4 +1,4 @@
-export FZ_VERSION =    1.3.1
+export FZ_VERSION =    1.4.0
 export FZ_COMMIT  =    $(shell git rev-parse --short HEAD)
 export FZ_TID     =    0100000000000F12
 
