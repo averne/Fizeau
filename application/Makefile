@@ -17,9 +17,7 @@ EXTENSION         =    nro
 OUT               =    out
 BUILD             =    build
 SOURCES           =    src ../common
-INCLUDES          =    include ../common \
-                       ../lib/libstratosphere/libstratosphere/libstratosphere/include    \
-                       ../lib/libstratosphere/libstratosphere/libvapours/include # libstrat expects it...
+INCLUDES          =    include ../common ../lib/libstratosphere/libstratosphere/include
 CUSTOM_LIBS       =    ../lib/glfw ../lib/glad ../lib/imgui ../lib/inih
 ROMFS             =
 

@@ -14,8 +14,7 @@ EXTENSION         =    nsp
 OUT               =    out
 BUILD             =    build
 SOURCES           =    src ../common
-INCLUDES          =    include ../common/ ../lib/libstratosphere/libstratosphere/libvapours/include \
-                       ../lib/libstratosphere/libstratosphere/libstratosphere/include
+INCLUDES          =    include ../common/ ../lib/libstratosphere/libstratosphere/include
 CUSTOM_LIBS       =    ../lib/libstratosphere
 NPDM_JSON         =    config.json
 

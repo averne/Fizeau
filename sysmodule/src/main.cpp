@@ -55,24 +55,19 @@ extern "C" void __libnx_initheap(void) {
 }
 
 extern "C" void __libnx_exception_handler(ThreadExceptionDump *ctx) {
-
+    ams::CrashHandler(ctx);
 }
 
 extern "C" void __appInit(void) {
-    fz::do_with_sm_session([] {
-        auto rc = setsysInitialize();
-        if (R_SUCCEEDED(rc)) {
-            SetSysFirmwareVersion fw;
-            rc = setsysGetFirmwareVersion(&fw);
-            if (R_SUCCEEDED(rc))
-                hosversionSet(MAKEHOSVERSION(fw.major, fw.minor, fw.micro));
-            setsysExit();
-        }
+    ams::hos::InitializeForStratosphere();
 
+    fz::do_with_sm_session([] {
         R_ABORT_UNLESS(viInitialize(ViServiceType_Manager));
         R_ABORT_UNLESS(timeInitialize());
         R_ABORT_UNLESS(lblInitialize());
     });
+
+    ams::CheckApiVersion();
 }
 
 extern "C" void __appExit(void) {
@@ -86,7 +81,7 @@ int main(int argc, char **argv) {
 
     static Thread update_thread;
     constexpr std::size_t update_thread_stack_size = 2 * ams::os::MemoryPageSize;
-    alignas(ams::os::ThreadStackAlignment) static std::uint8_t update_thread_stack[update_thread_stack_size];
+    alignas(ams::os::MemoryPageSize) static std::uint8_t update_thread_stack[update_thread_stack_size];
     static auto update_thread_func = +[](void *args) {
         while (true) {
             svcSleepThread(1e+9l); // 1 second

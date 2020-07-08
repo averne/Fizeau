@@ -8,14 +8,8 @@ TARGET            =    $(notdir $(CURDIR))
 EXTENSION         =    a
 OUT               =    lib
 BUILD             =    build
-SOURCES           =    libstratosphere/libstratosphere/source/sf libstratosphere/libstratosphere/source/sm      \
-                       libstratosphere/libstratosphere/source/os libstratosphere/libstratosphere/source/hos     \
-                       libstratosphere/libstratosphere/source/spl                                               \
-                       libstratosphere/libstratosphere/source/result                                            \
-                       libstratosphere/libstratosphere/source/diag                                              \
-                       libstratosphere/libstratosphere/source/ams/ams_exosphere_api.cpp                         \
-                       libstratosphere/libstratosphere/source/ams/ams_environment.cpp
-INCLUDES          =    libstratosphere/libstratosphere/include libstratosphere/libvapours/include
+SOURCES           =    libstratosphere/source
+INCLUDES          =    libstratosphere/include
 LIBS              =
 
 DEFINES           =    __SWITCH__ ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_NX ATMOSPHERE_ARCH_ARM64 \
@@ -49,7 +43,8 @@ CFILES            =    $(shell find $(SOURCES) -name *.c)
 CPPFILES          =    $(shell find $(SOURCES) -name *.cpp)
 SFILES            =    $(shell find $(SOURCES) -name *.s -or -name *.S)
 OFILES            =    $(CFILES:%=$(BUILD)/%.o) $(CPPFILES:%=$(BUILD)/%.o) $(SFILES:%=$(BUILD)/%.o)
-DFILES            =    $(OFILES:.o=.d)
+DFILES            =    $(addprefix $(BUILD)/,$(GCHFILES:.gch=.d)) $(OFILES:.o=.d)
+GCHFILES          =    include/stratosphere.gch
 
 LIB_TARGET        =    $(if $(OUT:=), $(OUT)/$(TARGET).$(EXTENSION), .$(OUT)/$(TARGET).$(EXTENSION))
 
@@ -72,6 +67,11 @@ $(LIB_TARGET): $(OFILES)
 	@$(AR) $(ARFLAGS) $@ $^
 	@echo "Built" $(notdir $@)
 
+%.gch: %.hpp
+	@echo " GCH " $@
+	@mkdir -p $(dir $@) $(dir $(BUILD)/$*.d)
+	@$(CXX) -w -x c++-header -MMD -MP -MF $(BUILD)/$*.d $(ARCH) $(FLAGS) $(CXXFLAGS) $(DEFINE_FLAGS) $(INCLUDE_FLAGS) -c $(CURDIR)/$< -o $@
+
 $(BUILD)/%.c.o: %.c
 	@echo " CC  " $@
 	@mkdir -p $(dir $@)
@@ -89,6 +89,6 @@ $(BUILD)/%.s.o: %.s %.S
 
 clean:
 	@echo Cleaning...
-	@rm -rf $(BUILD) $(OUT)
+	@rm -rf $(BUILD) $(OUT) $(GCHFILES)
 
 -include $(DFILES)
