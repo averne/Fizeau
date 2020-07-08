@@ -73,7 +73,6 @@
             "command": "make",
             "args": [
                 "application",
-                "all",
                 "-j$(nproc)"
             ],
             "presentation": {
@@ -106,7 +105,6 @@
             "command": "make",
             "args": [
                 "sysmodule",
-                "all",
                 "-j$(nproc)"
             ],
             "presentation": {
