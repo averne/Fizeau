@@ -18,56 +18,100 @@
 #pragma once
 
 #include <cstdint>
-#include <array>
+#include <cmath>
+#include <algorithm>
+#include <tuple>
 
-#include "utils.hpp"
 #include "types.h"
 
 namespace fz {
 
-struct rgba4444_t {
-    static constexpr inline std::uint16_t member_min = 0;
-    static constexpr inline std::uint16_t member_max = (1 << 4) - 1;
+[[maybe_unused]]
+static std::tuple<float, float, float> whitepoint(Temperature temperature) {
+    if (temperature == MAX_TEMP)
+        return { 1.0f, 1.0f, 1.0f }; // Fast path
 
-    union {
-        struct {
-            std::uint16_t r: 4, g: 4, b: 4, a: 4;
-        };
-        std::uint16_t rgba;
+    float temp = static_cast<float>(temperature) / 100.0f, red, green, blue;
+
+    if (temp <= 66.0f)
+        red = 255.0f;
+    else
+        red = 329.698727446f * std::pow(temp - 60.0f, -0.1332047592f);
+
+    if (temp <= 66.0f)
+        green = 99.4708025861f * std::log(temp) - 161.1195681661f;
+    else
+        green = 288.1221695283f * std::pow(temp - 60.0f, -0.0755148492f);
+
+    if (temp >= 66.0f)
+        blue = 255.0f;
+    else if (temp <= 19.0f)
+        blue = 0.0f;
+    else
+        blue = 138.5177312231f * std::log(temp - 10.0f) - 305.0447927307f;
+
+    return {
+        std::clamp(red,   0.0f, 255.0f) / 255.0f,
+        std::clamp(green, 0.0f, 255.0f) / 255.0f,
+        std::clamp(blue,  0.0f, 255.0f) / 255.0f,
     };
+}
 
-    constexpr inline rgba4444_t(): rgba(0) { }
-    constexpr inline rgba4444_t(std::uint16_t raw): rgba(raw) { }
-    constexpr inline rgba4444_t(std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a): r(r), g(g), b(b), a(a) { }
+[[maybe_unused]]
+static float degamma(float x, Gamma gamma) {
+    if (x <= 0.040045f)
+        return x /= gamma * 12.92f / DEFAULT_GAMMA;
+    return std::pow((x + 0.055f) / (1.0f + 0.055f), gamma);
+}
 
-    template <typename T>
-    inline rgba4444_t(const std::array<T, 4> &arr) {
-        this->r = static_cast<decltype(this->r)>(arr[0]);
-        this->g = static_cast<decltype(this->g)>(arr[1]);
-        this->b = static_cast<decltype(this->b)>(arr[2]);
-        this->a = static_cast<decltype(this->a)>(arr[3]);
-    }
+[[maybe_unused]]
+static float regamma(float x, Gamma gamma) {
+    if (x <= 0.0031308f)
+        return x *= gamma * 12.92f / DEFAULT_GAMMA;
+    else
+        return (1.0f + 0.055f) * std::pow(x, 1.0f / gamma) - 0.055f;
+}
 
-    constexpr inline operator std::uint16_t() const {
-        return this->rgba;
-    }
+[[maybe_unused]]
+static void gamma_ramp(float (*func)(float, Gamma), std::uint16_t *array, std::size_t size, Gamma gamma, std::size_t nb_bits, float lo, float hi) {
+    float step = (hi - lo) / (size - 1), cur = lo;
+    std::uint16_t shift = (1 << nb_bits) - 1, mask = (1 << (nb_bits + 1)) - 1;
 
-    constexpr inline bool operator ==(const rgba4444_t &other) {
-        return this->rgba == other.rgba;
-    }
-    constexpr inline bool operator !=(const rgba4444_t &other) {
-        return !(*this == other);
-    }
-};
-ASSERT_SIZE(rgba4444_t, 2);
-ASSERT_STANDARD_LAYOUT(rgba4444_t);
+    for (std::size_t i = 0; i < size; ++i, cur += step)
+        array[i] = static_cast<std::uint16_t>(std::round(func(cur, gamma) * shift)) & mask;
+}
 
-static inline constexpr rgba4444_t black       = {rgba4444_t::member_min, rgba4444_t::member_min,
-    rgba4444_t::member_min, rgba4444_t::member_max};
-static inline constexpr rgba4444_t white       = {rgba4444_t::member_max, rgba4444_t::member_max,
-    rgba4444_t::member_max, rgba4444_t::member_max};
-static inline constexpr rgba4444_t transparent = {rgba4444_t::member_min, rgba4444_t::member_min,
-    rgba4444_t::member_min, rgba4444_t::member_min};
+[[maybe_unused]]
+static inline void degamma_ramp(std::uint16_t *array, std::size_t size, Gamma gamma, std::size_t nb_bits, float lo = 0.0f, float hi = 1.0f) {
+    return gamma_ramp(degamma, array, size, gamma, nb_bits, lo, hi);
+}
+
+[[maybe_unused]]
+static inline void regamma_ramp(std::uint16_t *array, std::size_t size, Gamma gamma, std::size_t nb_bits, float lo = 0.0f, float hi = 1.0f) {
+    return gamma_ramp(regamma, array, size, gamma, nb_bits, lo, hi);
+}
+
+[[maybe_unused]]
+static void apply_luma(std::uint16_t *array, std::size_t size, Luminance luma) {
+    luma = std::clamp(luma, MIN_LUMA, MAX_LUMA) + MAX_LUMA;
+    if (luma == 1.0f)
+        return; // No effect, fast path
+
+    auto max = array[size - 1];
+    for (std::size_t i = 0; i < size; ++i)
+        array[i] = std::clamp(static_cast<std::uint16_t>(std::round(array[i] * luma)),
+            static_cast<std::uint16_t>(0), static_cast<std::uint16_t>(max));
+}
+
+[[maybe_unused]]
+static void apply_range(std::uint16_t *array, std::size_t size, float lo, float hi) {
+    lo = std::clamp(lo, 0.0f, hi), hi = std::clamp(hi, lo, 1.0f);
+    if ((lo == 0.0f) && (hi == 1.0f))
+        return; // No effect, fast path
+
+    auto max = array[size - 1];
+    for (std::size_t i = 0; i < size; ++i)
+        array[i] = static_cast<std::uint16_t>(std::round(array[i] * (hi - lo) + lo * max));
+}
 
 } // namespace fz
-

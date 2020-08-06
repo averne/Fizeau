@@ -5,13 +5,11 @@
             "includePath": [
                 "${workspaceFolder}/common",
 
-                "${workspaceFolder}/lib/glad/include",
-                "${workspaceFolder}/lib/glfw/include",
                 "${workspaceFolder}/lib/imgui/include",
+                "${workspaceFolder}/lib/imgui-nx/include",
                 "${workspaceFolder}/lib/inih/include",
                 "${workspaceFolder}/lib/libstratosphere/include",
-                "${workspaceFolder}/lib/libstratosphere/libstratosphere/libstratosphere/include",
-                "${workspaceFolder}/lib/libstratosphere/libstratosphere/libvapours/include",
+                "${workspaceFolder}/lib/stb_image/include",
 
                 "${workspaceFolder}/**",
 
@@ -30,6 +28,7 @@
             "defines": [
                 "__SWITCH__",
                 "DEBUG",
+                "TWILI",
                 "_GLFW_SWITCH",
                 "VERSION=\"0.0.0\"",
                 "COMMIT=\"0000000\"",

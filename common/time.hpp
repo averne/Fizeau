@@ -28,26 +28,36 @@ namespace fz {
 class Clock {
     public:
         static Result initialize() {
-            return do_with_sm_session([]() -> Result {
-                TRY_RETURN(timeInitialize());
-                ON_SCOPE_EXIT { timeExit(); };
+            R_TRY(smInitialize());
+            ON_SCOPE_EXIT { smExit(); };
+            R_TRY(timeInitialize());
+            ON_SCOPE_EXIT { timeExit(); };
 
-                std::uint64_t time;
-                TimeCalendarTime caltime;
-                TRY_RETURN(timeGetCurrentTime(TimeType_Default, &time));
-                TRY_RETURN(timeToCalendarTimeWithMyRule(time, &caltime, nullptr));
-                timestamp = ams::TimeSpan::FromSeconds(60 * 60 * caltime.hour + 60 * caltime.minute + caltime.second);
-                return 0;
-            });
+            std::uint64_t time;
+            TimeCalendarTime caltime;
+            Clock::tick = armGetSystemTick();
+            R_TRY(timeGetCurrentTime(TimeType_Default, &time));
+            R_TRY(timeToCalendarTimeWithMyRule(time, &caltime, nullptr));
+            Clock::timestamp = ams::TimeSpan::FromSeconds(60 * 60 * caltime.hour + 60 * caltime.minute + caltime.second);
+            return 0;
         }
 
-        static inline Time get_current_time() {
-            auto ts = timestamp + ams::TimeSpan::FromNanoSeconds(armTicksToNs(armGetSystemTick()));
+        static Time get_current_time() {
+            auto ts = Clock::timestamp + ams::TimeSpan::FromNanoSeconds(armTicksToNs(armGetSystemTick() - Clock::tick));
             return {static_cast<std::uint8_t>(ts.GetHours() % 24),
                 static_cast<std::uint8_t>(ts.GetMinutes() % 60), static_cast<std::uint8_t>(ts.GetSeconds() % 60)};
         }
 
+        static bool is_in_interval(const Time &cur, const Time &lo, const Time &hi) {
+            return (lo <= cur) && (cur < hi);
+        }
+
+        static bool is_in_interval(const Time &lo, const Time &hi) {
+            return Clock::is_in_interval(Clock::get_current_time(), lo, hi);
+        }
+
     private:
+        static inline std::uint64_t tick      = 0;
         static inline ams::TimeSpan timestamp = 0;
 };
 

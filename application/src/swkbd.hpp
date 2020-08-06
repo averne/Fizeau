@@ -17,76 +17,27 @@
 
 #pragma once
 
-#include <cstdio>
 #include <string>
 #include <utility>
+#include <type_traits>
 #include <switch.h>
-#include <imgui.hpp>
-#include <common.hpp>
+#include <imgui.h>
 
-namespace fz {
+namespace fz::swkbd {
 
-static inline std::string fmt_float(float f) {
-    std::string str(std::snprintf(nullptr, 0, "%.1f", f) + 1, 0);
-    std::snprintf(str.data(), str.capacity(), "%.1f", f);
-    return str;
-}
+std::string show(const std::string &in, SwkbdArgCommon *args = nullptr);
+bool input_f(float *val, float min, float max, const std::string &fmt, bool negative = false);
+bool input_int(int *val, int min, int max);
 
-static std::string swkbd_show(const std::string &in, SwkbdArgCommon *args = nullptr) {
-    std::string out(0x10, 0);
-
-    SwkbdConfig kbd;
-    TRY_RETURNV(swkbdCreate(&kbd, 0), {});
-    if (args)
-        kbd.arg.arg.arg = *args;
-    swkbdConfigSetType(&kbd, SwkbdType_NumPad);
-    swkbdConfigSetBlurBackground(&kbd, true);
-    swkbdConfigSetInitialText(&kbd, in.c_str());
-    swkbdConfigSetInitialCursorPos(&kbd, 1);
-    TRY_RETURNV(swkbdShow(&kbd, out.data(), out.capacity()), {});
-    return out;
-}
-
-static bool swkbd_input_f(float *val, float min, float max) {
-    SwkbdArgCommon args{};
-    args.leftButtonText = u'.';
-    args.rightButtonText = u'.';
-    auto str = swkbd_show(fmt_float(*val), &args);
-    float f = std::atof(str.c_str());
-    if (!str.empty() && (min <= f) && (f <= max)) {
-        *val = f;
-        return true;
+template <typename T, typename ...Args>
+static bool handle(const char *label, T *val, T min, T max, Args &&...args) {
+    if (ImGui::TempInputIsActive(ImGui::GetCurrentWindow()->GetID(label))) {
+        if constexpr (std::is_integral_v<T>)
+            return input_int(reinterpret_cast<int *>(val), min, max, std::forward<Args>(args)...);
+        else if constexpr (std::is_same_v<T, float>)
+            return input_f(val, min, max, std::forward<Args>(args)...);
     }
     return false;
 }
 
-static bool swkbd_input_u8(std::uint8_t *val, std::uint8_t min, std::uint8_t max) {
-    SwkbdArgCommon args{};
-    auto str = swkbd_show(std::to_string(*val), &args);
-    std::uint8_t i = std::atoi(str.c_str());
-    if (!str.empty() && (min <= i) && (i <= max)) {
-        *val = i;
-        return true;
-    }
-    return false;
-}
-
-static bool swkbd_input_u16(std::uint16_t *val, std::uint16_t min, std::uint16_t max) {
-    SwkbdArgCommon args{};
-    auto str = swkbd_show(std::to_string(*val), &args);
-    std::uint16_t i = std::atoi(str.c_str());
-    if (!str.empty() && (min <= i) && (i <= max)) {
-        *val = i;
-        return true;
-    }
-    return false;
-}
-
-template <typename F, typename ...Args>
-static inline bool handle_swkbd(const char *label, F f, Args ...args) {
-    if (fz::imgui::TempInputIsActive(fz::imgui::GetCurrentWindow()->GetID(label)))
-        return f(args...);
-    return false;
-}
-
-} // namespace fz
+} // namespace fz::swkbd

@@ -17,25 +17,41 @@
 
 #pragma once
 
-#include <string>
+#include <string_view>
+#include <switch.h>
 #include <common.hpp>
 
-namespace fz {
+#include "fizeau.h"
 
-constexpr char config_path[] = "/switch/Fizeau/config.ini";
+namespace fz::cfg {
+
+constexpr std::string_view path = "/switch/Fizeau/config.ini";
 
 struct Config {
-    bool active = false;
-    Time dusk{}, dawn{};
-    Temp temp = min_temp;
-    rgba4444_t color = transparent;
-    float brightness = 0.0f;
+    bool active = true, has_active_override = false;
 
-    bool has_active_override = false;
+    FizeauProfile cur_profile = {};
+    FizeauProfileId cur_profile_id = FizeauProfileId_Invalid,
+        active_internal_profile = FizeauProfileId_Invalid, active_external_profile = FizeauProfileId_Invalid;
+    bool is_editing_day_profile = false, is_editing_night_profile = false;
+
+    Time dusk_begin, dusk_end;
+    Time dawn_begin, dawn_end;
+
+    Temperature temperature_day, temperature_night;
+    Gamma       gamma_day,       gamma_night;
+    Luminance   luminance_day,   luminance_night;
+    ColorRange  range_day,       range_night;
+    Brightness  brightness_day,  brightness_night;
 };
 
-Config read_config(const std::string &path);
-std::string make_config(const Config &config);
-void dump_config(const std::string &path, const Config &config);
+Config read(const std::string_view &path);
+std::string make(Config &config);
+void dump(const std::string &path, Config &config);
 
-} // namespace fz
+Result update(Config &config);
+Result apply(Config &config);
+Result reset(Config &config);
+Result open_profile(Config &cfg, FizeauProfileId id);
+
+} // namespace fz::cfg

@@ -11,10 +11,12 @@
 *.nro
 *.nacp
 *.npdm
+*.dksh
 
 *.ini
 *.log
 *.txt
+*.bin
 
 **/build/
 **/release/

@@ -8,7 +8,7 @@ TARGET            =    lib$(notdir $(CURDIR))
 EXTENSION         =    a
 OUT               =    lib
 BUILD             =    build
-SOURCES           =    src imgui -maxdepth 1
+SOURCES           =    imgui -maxdepth 1
 INCLUDES          =    include imgui ../glad/include ../glfw/include
 LIBS              =
 

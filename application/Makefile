@@ -18,19 +18,19 @@ OUT               =    out
 BUILD             =    build
 SOURCES           =    src ../common
 INCLUDES          =    include ../common ../lib/libstratosphere/libstratosphere/include
-CUSTOM_LIBS       =    ../lib/glfw ../lib/glad ../lib/imgui ../lib/inih
-ROMFS             =
+CUSTOM_LIBS       =    ../lib/imgui-nx ../lib/imgui ../lib/inih ../lib/stb_image
+ROMFS             =    res
 
 DEFINES           =    __SWITCH__ VERSION=\"$(FZ_VERSION)\" COMMIT=\"$(FZ_COMMIT)\"      \
                        ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_NX           \
-                       ATMOSPHERE_ARCH_ARM64 ATMOSPHERE_OS_HORIZON
+                       ATMOSPHERE_ARCH_ARM64 ATMOSPHERE_OS_HORIZON APPLICATION TWILI
 ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
 FLAGS             =    -Wall -pipe -g -O2 -ffunction-sections -fdata-sections
 CFLAGS            =    -std=gnu11
 CXXFLAGS          =    -std=gnu++20 -fno-rtti -fno-exceptions
 ASFLAGS           =
 LDFLAGS           =    -Wl,-pie -specs=$(DEVKITPRO)/libnx/switch.specs -g
-LINKS             =    -lglfw -lEGL -lglapi -ldrm_nouveau -lm -lglad -limgui -linih -lnx
+LINKS             =    -limgui-nx -limgui -lstbi -linih -ltwili -ldeko3d -lnx
 
 PREFIX            =    aarch64-none-elf-
 CC                =    $(PREFIX)gcc
@@ -92,6 +92,7 @@ NROFLAGS          =    --icon=$(strip $(APP_ICON)) --nacp=$(strip $(NACP_TARGET)
 
 ifneq ($(ROMFS),)
     NROFLAGS     +=    --romfsdir=$(strip $(ROMFS))
+    ROMFS_TARGET +=    $(shell find $(ROMFS) -type 'f')
 endif
 
 # -----------------------------------------------
@@ -108,13 +109,17 @@ run: all
 
 libs: $(CUSTOM_LIBS)
 
+shaders: ../lib/imgui-nx
+	@mkdir -p $(ROMFS)
+	$(shell find ../lib/imgui-nx/lib/ -type f -name '*.dksh' -exec cp -u {} $(ROMFS) \;)
+
 $(CUSTOM_LIBS):
 	@$(MAKE) -s --no-print-directory -C $@
 
-$(NX_TARGET): $(ELF_TARGET) $(NACP_TARGET) $(APP_ICON)
+$(NX_TARGET): $(ROMFS_TARGET) $(APP_ICON) $(NACP_TARGET) $(ELF_TARGET) | shaders
 	@echo " NRO " $@
 	@mkdir -p $(dir $@)
-	@elf2nro $< $@ $(NROFLAGS) > /dev/null
+	@elf2nro $(ELF_TARGET) $@ $(NROFLAGS) > /dev/null
 	@echo "Built" $(notdir $@)
 
 $(ELF_TARGET): $(OFILES) $(LIBS_TARGET) | libs

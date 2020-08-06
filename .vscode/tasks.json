@@ -134,11 +134,10 @@
         {
             "label": "application run",
             "type": "shell",
-            "command": "nxlink",
+            "command": "twib",
             "args": [
-                "-p",
-                "Fizeau/Fizeau.nro",
-                "-s",
+                "run",
+                "-a",
                 "${workspaceRoot}/application/out/Fizeau.nro"
             ],
             "dependsOn": "application all",
@@ -151,34 +150,8 @@
         {
             "label": "sysmodule run",
             "type": "shell",
-            "command": "$FUSEE/sysmodule_test.py",
-            "args": [
-                "-p",
-                "${workspaceRoot}/sysmodule/out/Fizeau.nsp",
-                "-t",
-                "0100000000000f12"
-            ],
+            "command": "${workspaceRoot}/.vscode/restart.sh",
             "dependsOn": "sysmodule all",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "silent",
-                "panel": "shared"
-            }
-        },
-        {
-            "label": "fusee",
-            "type": "shell",
-            "command": "$FUSEE/fusee.sh",
-            "problemMatcher": [],
-            "presentation": {
-                "reveal": "silent",
-                "panel": "shared"
-            }
-        },
-        {
-            "label": "memloader",
-            "type": "shell",
-            "command": "$FUSEE/memloader.sh",
             "problemMatcher": [],
             "presentation": {
                 "reveal": "silent",

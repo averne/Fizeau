@@ -7,5 +7,8 @@
         "*.nro": true
     },
     "licenser.license": "GPLv2",
-    "licenser.projectName": "Fizeau"
+    "licenser.projectName": "Fizeau",
+
+    // libstratosphre completely breaks intellisense for now
+    "C_Cpp.intelliSenseEngine": "Tag Parser"
 }

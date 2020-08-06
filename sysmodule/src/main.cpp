@@ -21,19 +21,20 @@
 #include <stratosphere.hpp>
 #include <common.hpp>
 
-#include "layer.hpp"
-#include "screen.hpp"
+#include "brightness.hpp"
+#include "cmu.hpp"
 #include "service.hpp"
 
 // libnx tweaking
 extern "C" {
     u32 __nx_applet_type = AppletType_None;
 
-    #define INNER_HEAP_SIZE (0x1e * ams::os::MemoryPageSize)
+    #define INNER_HEAP_SIZE (12 * ams::os::MemoryPageSize)
     size_t nx_inner_heap_size = INNER_HEAP_SIZE;
     char nx_inner_heap[INNER_HEAP_SIZE];
 
-    u32 __nx_nv_transfermem_size = 0x15 * ams::os::MemoryPageSize;
+    // 32kib is the smallest possible transfer memory size
+    u32 __nx_nv_transfermem_size = 8 * ams::os::MemoryPageSize;
 
     alignas(16) u8 __nx_exception_stack[ams::os::MemoryPageSize];
     u64 __nx_exception_stack_size = sizeof(__nx_exception_stack);
@@ -41,9 +42,15 @@ extern "C" {
 
 // libstratosphere tweaking
 namespace ams {
-ncm::ProgramId CurrentProgramId = {0x0100000000000f12};
-namespace result { bool CallFatalOnResultAssertion = false; }
+    ncm::ProgramId CurrentProgramId = { 0x0100000000000f12 };
+    namespace result {
+        bool CallFatalOnResultAssertion = false;
+    }
 }
+
+#ifdef DEBUG
+TwiliPipe g_twlPipe;
+#endif
 
 extern "C" void __libnx_initheap(void) {
     // Newlib
@@ -61,47 +68,49 @@ extern "C" void __libnx_exception_handler(ThreadExceptionDump *ctx) {
 extern "C" void __appInit(void) {
     ams::hos::InitializeForStratosphere();
 
-    fz::do_with_sm_session([] {
-        R_ABORT_UNLESS(viInitialize(ViServiceType_Manager));
+    ams::sm::DoWithSession([] {
+        R_ABORT_UNLESS(nvInitialize());
         R_ABORT_UNLESS(lblInitialize());
+#ifdef DEBUG
+        R_ABORT_UNLESS(twiliInitialize());
+        R_ABORT_UNLESS(twiliCreateNamedOutputPipe(&g_twlPipe, "fzout"));
+#endif
     });
 
     ams::CheckApiVersion();
 }
 
 extern "C" void __appExit(void) {
-    SERV_EXIT(vi);
-    SERV_EXIT(lbl);
+    nvExit();
+    lblExit();
+#ifdef DEBUG
+    twiliClosePipe(&g_twlPipe);
+    twiliExit();
+#endif
 }
 
-int main(int argc, char **argv) {
-    static auto layer = fz::Layer();
+namespace {
 
+constexpr auto service_name = ams::sm::ServiceName::Encode("fizeau");
+constexpr std::size_t num_servers  = 1;
+constexpr std::size_t max_sessions = 2;
+ams::sf::hipc::ServerManager<num_servers, ams::sf::hipc::DefaultServerManagerOptions, max_sessions> server_manager;
+
+} // namespace
+
+int main(int argc, char **argv) {
+    LOG("Initializing\n");
+    R_ABORT_UNLESS(fz::CmuManager::initialize());
+    R_ABORT_UNLESS(fz::BrightnessManager::initialize());
+    R_ABORT_UNLESS(fz::ProfileManager::initialize());
     R_ABORT_UNLESS(fz::Clock::initialize());
 
-    static Thread update_thread;
-    constexpr std::size_t update_thread_stack_size = 2 * ams::os::MemoryPageSize;
-    alignas(ams::os::MemoryPageSize) static std::uint8_t update_thread_stack[update_thread_stack_size];
-    static auto update_thread_func = +[](void *args) {
-        while (true) {
-            svcSleepThread(1e+9l); // 1 second
-            static_cast<fz::Layer *>(args)->update(fz::Clock::get_current_time());
-        }
-    };
-
-    R_ABORT_UNLESS(threadCreate(&update_thread, update_thread_func, static_cast<void *>(&layer),
-        update_thread_stack, update_thread_stack_size, 0x3f, -2));
-    R_ABORT_UNLESS(threadStart(&update_thread));
-
-    static constexpr auto service_name = ams::sm::ServiceName::Encode("fizeau");
-    static constexpr std::size_t num_servers  = 1;
-    static constexpr std::size_t max_sessions = 2;
-    static ams::sf::hipc::ServerManager<num_servers, ams::sf::hipc::DefaultServerManagerOptions, max_sessions> server_manager;
+    LOG("Starting server\n");
     R_ABORT_UNLESS(server_manager.RegisterServer<fz::FizeauService>(service_name, max_sessions));
     server_manager.LoopProcess();
 
-    R_ABORT_UNLESS(threadWaitForExit(&update_thread));
-    R_ABORT_UNLESS(threadClose(&update_thread));
-
+    LOG("Exiting\n");
+    fz::CmuManager::finalize();
+    fz::BrightnessManager::finalize();
     return 0;
 }

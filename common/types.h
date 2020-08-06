@@ -21,36 +21,58 @@
 #define _TYPES_H
 
 #include <stdint.h>
+#include <switch.h>
 
-typedef float Temp;
+typedef uint32_t Temperature;
+#define MIN_TEMP     1000u // °K
+#define MAX_TEMP     6500u // °K, D65 standard illuminant
+#define DEFAULT_TEMP MAX_TEMP
+
+typedef float Gamma;
+#define MIN_GAMMA     0.0f
+#define MAX_GAMMA     5.0f
+#define DEFAULT_GAMMA 2.4f
+
+typedef float Luminance;
+#define MIN_LUMA    -1.0f
+#define MAX_LUMA     1.0f
+#define DEFAULT_LUMA 0.0f
+
+typedef struct {
+    float lo, hi;
+} ColorRange;
+#define MIN_RANGE 0.0f
+#define MAX_RANGE 1.0f
+#define MIN_LIMITED_RANGE (16.0f  / 255.0f)
+#define MAX_LIMITED_RANGE (235.0f / 255.0f)
+#define DEFAULT_RANGE         { MIN_RANGE,         MAX_RANGE }
+#define DEFAULT_LIMITED_RANGE { MIN_LIMITED_RANGE, MAX_LIMITED_RANGE}
+
+typedef float Brightness;
+#define MIN_BRIGHTNESS 0.0f
+#define MAX_BRIGHTNESS 1.0f
+
 typedef uint64_t Timestamp;
-typedef union {
-    struct {
-        uint8_t hour, minute, second;
-    };
-    struct {
-        uint8_t h, m, s;
-    };
-} Time;
+typedef struct {
+    uint8_t h, m, s;
+} __attribute__((aligned(4))) Time;
+
+NX_CONSTEXPR Timestamp to_timestamp(Time t) {
+    return (60 * 60 * t.h + 60 * t.m + t.s);
+}
+
+NX_CONSTEXPR Time from_timestamp(Timestamp s) {
+    return (Time){ (uint8_t)(s / (60 * 60)), (uint8_t)(s / 60 % 60), (uint8_t)(s % 60) };
+}
 
 #ifdef __cplusplus
 
-inline constexpr bool operator ==(Time l, const Time &r) {
-    return (l.h == r.h) && (l.m == r.m) && (l.s == r.s);
+constexpr auto operator <=>(const Time &l, const Time &r) {
+    return to_timestamp(l) <=> to_timestamp(r);
 }
 
-inline constexpr bool operator !=(Time l, const Time &r) {
-    return !(l == r);
-}
-
-inline constexpr bool operator >(Time l, const Time &r) {
-    if (l.h > r.h)
-        return true;
-    if (l.m > r.m)
-        return true;
-    if (l.s > r.s)
-        return true;
-    return false;
+constexpr Time operator -(const Time &l, const Time &r) {
+    return from_timestamp(to_timestamp(l) - to_timestamp(r));
 }
 
 #endif // __cplusplus

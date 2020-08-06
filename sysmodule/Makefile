@@ -19,10 +19,11 @@ CUSTOM_LIBS       =    ../lib/libstratosphere
 NPDM_JSON         =    config.json
 
 DEFINES           =    __SWITCH__ ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_NX           \
-                       ATMOSPHERE_ARCH_ARM64 ATMOSPHERE_OS_HORIZON
+                       ATMOSPHERE_ARCH_ARM64 ATMOSPHERE_OS_HORIZON SYSMODULE TWILI
 ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
-FLAGS             =    -Wall -pipe -g -Os -ffunction-sections -fdata-sections
-CFLAGS            =    -std=gnu11 -fno-stack-protector -fno-common -flto
+FLAGS             =    -Wall -pipe -g -Os -ffunction-sections -fdata-sections                       \
+                       -fno-stack-protector -fno-common
+CFLAGS            =    -std=gnu11
 CXXFLAGS          =    -std=gnu++20 -fno-rtti -fno-exceptions -fno-non-call-exceptions              \
                        -fno-threadsafe-statics -fno-use-cxa-atexit                                  \
                        -fno-asynchronous-unwind-tables -fno-unwind-tables
@@ -43,7 +44,7 @@ LDFLAGS           =    -Wl,--wrap,__cxa_pure_virtual                            
                        -Wl,--wrap,_ZNSt11logic_errorC2EPKc                                          \
                        -Wl,-pie -specs=$(DEVKITPRO)/libnx/switch.specs -g -Os                       \
                        -flto -fuse-linker-plugin
-LINKS             =    -lstratosphere -lnx
+LINKS             =    -ltwili -lstratosphere -lnx
 
 PREFIX            =    aarch64-none-elf-
 CC                =    $(PREFIX)gcc
@@ -98,6 +99,7 @@ $(NX_TARGET): $(NSO_TARGET) $(NPDM_TARGET)
 	@cp $(NSO_TARGET) $(BUILD)/exefs/main
 	@cp $(NPDM_TARGET) $(BUILD)/exefs/main.npdm
 	@build_pfs0 $(BUILD)/exefs $@
+	@echo Built $(notdir $@)
 
 $(NSO_TARGET): $(ELF_TARGET)
 	@echo " NSO " $@

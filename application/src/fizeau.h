@@ -17,8 +17,8 @@
  * along with Fizeau.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _IPC_H
-#define _IPC_H
+#ifndef _FZ_IPC_H
+#define _FZ_IPC_H
 
 #include <stdint.h>
 #include <switch.h>
@@ -28,6 +28,19 @@
 extern "C" {
 #endif
 
+typedef enum {
+    FizeauProfileId_Profile1,
+    FizeauProfileId_Profile2,
+    FizeauProfileId_Profile3,
+    FizeauProfileId_Profile4,
+    FizeauProfileId_Total,
+    FizeauProfileId_Invalid = 0xffff,
+} FizeauProfileId;
+
+typedef struct {
+    Service s;
+} FizeauProfile;
+
 Result fizeauIsServiceActive(bool *out);
 Result fizeauInitialize();
 void fizeauExit();
@@ -36,18 +49,30 @@ Service *fizeauGetServiceSession();
 
 Result fizeauGetIsActive(bool *is_active);
 Result fizeauSetIsActive(bool is_active);
-Result fizeauGetDuskTime(Time *time);
-Result fizeauSetDuskTime(Time time);
-Result fizeauGetDawnTime(Time *time);
-Result fizeauSetDawnTime(Time time);
-Result fizeauGetColor(uint16_t *color);
-Result fizeauSetColor(uint16_t color);
-Result fizeauGetBrightness(float *brightness);
-Result fizeauSetBrightness(float brightness);
-Result fizeauEasterEgg(void);
+Result fizeauOpenProfile(FizeauProfile *out, FizeauProfileId id);
+Result fizeauGetActiveInternalProfileId(FizeauProfileId *id);
+Result fizeauSetActiveInternalProfileId(FizeauProfileId id);
+Result fizeauGetActiveExternalProfileId(FizeauProfileId *id);
+Result fizeauSetActiveExternalProfileId(FizeauProfileId id);
+
+void fizeauProfileClose(FizeauProfile *p);
+Result fizeauProfileGetDawnTime(FizeauProfile *p, Time *time_begin, Time *time_end);
+Result fizeauProfileSetDawnTime(FizeauProfile *p, Time time_begin, Time time_end);
+Result fizeauProfileGetDuskTime(FizeauProfile *p, Time *time_begin, Time *time_end);
+Result fizeauProfileSetDuskTime(FizeauProfile *p, Time time_begin, Time time_end);
+Result fizeauProfileGetCmuTemperature(FizeauProfile *p, Temperature *temp_day, Temperature *temp_night);
+Result fizeauProfileSetCmuTemperature(FizeauProfile *p, Temperature temp_day, Temperature temp_night);
+Result fizeauProfileGetCmuGamma(FizeauProfile *p, Gamma *gamma_day, Gamma *gamma_night);
+Result fizeauProfileSetCmuGamma(FizeauProfile *p, Gamma gamma_day, Gamma gamma_night);
+Result fizeauProfileGetCmuLuminance(FizeauProfile *p, Luminance *luma_day, Luminance *luma_night);
+Result fizeauProfileSetCmuLuminance(FizeauProfile *p, Luminance luma_day, Luminance luma_night);
+Result fizeauProfileGetCmuColorRange(FizeauProfile *p, ColorRange *range_day, ColorRange *range_night);
+Result fizeauProfileSetCmuColorRange(FizeauProfile *p, ColorRange range_day, ColorRange range_night);
+Result fizeauProfileGetScreenBrightness(FizeauProfile *p, Brightness *brightness_day, Brightness *brightness_night);
+Result fizeauProfileSetScreenBrightness(FizeauProfile *p, Brightness brightness_day, Brightness brightness_night);
 
 #ifdef __cplusplus
 }
 #endif // __cplusplus
 
-#endif // _IPC_H
+#endif // _FZ_IPC_H

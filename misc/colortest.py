@@ -39,7 +39,7 @@ def main(argc, argv):
     px = im.load()
     for y, temp in enumerate(range(MIN_TEMP, MAX_TEMP, 100)):
         col = temp_to_col(temp)
-        print(f"r: {col[0]}, g: {col[1]}, b: {col[2]}")
+        print(f"{temp} => r: {col[0] / 256}, g: {col[1] / 256}, b: {col[2] / 256}")
         for x in range(im.size[0]):
             px[x, y] = col
     im.show()

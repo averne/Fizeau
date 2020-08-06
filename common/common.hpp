@@ -19,9 +19,8 @@
 
 #ifdef __cplusplus
 #   include "color.hpp"
-#   include "colortemp.hpp"
 #   include "time.hpp"
-#   include "utils.hpp"
 #endif // __cplusplus
 
 #include "types.h"
+#include "utils.h"
