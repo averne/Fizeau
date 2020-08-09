@@ -16,9 +16,9 @@ TARGET            =    Fizeau
 EXTENSION         =    nro
 OUT               =    out
 BUILD             =    build
-SOURCES           =    src ../common
-INCLUDES          =    include ../common ../lib/libstratosphere/libstratosphere/include
-CUSTOM_LIBS       =    ../lib/imgui-nx ../lib/imgui ../lib/inih ../lib/stb_image
+SOURCES           =    src
+INCLUDES          =    include ../lib/libstratosphere/libstratosphere/include
+CUSTOM_LIBS       =    ../common ../lib/imgui-nx ../lib/imgui ../lib/inih ../lib/stb_image
 ROMFS             =    res
 
 DEFINES           =    __SWITCH__ VERSION=\"$(FZ_VERSION)\" COMMIT=\"$(FZ_COMMIT)\"      \
@@ -30,7 +30,7 @@ CFLAGS            =    -std=gnu11
 CXXFLAGS          =    -std=gnu++20 -fno-rtti -fno-exceptions
 ASFLAGS           =
 LDFLAGS           =    -Wl,-pie -specs=$(DEVKITPRO)/libnx/switch.specs -g
-LINKS             =    -limgui-nx -limgui -lstbi -linih -ltwili -ldeko3d -lnx
+LINKS             =    -lcommon -limgui-nx -limgui -lstbi -linih -ltwili -ldeko3d -lnx
 
 PREFIX            =    aarch64-none-elf-
 CC                =    $(PREFIX)gcc
@@ -59,7 +59,6 @@ LIBS_TARGET       =    $(shell find $(addsuffix /lib,$(CUSTOM_LIBS)) -name "*.a"
 NX_TARGET         =    $(if $(OUT:=), $(OUT)/$(TARGET).$(EXTENSION), .$(OUT)/$(TARGET).$(EXTENSION))
 ELF_TARGET        =    $(if $(OUT:=), $(OUT)/$(TARGET).elf, .$(OUT)/$(TARGET).elf)
 NACP_TARGET       =    $(if $(OUT:=), $(OUT)/$(TARGET).nacp, .$(OUT)/$(TARGET).nacp)
-NRO_TARGET        =    $(if $(OUT:=), $(OUT)/$(TARGET).nro, .$(OUT)/$(TARGET).nro)
 
 DEFINE_FLAGS      =    $(addprefix -D,$(DEFINES))
 INCLUDE_FLAGS     =    $(addprefix -I$(CURDIR)/,$(INCLUDES)) $(foreach dir,$(CUSTOM_LIBS),-I$(CURDIR)/$(dir)/include) \
@@ -154,6 +153,9 @@ clean:
 
 mrproper: clean
 	@for dir in $(CUSTOM_LIBS); do $(MAKE) --no-print-directory -C $$dir clean; done
+
+overlay:
+	@:
 
 sysmodule:
 	@:

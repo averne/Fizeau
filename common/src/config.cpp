@@ -17,10 +17,7 @@
 
 #include <cstring>
 #include <string>
-#include <sstream>
-#include <iomanip>
 #include <ini.h>
-#include <stratosphere.hpp>
 #include <common.hpp>
 
 #include "fizeau.h"
@@ -120,32 +117,32 @@ Config read(const std::string_view &path) {
 }
 
 inline std::string make(Config &config) {
-    std::stringstream stream;
-
-    auto format_profile = [](FizeauProfileId id) -> std::string {
-        std::array<char, 0x10> buf;
-        std::snprintf(buf.data(), buf.size(), "profile%u", id + 1);
-        return std::string(buf.data());
+    auto format = []<typename ...Args>(const std::string_view &fmt, Args &&...args) -> std::string {
+        std::string str(std::snprintf(nullptr, 0, fmt.data(), args...), 0);
+        std::snprintf(str.data(), str.capacity(), fmt.data(), args...);
+        return str;
     };
 
-    auto format_time = [](Time t) -> std::string {
-        std::array<char, 0x10> buf;
-        std::snprintf(buf.data(), buf.size(), "%02d:%02d", t.h, t.m);
-        return std::string(buf.data());
+    auto format_profile = [&format](FizeauProfileId id) -> std::string {
+        return format("profile%u", id + 1);
     };
 
-    auto format_range = [](ColorRange r) -> std::string {
-        std::array<char, 0x10> buf;
-        std::snprintf(buf.data(), buf.size(), "%.2f-%.2f", r.lo, r.hi);
-        return std::string(buf.data());
+    auto format_time = [&format](Time t) -> std::string {
+        return format("%02d:%02d", t.h, t.m);
     };
 
-    stream << (config.has_active_override ? "" : COMMENT) << "active            = " << (config.active ? "true" : "false") << '\n';
-    stream << '\n';
+    auto format_range = [&format](ColorRange r) -> std::string {
+        return format("%.2f-%.2f", r.lo, r.hi);
+    };
 
-    stream << "handheld_profile  = " << format_profile(config.active_internal_profile) << '\n';
-    stream << "docked_profile    = " << format_profile(config.active_external_profile) << '\n';
-    stream << '\n';
+    std::string str;
+
+    str += std::string(config.has_active_override ? "" : COMMENT) + "active            = " + (config.active ? "true" : "false") + '\n';
+    str += '\n';
+
+    str += "handheld_profile  = " + format_profile(config.active_internal_profile) + '\n';
+    str += "docked_profile    = " + format_profile(config.active_external_profile) + '\n';
+    str += '\n';
 
     for (int id = FizeauProfileId_Profile1; id < FizeauProfileId_Total; ++id) {
         if (auto rc = open_profile(config, static_cast<FizeauProfileId>(id)); R_FAILED(rc))
@@ -153,38 +150,37 @@ inline std::string make(Config &config) {
         if (auto rc = update(config); R_FAILED(rc))
             LOG("Failed to update profile: %#x\n", rc);
 
-        stream << "[profile" << config.cur_profile_id + 1 << "]\n";
+        str += "[profile" + std::to_string(config.cur_profile_id + 1) + "]\n";
 
-        stream << "dusk_begin        = " << format_time(config.dusk_begin)   << '\n';
-        stream << "dusk_end          = " << format_time(config.dusk_end)     << '\n';
-        stream << "dawn_begin        = " << format_time(config.dawn_begin)   << '\n';
-        stream << "dawn_end          = " << format_time(config.dawn_end)     << '\n';
+        str += "dusk_begin        = " + format_time(config.dusk_begin)           + '\n';
+        str += "dusk_end          = " + format_time(config.dusk_end)             + '\n';
+        str += "dawn_begin        = " + format_time(config.dawn_begin)           + '\n';
+        str += "dawn_end          = " + format_time(config.dawn_end)             + '\n';
 
-        stream << "temperature_day   = " << config.temperature_day           << '\n';
-        stream << "temperature_night = " << config.temperature_night         << '\n';
+        str += "temperature_day   = " + std::to_string(config.temperature_day)   + '\n';
+        str += "temperature_night = " + std::to_string(config.temperature_night) + '\n';
 
-        stream << "brightness_day    = " << config.brightness_day            << '\n';
-        stream << "brightness_night  = " << config.brightness_night          << '\n';
+        str += "brightness_day    = " + std::to_string(config.brightness_day)    + '\n';
+        str += "brightness_night  = " + std::to_string(config.brightness_night)  + '\n';
 
-        stream << "gamma_day         = " << config.gamma_day                 << '\n';
-        stream << "gamma_night       = " << config.gamma_night               << '\n';
+        str += "gamma_day         = " + std::to_string(config.gamma_day)         + '\n';
+        str += "gamma_night       = " + std::to_string(config.gamma_night)       + '\n';
 
-        stream << "luminance_day     = " << config.luminance_day             << '\n';
-        stream << "luminance_night   = " << config.luminance_night           << '\n';
+        str += "luminance_day     = " + std::to_string(config.luminance_day)     + '\n';
+        str += "luminance_night   = " + std::to_string(config.luminance_night)   + '\n';
 
-        stream << "range_day         = " << format_range(config.range_day)   << '\n';
-        stream << "range_night       = " << format_range(config.range_night) << '\n';
+        str += "range_day         = " + format_range(config.range_day)           + '\n';
+        str += "range_night       = " + format_range(config.range_night)         + '\n';
 
-        stream << '\n';
+        str += '\n';
     }
 
-    return stream.str();
+    return str;
 }
 
-void dump(const std::string &path,
-Config &config) {
+void dump(const std::string_view &path, Config &config) {
     auto str = make(config);
-    FILE *fp = fopen(path.c_str(), "w");
+    FILE *fp = fopen(path.data(), "w");
     fwrite(str.c_str(), str.length(), 1, fp);
     fclose(fp);
 }

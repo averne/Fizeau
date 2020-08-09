@@ -15,19 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Fizeau.  If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
-
 #include <cstdint>
 #include <cmath>
 #include <algorithm>
 #include <tuple>
 
-#include "types.h"
+#include <common.hpp>
 
 namespace fz {
 
-[[maybe_unused]]
-static std::tuple<float, float, float> whitepoint(Temperature temperature) {
+std::tuple<float, float, float> whitepoint(Temperature temperature) {
     if (temperature == MAX_TEMP)
         return { 1.0f, 1.0f, 1.0f }; // Fast path
 
@@ -57,23 +54,20 @@ static std::tuple<float, float, float> whitepoint(Temperature temperature) {
     };
 }
 
-[[maybe_unused]]
-static float degamma(float x, Gamma gamma) {
+float degamma(float x, Gamma gamma) {
     if (x <= 0.040045f)
         return x /= gamma * 12.92f / DEFAULT_GAMMA;
     return std::pow((x + 0.055f) / (1.0f + 0.055f), gamma);
 }
 
-[[maybe_unused]]
-static float regamma(float x, Gamma gamma) {
+float regamma(float x, Gamma gamma) {
     if (x <= 0.0031308f)
         return x *= gamma * 12.92f / DEFAULT_GAMMA;
     else
         return (1.0f + 0.055f) * std::pow(x, 1.0f / gamma) - 0.055f;
 }
 
-[[maybe_unused]]
-static void gamma_ramp(float (*func)(float, Gamma), std::uint16_t *array, std::size_t size, Gamma gamma, std::size_t nb_bits, float lo, float hi) {
+void gamma_ramp(float (*func)(float, Gamma), std::uint16_t *array, std::size_t size, Gamma gamma, std::size_t nb_bits, float lo, float hi) {
     float step = (hi - lo) / (size - 1), cur = lo;
     std::uint16_t shift = (1 << nb_bits) - 1, mask = (1 << (nb_bits + 1)) - 1;
 
@@ -81,18 +75,7 @@ static void gamma_ramp(float (*func)(float, Gamma), std::uint16_t *array, std::s
         array[i] = static_cast<std::uint16_t>(std::round(func(cur, gamma) * shift)) & mask;
 }
 
-[[maybe_unused]]
-static inline void degamma_ramp(std::uint16_t *array, std::size_t size, Gamma gamma, std::size_t nb_bits, float lo = 0.0f, float hi = 1.0f) {
-    return gamma_ramp(degamma, array, size, gamma, nb_bits, lo, hi);
-}
-
-[[maybe_unused]]
-static inline void regamma_ramp(std::uint16_t *array, std::size_t size, Gamma gamma, std::size_t nb_bits, float lo = 0.0f, float hi = 1.0f) {
-    return gamma_ramp(regamma, array, size, gamma, nb_bits, lo, hi);
-}
-
-[[maybe_unused]]
-static void apply_luma(std::uint16_t *array, std::size_t size, Luminance luma) {
+void apply_luma(std::uint16_t *array, std::size_t size, Luminance luma) {
     luma = std::clamp(luma, MIN_LUMA, MAX_LUMA) + MAX_LUMA;
     if (luma == 1.0f)
         return; // No effect, fast path
@@ -103,8 +86,7 @@ static void apply_luma(std::uint16_t *array, std::size_t size, Luminance luma) {
             static_cast<std::uint16_t>(0), static_cast<std::uint16_t>(max));
 }
 
-[[maybe_unused]]
-static void apply_range(std::uint16_t *array, std::size_t size, float lo, float hi) {
+void apply_range(std::uint16_t *array, std::size_t size, float lo, float hi) {
     lo = std::clamp(lo, 0.0f, hi), hi = std::clamp(hi, lo, 1.0f);
     if ((lo == 0.0f) && (hi == 1.0f))
         return; // No effect, fast path

@@ -10,6 +10,7 @@
                 "${workspaceFolder}/lib/inih/include",
                 "${workspaceFolder}/lib/libstratosphere/include",
                 "${workspaceFolder}/lib/stb_image/include",
+                "${workspaceFolder}/lib/libtesla/include",
 
                 "${workspaceFolder}/**",
 
@@ -26,10 +27,10 @@
                 "/usr/include"
             ],
             "defines": [
+                "__aarch64__",
                 "__SWITCH__",
                 "DEBUG",
                 "TWILI",
-                "_GLFW_SWITCH",
                 "VERSION=\"0.0.0\"",
                 "COMMIT=\"0000000\"",
                 "ATMOSPHERE_IS_STRATOSPHERE",

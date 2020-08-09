@@ -19,9 +19,9 @@
 
 #include <string_view>
 #include <switch.h>
-#include <common.hpp>
 
 #include "fizeau.h"
+#include "types.h"
 
 namespace fz::cfg {
 
@@ -47,7 +47,7 @@ struct Config {
 
 Config read(const std::string_view &path);
 std::string make(Config &config);
-void dump(const std::string &path, Config &config);
+void dump(const std::string_view &path, Config &config);
 
 Result update(Config &config);
 Result apply(Config &config);

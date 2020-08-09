@@ -19,8 +19,8 @@
 #include <imgui.h>
 #include <imgui_deko3d.h>
 #include <stratosphere.hpp>
+#include <common.hpp>
 
-#include "fizeau.h"
 #include "swkbd.hpp"
 
 #include "gui.hpp"

@@ -22,7 +22,8 @@
 
 #include <stdint.h>
 #include <switch.h>
-#include <common.hpp>
+
+#include "types.h"
 
 #ifdef __cplusplus
 extern "C" {

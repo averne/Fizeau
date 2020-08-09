@@ -7,3 +7,6 @@
 [submodule "lib/libstratosphere/libstratosphere"]
 	path = lib/libstratosphere/libstratosphere
 	url = git@github.com:averne/libstratosphere.git
+[submodule "lib/libtesla"]
+	path = lib/libtesla
+	url = git@github.com:WerWolv/libtesla.git

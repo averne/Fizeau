@@ -19,8 +19,7 @@
 
 #include <deko3d.hpp>
 #include <imgui.h>
-
-#include "config.hpp"
+#include <common.hpp>
 
 namespace fz::gui {
 

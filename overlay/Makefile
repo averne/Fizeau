@@ -7,44 +7,30 @@ TOPDIR           ?=    $(CURDIR)
 # -----------------------------------------------
 
 APP_TITLE         =    Fizeau
+APP_AUTHOR        =    averne
+APP_ICON          =
+APP_VERSION       =    $(FZ_VERSION)
 APP_TITLEID       =
 
 TARGET            =    Fizeau
-EXTENSION         =    nsp
+EXTENSION         =    ovl
 OUT               =    out
 BUILD             =    build
 SOURCES           =    src
-INCLUDES          =    include ../lib/libstratosphere/libstratosphere/include
-CUSTOM_LIBS       =    ../common ../lib/libstratosphere
-NPDM_JSON         =    config.json
+INCLUDES          =    include ../lib/libtesla/include ../lib/libstratosphere/libstratosphere/include
+CUSTOM_LIBS       =    ../common ../lib/inih
+ROMFS             =
 
-DEFINES           =    __SWITCH__ ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_NX           \
-                       ATMOSPHERE_ARCH_ARM64 ATMOSPHERE_OS_HORIZON SYSMODULE TWILI
+DEFINES           =    __SWITCH__ VERSION=\"$(FZ_VERSION)\" COMMIT=\"$(FZ_COMMIT)\"      \
+                       ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_NX           \
+                       ATMOSPHERE_ARCH_ARM64 ATMOSPHERE_OS_HORIZON
 ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
-FLAGS             =    -Wall -pipe -g -Os -ffunction-sections -fdata-sections                       \
-                       -fno-stack-protector -fno-common
+FLAGS             =    -Wall -pipe -g -O2 -ffunction-sections -fdata-sections
 CFLAGS            =    -std=gnu11
-CXXFLAGS          =    -std=gnu++20 -fno-rtti -fno-exceptions -fno-non-call-exceptions              \
-                       -fno-threadsafe-statics -fno-use-cxa-atexit                                  \
-                       -fno-asynchronous-unwind-tables -fno-unwind-tables
+CXXFLAGS          =    -std=gnu++20 -fno-exceptions
 ASFLAGS           =
-LDFLAGS           =    -Wl,--wrap,__cxa_pure_virtual                                                \
-                       -Wl,--wrap,__cxa_throw                                                       \
-                       -Wl,--wrap,__cxa_rethrow                                                     \
-                       -Wl,--wrap,__cxa_allocate_exception                                          \
-                       -Wl,--wrap,__cxa_free_exception                                              \
-                       -Wl,--wrap,__cxa_begin_catch                                                 \
-                       -Wl,--wrap,__cxa_end_catch                                                   \
-                       -Wl,--wrap,__cxa_call_unexpected                                             \
-                       -Wl,--wrap,__cxa_call_terminate                                              \
-                       -Wl,--wrap,__gxx_personality_v0                                              \
-                       -Wl,--wrap,_Unwind_Resume                                                    \
-                       -Wl,--wrap,_ZSt19__throw_logic_errorPKc                                      \
-                       -Wl,--wrap,_ZSt20__throw_length_errorPKc                                     \
-                       -Wl,--wrap,_ZNSt11logic_errorC2EPKc                                          \
-                       -Wl,-pie -specs=$(DEVKITPRO)/libnx/switch.specs -g -Os                       \
-                       -flto -fuse-linker-plugin
-LINKS             =    -lcommon -ltwili -lstratosphere -lnx
+LDFLAGS           =    -Wl,-pie -specs=$(DEVKITPRO)/libnx/switch.specs -g
+LINKS             =    -lcommon -linih -lnx
 
 PREFIX            =    aarch64-none-elf-
 CC                =    $(PREFIX)gcc
@@ -72,13 +58,41 @@ DFILES            =    $(OFILES:.o=.d)
 LIBS_TARGET       =    $(shell find $(addsuffix /lib,$(CUSTOM_LIBS)) -name "*.a" 2>/dev/null)
 NX_TARGET         =    $(if $(OUT:=), $(OUT)/$(TARGET).$(EXTENSION), .$(OUT)/$(TARGET).$(EXTENSION))
 ELF_TARGET        =    $(if $(OUT:=), $(OUT)/$(TARGET).elf, .$(OUT)/$(TARGET).elf)
-NSO_TARGET        =    $(if $(BUILD:=), $(BUILD)/$(TARGET).nso, .$(BUILD)/$(TARGET).nso)
-NPDM_TARGET       =    $(if $(OUT:=), $(OUT)/$(TARGET).npdm, .$(OUT)/$(TARGET).npdm)
+NACP_TARGET       =    $(if $(OUT:=), $(OUT)/$(TARGET).nacp, .$(OUT)/$(TARGET).nacp)
 
 DEFINE_FLAGS      =    $(addprefix -D,$(DEFINES))
 INCLUDE_FLAGS     =    $(addprefix -I$(CURDIR)/,$(INCLUDES)) $(foreach dir,$(CUSTOM_LIBS),-I$(CURDIR)/$(dir)/include) \
                        $(foreach dir,$(filter-out $(CUSTOM_LIBS),$(LIBS)),-I$(dir)/include)
 LIB_FLAGS         =    $(foreach dir,$(LIBS),-L$(dir)/lib)
+
+# -----------------------------------------------
+
+ifeq ($(strip $(APP_TITLE)),)
+    APP_TITLE     =    $(TARGET)
+endif
+
+ifeq ($(strip $(APP_AUTHOR)),)
+    APP_AUTHOR    =    Unspecified
+endif
+
+ifeq ($(strip $(APP_VERSION)),)
+    APP_VERSION   =    Unspecified
+endif
+
+ifneq ($(APP_TITLEID),)
+    NACPFLAGS    +=    --titleid=$(strip $(APP_TITLEID))
+endif
+
+ifeq ($(strip $(APP_ICON)),)
+    APP_ICON      =    $(LIBNX)/default_icon.jpg
+endif
+
+NROFLAGS          =    --icon=$(strip $(APP_ICON)) --nacp=$(strip $(NACP_TARGET))
+
+ifneq ($(ROMFS),)
+    NROFLAGS     +=    --romfsdir=$(strip $(ROMFS))
+    ROMFS_TARGET +=    $(shell find $(ROMFS) -type 'f')
+endif
 
 # -----------------------------------------------
 
@@ -93,20 +107,13 @@ libs: $(CUSTOM_LIBS)
 $(CUSTOM_LIBS):
 	@$(MAKE) -s --no-print-directory -C $@
 
-$(NX_TARGET): $(NSO_TARGET) $(NPDM_TARGET)
-	@echo " NSP " $@
-	@mkdir -p $(BUILD)/exefs
-	@cp $(NSO_TARGET) $(BUILD)/exefs/main
-	@cp $(NPDM_TARGET) $(BUILD)/exefs/main.npdm
-	@build_pfs0 $(BUILD)/exefs $@
-	@echo Built $(notdir $@)
-
-$(NSO_TARGET): $(ELF_TARGET)
-	@echo " NSO " $@
+$(NX_TARGET): $(ROMFS_TARGET) $(APP_ICON) $(NACP_TARGET) $(ELF_TARGET)
+	@echo " OVL " $@
 	@mkdir -p $(dir $@)
-	@elf2nso $< $@
+	@elf2nro $(ELF_TARGET) $@ $(NROFLAGS) > /dev/null
+	@echo "Built" $(notdir $@)
 
-$(ELF_TARGET): $(OFILES) | libs
+$(ELF_TARGET): $(OFILES) $(LIBS_TARGET) | libs
 	@echo " LD  " $@
 	@mkdir -p $(dir $@)
 	@$(LD) $(ARCH) $(LDFLAGS) -Wl,-Map,$(BUILD)/$(TARGET).map $(LIB_FLAGS) $(OFILES) $(LINKS) -o $@
@@ -127,10 +134,10 @@ $(BUILD)/%.s.o: %.s %.S
 	@mkdir -p $(dir $@)
 	@$(AS) -MMD -MP -x assembler-with-cpp $(ARCH) $(FLAGS) $(ASFLAGS) $(INCLUDE_FLAGS) -c $(CURDIR)/$< -o $@
 
-%.npdm: $(NPDM_JSON)
-	@echo " NPDM" $@
+%.nacp:
+	@echo " NACP" $@
 	@mkdir -p $(dir $@)
-	@npdmtool $(NPDM_JSON) $@
+	@nacptool --create "$(APP_TITLE)" "$(APP_AUTHOR)" "$(APP_VERSION)" $@ $(NACPFLAGS)
 
 clean:
 	@echo Cleaning...
@@ -142,7 +149,7 @@ mrproper: clean
 application:
 	@:
 
-overlay:
+sysmodule:
 	@:
 
 -include $(DFILES)

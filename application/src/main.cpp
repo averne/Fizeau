@@ -22,8 +22,6 @@
 #include <stratosphere.hpp>
 #include <common.hpp>
 
-#include "fizeau.h"
-#include "config.hpp"
 #include "gfx.hpp"
 #include "gui.hpp"
 
@@ -111,7 +109,7 @@ int main(int argc, char **argv) {
         fz::gfx::render();
     }
 
-    fz::cfg::dump(fz::cfg::path.data(), config);
+    fz::cfg::dump(fz::cfg::path, config);
 
     background_decoder.end(), preview_decoder.end();
 

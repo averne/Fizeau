@@ -18,29 +18,31 @@ DIST_TARGET       =    $(OUT)/Fizeau-$(FZ_VERSION)-$(FZ_COMMIT).zip
 
 # -----------------------------------------------
 
-.PHONY: all application sysmodule dist clean mrproper
+.PHONY: all application sysmodule overlay dist clean mrproper
 
-all: application sysmodule
+all: application sysmodule overlay
 	@:
 
 dist: $(DIST_TARGET)
 	@:
 
-$(DIST_TARGET): application/out/Fizeau.nro sysmodule/out/Fizeau.nsp misc/default.ini
-	@$(MAKE) application sysmodule all --no-print-directory
+$(DIST_TARGET): | all
+	@rm -rf $(OUT)/Fizeau*.zip
 
-	@rm -rf out/Fizeau*.zip
-	@mkdir -p out/switch/Fizeau
-	@cp misc/default.ini out/switch/Fizeau/config.ini
-	@cp application/out/Fizeau.nro out/switch/Fizeau/Fizeau.nro
+	@mkdir -p $(OUT)/switch/Fizeau
+	@cp misc/default.ini $(OUT)/switch/Fizeau/config.ini
+	@cp application/out/Fizeau.nro $(OUT)/switch/Fizeau/Fizeau.nro
 
-	@mkdir -p out/atmosphere/contents/$(FZ_TID)/flags
-	@cp sysmodule/out/Fizeau.nsp out/atmosphere/contents/$(FZ_TID)/exefs.nsp
-	@cp sysmodule/toolbox.json out/atmosphere/contents/$(FZ_TID)/toolbox.json
-	@touch out/atmosphere/contents/$(FZ_TID)/flags/boot2.flag
+	@mkdir -p $(OUT)/switch/.overlays
+	@cp overlay/out/Fizeau.ovl $(OUT)/switch/.overlays/Fizeau.ovl
 
-	@7z a $@ ./out/atmosphere ./out/switch >/dev/null
-	@rm -r out/atmosphere out/switch
+	@mkdir -p $(OUT)/atmosphere/contents/$(FZ_TID)/flags
+	@cp sysmodule/out/Fizeau.nsp $(OUT)/atmosphere/contents/$(FZ_TID)/exefs.nsp
+	@cp sysmodule/toolbox.json $(OUT)/atmosphere/contents/$(FZ_TID)/toolbox.json
+	@touch $(OUT)/atmosphere/contents/$(FZ_TID)/flags/boot2.flag
+
+	@7z a $@ ./$(OUT)/atmosphere ./$(OUT)/switch >/dev/null
+	@rm -r $(OUT)/atmosphere $(OUT)/switch
 	@echo Compressed release to $@
 
 clean:
@@ -49,12 +51,16 @@ clean:
 mrproper: clean
 	@$(MAKE) --no-print-directory -C application mrproper
 	@$(MAKE) --no-print-directory -C sysmodule mrproper
+	@$(MAKE) --no-print-directory -C overlay mrproper
 
 application:
-	@$(MAKE) -C $@ $(filter-out $@,$(MAKECMDGOALS)) --no-print-directory
+	@$(MAKE) -s -C $@ $(filter-out $@ dist,$(MAKECMDGOALS)) --no-print-directory
 
 sysmodule:
-	@$(MAKE) -C $@ $(filter-out $@,$(MAKECMDGOALS)) --no-print-directory
+	@$(MAKE) -s -C $@ $(filter-out $@ dist,$(MAKECMDGOALS)) --no-print-directory
+
+overlay:
+	@$(MAKE) -s -C $@ $(filter-out $@ dist,$(MAKECMDGOALS)) --no-print-directory
 
 %:
 	@:

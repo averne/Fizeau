@@ -132,6 +132,38 @@
             "problemMatcher": []
         },
         {
+            "label": "overlay all",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "overlay",
+                "-j$(nproc)"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": {
+                "base": "$gcc",
+                "fileLocation": "absolute"
+            }
+        },
+        {
+            "label": "overlay clean",
+            "type": "shell",
+            "command": "make",
+            "args": [
+                "overlay",
+                "clean"
+            ],
+            "presentation": {
+                "panel": "shared",
+                "reveal": "never"
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "application run",
             "type": "shell",
             "command": "twib",
