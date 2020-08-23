@@ -30,7 +30,7 @@ CFLAGS            =    -std=gnu11
 CXXFLAGS          =    -std=gnu++20 -fno-rtti -fno-exceptions
 ASFLAGS           =
 LDFLAGS           =    -Wl,-pie -specs=$(DEVKITPRO)/libnx/switch.specs -g
-LINKS             =    -lcommon -limgui-nx -limgui -lstbi -linih -ltwili -ldeko3d -lnx
+LINKS             =    -lcommon -limgui-nx -limgui -lstbi -linih -ldeko3d -lnx
 
 PREFIX            =    aarch64-none-elf-
 CC                =    $(PREFIX)gcc

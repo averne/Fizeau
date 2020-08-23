@@ -1,0 +1,25 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: devkitpro/devkita64:latest
+
+    steps:
+    - name: Install 7z
+      run: sudo apt update && sudo apt install -y p7zip-full
+
+    - uses: actions/checkout@v1
+      with:
+        submodules: recursive
+
+    - name: Build
+      run: |
+        make dist -j$(nproc)
+
+    - uses: actions/upload-artifact@master
+      with:
+        name: Fizeau
+        path: out/Fizeau-*.zip

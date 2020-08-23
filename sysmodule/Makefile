@@ -44,7 +44,7 @@ LDFLAGS           =    -Wl,--wrap,__cxa_pure_virtual                            
                        -Wl,--wrap,_ZNSt11logic_errorC2EPKc                                          \
                        -Wl,-pie -specs=$(DEVKITPRO)/libnx/switch.specs -g -Os                       \
                        -flto -fuse-linker-plugin
-LINKS             =    -lcommon -ltwili -lstratosphere -lnx
+LINKS             =    -lcommon -lstratosphere -lnx
 
 PREFIX            =    aarch64-none-elf-
 CC                =    $(PREFIX)gcc
