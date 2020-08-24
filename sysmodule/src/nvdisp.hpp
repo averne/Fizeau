@@ -92,30 +92,73 @@ static inline Result nvioctlNvDisp_SetCmu(u32 fd, Cmu &cmu) {
     return nvIoctl(fd, _NV_IOWR(2, 14, Cmu), &cmu);
 }
 
-class CmuManager {
+// Defined in CEA-861-D table 11
+enum class RgbQuantRange {
+    Default = 0,
+    Limited = 1,
+    Full    = 2,
+};
+
+// Unpacked standard AVI infoframe struct (HDMI v1.4b/2.0)
+struct AviInfoframe {
+    std::uint32_t csum;
+    std::uint32_t scan;
+    std::uint32_t bar_valid;
+    std::uint32_t act_fmt_valid;
+    std::uint32_t rgb_ycc;
+    std::uint32_t act_format;
+    std::uint32_t aspect_ratio;
+    std::uint32_t colorimetry;
+    std::uint32_t scaling;
+    std::uint32_t rgb_quant;
+    std::uint32_t ext_colorimetry;
+    std::uint32_t it_content;
+    std::uint32_t video_format;
+    std::uint32_t pix_rep;
+    std::uint32_t it_content_type;
+    std::uint32_t ycc_quant;
+    std::uint32_t top_bar_end_line_low_byte, top_bar_end_line_high_byte;
+    std::uint32_t bot_bar_start_line_low_byte, bot_bar_start_line_high_byte;
+    std::uint32_t left_bar_end_pixel_low_byte, left_bar_end_pixel_high_byte;
+    std::uint32_t right_bar_start_pixel_low_byte, right_bar_start_pixel_high_byte;
+};
+ASSERT_SIZE(AviInfoframe, 96);
+
+static inline Result nvioctlNvDisp_GetAviInfoframe(u32 fd, AviInfoframe &infoframe) {
+    return nvIoctl(fd, _NV_IOR(2, 16, AviInfoframe), &infoframe);
+}
+
+static inline Result nvioctlNvDisp_SetAviInfoframe(u32 fd, AviInfoframe &infoframe) {
+    return nvIoctl(fd, _NV_IOW(2, 17, AviInfoframe), &infoframe);
+}
+
+class DispControlManager {
     public:
         static ams::Result initialize() {
-            return nvOpen(&CmuManager::disp0_fd, "/dev/nvdisp-disp0") | nvOpen(&CmuManager::disp1_fd, "/dev/nvdisp-disp1");
+            return nvOpen(&DispControlManager::disp0_fd, "/dev/nvdisp-disp0") | nvOpen(&DispControlManager::disp1_fd, "/dev/nvdisp-disp1");
         }
 
         static ams::Result finalize() {
-            return nvClose(CmuManager::disp0_fd) | nvClose(CmuManager::disp1_fd);
+            return nvClose(DispControlManager::disp0_fd) | nvClose(DispControlManager::disp1_fd);
         }
 
         static ams::Result set_cmu(std::uint32_t fd, Temperature temp, Gamma gamma, Luminance luma, ColorRange range);
 
         static inline ams::Result set_cmu_internal(Temperature temp, Gamma gamma, Luminance luma, ColorRange range) {
-            return CmuManager::set_cmu(CmuManager::disp0_fd, temp, gamma, luma, range);
+            return DispControlManager::set_cmu(DispControlManager::disp0_fd, temp, gamma, luma, range);
         }
 
         static inline ams::Result set_cmu_external(Temperature temp, Gamma gamma, Luminance luma, ColorRange range) {
-            return CmuManager::set_cmu(CmuManager::disp1_fd, temp, gamma, luma, range);
+            return DispControlManager::set_cmu(DispControlManager::disp1_fd, temp, gamma, luma, range);
         }
+
+        static ams::Result set_hdmi_color_range(ColorRange range, bool disable = false);
 
         static ams::Result disable();
 
     private:
-        static inline Cmu cmu;
+        static inline Cmu           cmu;
+        static inline AviInfoframe  infoframe;
         static inline std::uint32_t disp0_fd;
         static inline std::uint32_t disp1_fd;
 };

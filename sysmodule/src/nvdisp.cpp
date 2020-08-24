@@ -21,12 +21,14 @@
 
 #include "color.hpp"
 
-#include "cmu.hpp"
+#include "nvdisp.hpp"
 
 namespace fz {
 
-ams::Result CmuManager::set_cmu(std::uint32_t fd, Temperature temp, Gamma gamma, Luminance luma, ColorRange range) {
-    auto &cmu = CmuManager::cmu;
+using Man = DispControlManager;
+
+ams::Result Man::set_cmu(std::uint32_t fd, Temperature temp, Gamma gamma, Luminance luma, ColorRange range) {
+    auto &cmu = Man::cmu;
     cmu.reset();
 
     // Calculate color correction coefficients
@@ -48,10 +50,23 @@ ams::Result CmuManager::set_cmu(std::uint32_t fd, Temperature temp, Gamma gamma,
     return nvioctlNvDisp_SetCmu(fd, cmu);
 }
 
-ams::Result CmuManager::disable() {
-    CmuManager::cmu.reset(false);
-    R_TRY(nvioctlNvDisp_SetCmu(CmuManager::disp0_fd, CmuManager::cmu));
-    R_TRY(nvioctlNvDisp_SetCmu(CmuManager::disp1_fd, CmuManager::cmu));
+ams::Result Man::set_hdmi_color_range(ColorRange range, bool disable) {
+    auto is_limited = [](const ColorRange &range) {
+        return (range.lo >= MIN_LIMITED_RANGE) && (range.hi <= MAX_LIMITED_RANGE);
+    };
+
+    R_TRY(nvioctlNvDisp_GetAviInfoframe(Man::disp1_fd, Man::infoframe));
+    Man::infoframe.rgb_quant = static_cast<std::uint32_t>(disable ? RgbQuantRange::Default :
+        (is_limited(range) ? RgbQuantRange::Limited : RgbQuantRange::Full));
+    R_TRY(nvioctlNvDisp_SetAviInfoframe(Man::disp1_fd, Man::infoframe));
+    return ams::ResultSuccess();
+}
+
+ams::Result Man::disable() {
+    Man::cmu.reset(false);
+    R_TRY(nvioctlNvDisp_SetCmu(Man::disp0_fd, Man::cmu));
+    R_TRY(nvioctlNvDisp_SetCmu(Man::disp1_fd, Man::cmu));
+    R_TRY(set_hdmi_color_range(DEFAULT_LIMITED_RANGE, true));
     return ams::ResultSuccess();
 }
 

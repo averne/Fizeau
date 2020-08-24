@@ -22,7 +22,7 @@
 #include <common.hpp>
 
 #include "brightness.hpp"
-#include "cmu.hpp"
+#include "nvdisp.hpp"
 #include "service.hpp"
 
 // libnx tweaking
@@ -100,7 +100,7 @@ ams::sf::hipc::ServerManager<num_servers, ams::sf::hipc::DefaultServerManagerOpt
 
 int main(int argc, char **argv) {
     LOG("Initializing\n");
-    R_ABORT_UNLESS(fz::CmuManager::initialize());
+    R_ABORT_UNLESS(fz::DispControlManager::initialize());
     R_ABORT_UNLESS(fz::BrightnessManager::initialize());
     R_ABORT_UNLESS(fz::ProfileManager::initialize());
     R_ABORT_UNLESS(fz::Clock::initialize());
@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
     server_manager.LoopProcess();
 
     LOG("Exiting\n");
-    fz::CmuManager::finalize();
+    fz::DispControlManager::finalize();
     fz::BrightnessManager::finalize();
     return 0;
 }

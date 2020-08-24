@@ -20,7 +20,7 @@
 #include <common.hpp>
 
 #include "brightness.hpp"
-#include "cmu.hpp"
+#include "nvdisp.hpp"
 #include "profile.hpp"
 
 namespace fz {
@@ -79,7 +79,7 @@ ams::Result ProfileManager::set_is_active(bool active) {
     if (active) {
         R_TRY(Man::commit());
     } else {
-        R_TRY(CmuManager::disable());
+        R_TRY(DispControlManager::disable());
         R_TRY(BrightnessManager::disable());
     }
     return ams::ResultSuccess();
@@ -114,21 +114,25 @@ ams::Result ProfileManager::commit(bool force_brightness) {
         }
 
         if (Clock::is_in_interval(profile.dawn_begin, profile.dusk_begin)) {
-            if (internal)
-                R_TRY(CmuManager::set_cmu_internal(profile.temperature_day, profile.gamma_day,
+            if (internal) {
+                R_TRY(DispControlManager::set_cmu_internal(profile.temperature_day, profile.gamma_day,
                     profile.luminance_day, profile.range_day));
-            else
-                R_TRY(CmuManager::set_cmu_external(profile.temperature_day, profile.gamma_day,
+            } else {
+                R_TRY(DispControlManager::set_cmu_external(profile.temperature_day, profile.gamma_day,
                     profile.luminance_day, profile.range_day));
+                R_TRY(DispControlManager::set_hdmi_color_range(profile.range_day));
+            }
             if (internal && apply_brightness)
                 R_TRY(BrightnessManager::set_brightness(profile.brightness_day));
         } else {
-            if (internal)
-                R_TRY(CmuManager::set_cmu_internal(profile.temperature_night, profile.gamma_night,
+            if (internal) {
+                R_TRY(DispControlManager::set_cmu_internal(profile.temperature_night, profile.gamma_night,
                     profile.luminance_night, profile.range_night));
-            else
-                R_TRY(CmuManager::set_cmu_external(profile.temperature_night, profile.gamma_night,
+            } else {
+                R_TRY(DispControlManager::set_cmu_external(profile.temperature_night, profile.gamma_night,
                     profile.luminance_night, profile.range_night));
+                R_TRY(DispControlManager::set_hdmi_color_range(profile.range_night));
+            }
             if (internal && apply_brightness)
                 R_TRY(BrightnessManager::set_brightness(profile.brightness_night));
         }

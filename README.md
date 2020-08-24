@@ -77,6 +77,8 @@ Official software use the CMU for multiple purposes (the following images were g
 - Lastly, luminance correction, here with a luma=1.0 (color range correction is very similar):
   <p align="center"><img src="https://i.imgur.com/fsLv1wr.png"></p>
 
+In addition, the color range of the external display is restricted using the HDMI AVI (Auxiliary Video Information) infoframe.
+
 Official software uses precalculated default gamma ramps, and apply modifications to those (the relevant function can be found at .text + 0x05c70 in 6.0.0 nvnflinger). However here gamma ramps are generated at runtime, which is both more elegant and easily enables non-default gamma. The generated LUT1 is byte-for-byte identical to the official one.
 
 # Credits
