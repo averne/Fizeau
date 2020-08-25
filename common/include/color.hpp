@@ -18,12 +18,14 @@
 #pragma once
 
 #include <cstdint>
+#include <array>
 #include <tuple>
 
 #include "types.h"
 
 namespace fz {
 
+std::array<float, 9> filter_matrix(ColorFilter filter);
 std::tuple<float, float, float> whitepoint(Temperature temperature);
 
 float degamma(float x, Gamma gamma);

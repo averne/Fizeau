@@ -142,14 +142,14 @@ class DispControlManager {
             return nvClose(DispControlManager::disp0_fd) | nvClose(DispControlManager::disp1_fd);
         }
 
-        static ams::Result set_cmu(std::uint32_t fd, Temperature temp, Gamma gamma, Luminance luma, ColorRange range);
+        static ams::Result set_cmu(std::uint32_t fd, Temperature temp, ColorFilter filter, Gamma gamma, Luminance luma, ColorRange range);
 
-        static inline ams::Result set_cmu_internal(Temperature temp, Gamma gamma, Luminance luma, ColorRange range) {
-            return DispControlManager::set_cmu(DispControlManager::disp0_fd, temp, gamma, luma, range);
+        static inline ams::Result set_cmu_internal(Temperature temp, ColorFilter filter, Gamma gamma, Luminance luma, ColorRange range) {
+            return DispControlManager::set_cmu(DispControlManager::disp0_fd, temp, filter, gamma, luma, range);
         }
 
-        static inline ams::Result set_cmu_external(Temperature temp, Gamma gamma, Luminance luma, ColorRange range) {
-            return DispControlManager::set_cmu(DispControlManager::disp1_fd, temp, gamma, luma, range);
+        static inline ams::Result set_cmu_external(Temperature temp, ColorFilter filter, Gamma gamma, Luminance luma, ColorRange range) {
+            return DispControlManager::set_cmu(DispControlManager::disp1_fd, temp, filter, gamma, luma, range);
         }
 
         static ams::Result set_hdmi_color_range(ColorRange range, bool disable = false);

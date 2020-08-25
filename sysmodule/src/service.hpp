@@ -34,14 +34,16 @@ class IProfile final: public ams::sf::IServiceObject {
             SetDawnTime         = 3,
             GetCmuTemperature   = 4,
             SetCmuTemperature   = 5,
-            GetCmuGamma         = 6,
-            SetCmuGamma         = 7,
-            GetCmuLuminance     = 8,
-            SetCmuLuminance     = 9,
-            GetCmuColorRange    = 10,
-            SetCmuColorRange    = 11,
-            GetScreenBrightness = 12,
-            SetScreenBrightness = 13,
+            GetCmuColorFilter   = 6,
+            SetCmuColorFilter   = 7,
+            GetCmuGamma         = 8,
+            SetCmuGamma         = 9,
+            GetCmuLuminance     = 10,
+            SetCmuLuminance     = 11,
+            GetCmuColorRange    = 12,
+            SetCmuColorRange    = 13,
+            GetScreenBrightness = 14,
+            SetScreenBrightness = 15,
         };
 
     public:
@@ -55,6 +57,8 @@ class IProfile final: public ams::sf::IServiceObject {
 
         ams::Result GetCmuTemperature(ams::sf::Out<Temperature> temp_day, ams::sf::Out<Temperature> temp_night);
         ams::Result SetCmuTemperature(Temperature temp_day, Temperature temp_night);
+        ams::Result GetCmuColorFilter(ams::sf::Out<ColorFilter> filter_day, ams::sf::Out<ColorFilter> filter_night);
+        ams::Result SetCmuColorFilter(ColorFilter filter_day, ColorFilter filter_night);
         ams::Result GetCmuGamma(ams::sf::Out<Gamma> gamma_day, ams::sf::Out<Gamma> gamma_night);
         ams::Result SetCmuGamma(Gamma gamma_day, Gamma gamma_night);
         ams::Result GetCmuLuminance(ams::sf::Out<Luminance> luma_day, ams::sf::Out<Luminance> luma_night);
@@ -73,6 +77,8 @@ class IProfile final: public ams::sf::IServiceObject {
             MAKE_SERVICE_COMMAND_META(SetDawnTime),
             MAKE_SERVICE_COMMAND_META(GetCmuTemperature),
             MAKE_SERVICE_COMMAND_META(SetCmuTemperature),
+            MAKE_SERVICE_COMMAND_META(GetCmuColorFilter),
+            MAKE_SERVICE_COMMAND_META(SetCmuColorFilter),
             MAKE_SERVICE_COMMAND_META(GetCmuGamma),
             MAKE_SERVICE_COMMAND_META(SetCmuGamma),
             MAKE_SERVICE_COMMAND_META(GetCmuLuminance),

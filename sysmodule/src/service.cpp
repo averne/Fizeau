@@ -86,6 +86,16 @@ ams::Result IProfile::SetCmuTemperature(Temperature temp_day, Temperature temp_n
     return ProfileManager::on_profile_updated(this->id);
 }
 
+ams::Result IProfile::GetCmuColorFilter(ams::sf::Out<ColorFilter> filter_day, ams::sf::Out<ColorFilter> filter_night) {
+    filter_day.SetValue(this->profile.filter_day), filter_night.SetValue(this->profile.filter_night);
+    return ams::ResultSuccess();
+}
+
+ams::Result IProfile::SetCmuColorFilter(ColorFilter filter_day, ColorFilter filter_night) {
+    this->profile.filter_day = filter_day, this->profile.filter_night = filter_night;
+    return ams::ResultSuccess();
+}
+
 ams::Result IProfile::GetCmuGamma(ams::sf::Out<Gamma> gamma_day, ams::sf::Out<Gamma> gamma_night) {
     gamma_day.SetValue(this->profile.gamma_day), gamma_night.SetValue(this->profile.gamma_night);
     return ams::ResultSuccess();

@@ -122,6 +122,12 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
             val * (MAX_TEMP - MIN_TEMP) / 100 + MIN_TEMP;
     });
 
+    this->filter_bar = new tsl::elm::NamedStepTrackBar("", { "None", "Red", "Green", "Blue" });
+    this->filter_bar->setProgress(static_cast<u8>(this->is_day ? this->config.filter_day : this->config.filter_night));
+    this->filter_bar->setValueChangedListener([this](u8 val) {
+        (this->is_day ? this->config.filter_day : this->config.filter_night) = static_cast<ColorFilter>(val);
+    });
+
     this->brightness_slider = new tsl::elm::TrackBar("");
     this->brightness_slider->setProgress(((this->is_day ? this->config.brightness_day : this->config.brightness_night) - MIN_BRIGHTNESS)
         * 100 / (MAX_BRIGHTNESS - MIN_BRIGHTNESS));
@@ -162,6 +168,7 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     this->range_button->setValue(is_full(this->is_day ? this->config.range_day : this->config.range_night) ? "Full" : "Limited");
 
     this->temp_header       = new tsl::elm::CategoryHeader("");
+    this->filter_header     = new tsl::elm::CategoryHeader("Filter");
     this->brightness_header = new tsl::elm::CategoryHeader("");
     this->gamma_header      = new tsl::elm::CategoryHeader("");
     this->luma_header       = new tsl::elm::CategoryHeader("");
@@ -173,6 +180,8 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     list->addItem(this->apply_button);
     list->addItem(this->temp_header);
     list->addItem(this->temp_slider);
+    list->addItem(this->filter_header);
+    list->addItem(this->filter_bar);
     list->addItem(this->brightness_header);
     list->addItem(this->brightness_slider);
     list->addItem(this->gamma_header);

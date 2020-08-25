@@ -27,14 +27,19 @@ namespace fz {
 
 using Man = DispControlManager;
 
-ams::Result Man::set_cmu(std::uint32_t fd, Temperature temp, Gamma gamma, Luminance luma, ColorRange range) {
+ams::Result Man::set_cmu(std::uint32_t fd, Temperature temp, ColorFilter filter, Gamma gamma, Luminance luma, ColorRange range) {
     auto &cmu = Man::cmu;
     cmu.reset();
 
-    // Calculate color correction coefficients
+    // Calculate initial coefficients
+    auto coeffs = filter_matrix(filter);
+
+    // Apply temperature color correction
     auto [krr, kgg, kbb] = whitepoint(temp);
     krr = degamma(krr, 2.4f), kgg = degamma(kgg, 2.4f), kbb = degamma(kbb, 2.4f);
-    cmu.krr = krr, cmu.kgg = kgg, cmu.kbb = kbb;
+    coeffs[0] *= krr, coeffs[4] *= kgg, coeffs[8] *= kbb;
+
+    std::transform(coeffs.begin(), coeffs.end(), &cmu.krr, [](float c) -> QS18 { return c; });
 
     // Calculate gamma ramps
     degamma_ramp(cmu.lut_1.data(), cmu.lut_1.size(), DEFAULT_GAMMA, 12);                  // Set the LUT1 with a fixed gamma corresponding to the incoming data

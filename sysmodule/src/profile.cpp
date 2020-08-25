@@ -35,17 +35,18 @@ Profile Profile::interpolate(float factor, bool from_day) {
         p.luminance_day     = std::lerp(this->luminance_day,     this->luminance_night,   factor);
         p.brightness_day    = std::lerp(this->brightness_day,    this->brightness_night,  factor);
         p.range_day         = { std::lerp(this->range_day.lo,   this->range_night.lo, factor),
-            std::lerp(this->range_day.hi,   this->range_night.hi, factor)};
+            std::lerp(this->range_day.hi,   this->range_night.hi, factor) };
     } else {
         p.temperature_night = std::lerp(this->temperature_night, this->temperature_day,   factor);
         p.gamma_night       = std::lerp(this->gamma_night,       this->gamma_day,         factor);
         p.luminance_night   = std::lerp(this->luminance_night,   this->luminance_day,     factor);
         p.brightness_night  = std::lerp(this->brightness_night,  this->brightness_day,    factor);
         p.range_night       = { std::lerp(this->range_night.lo, this->range_day.lo,   factor),
-            std::lerp(this->range_night.hi, this->range_day.hi,   factor)};
+            std::lerp(this->range_night.hi, this->range_day.hi,   factor) };
     }
-    p.dusk_begin = this->dusk_begin, p.dusk_end = this->dusk_end;
-    p.dawn_begin = this->dawn_begin, p.dawn_end = this->dawn_end;
+    p.dusk_begin = this->dusk_begin, p.dusk_end     = this->dusk_end;
+    p.dawn_begin = this->dawn_begin, p.dawn_end     = this->dawn_end;
+    p.filter_day = this->filter_day, p.filter_night = this->filter_night;
     return p;
 }
 
@@ -115,22 +116,22 @@ ams::Result ProfileManager::commit(bool force_brightness) {
 
         if (Clock::is_in_interval(profile.dawn_begin, profile.dusk_begin)) {
             if (internal) {
-                R_TRY(DispControlManager::set_cmu_internal(profile.temperature_day, profile.gamma_day,
-                    profile.luminance_day, profile.range_day));
+                R_TRY(DispControlManager::set_cmu_internal(profile.temperature_day, profile.filter_day,
+                    profile.gamma_day, profile.luminance_day, profile.range_day));
             } else {
-                R_TRY(DispControlManager::set_cmu_external(profile.temperature_day, profile.gamma_day,
-                    profile.luminance_day, profile.range_day));
+                R_TRY(DispControlManager::set_cmu_external(profile.temperature_day, profile.filter_day,
+                    profile.gamma_day, profile.luminance_day, profile.range_day));
                 R_TRY(DispControlManager::set_hdmi_color_range(profile.range_day));
             }
             if (internal && apply_brightness)
                 R_TRY(BrightnessManager::set_brightness(profile.brightness_day));
         } else {
             if (internal) {
-                R_TRY(DispControlManager::set_cmu_internal(profile.temperature_night, profile.gamma_night,
-                    profile.luminance_night, profile.range_night));
+                R_TRY(DispControlManager::set_cmu_internal(profile.temperature_night, profile.filter_night,
+                    profile.gamma_night, profile.luminance_night, profile.range_night));
             } else {
-                R_TRY(DispControlManager::set_cmu_external(profile.temperature_night, profile.gamma_night,
-                    profile.luminance_night, profile.range_night));
+                R_TRY(DispControlManager::set_cmu_external(profile.temperature_night, profile.filter_night,
+                    profile.gamma_night, profile.luminance_night, profile.range_night));
                 R_TRY(DispControlManager::set_hdmi_color_range(profile.range_night));
             }
             if (internal && apply_brightness)

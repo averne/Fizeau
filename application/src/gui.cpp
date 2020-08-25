@@ -36,6 +36,13 @@ constexpr std::array profile_names = {
     "Profile 4",
 };
 
+constexpr std::array filters_names = {
+    "None",
+    "Red",
+    "Green",
+    "Blue",
+};
+
 } // namespace
 
 void init() {
@@ -54,21 +61,28 @@ bool new_slider(auto name, auto label, T &val, T min, T max, auto fmt, Args &&..
     bool ret = false;
     im::PushItemWidth(im::GetWindowWidth() - 0.08f * width);
     ON_SCOPE_EXIT { im::PopItemWidth(); };
+    im::TextUnformatted(name); im::SameLine(); im::SetCursorPosX(slider_pos);
     if constexpr (std::is_floating_point_v<T>) {
-        im::TextUnformatted(name);   im::SameLine(); im::SetCursorPosX(slider_pos);
         ret |= im::SliderFloat(label, reinterpret_cast<float *>(&val), min, max, fmt);
         ret |= swkbd::handle(label, &val, min, max, fmt, args...);
     } else {
-        im::TextUnformatted(name);   im::SameLine(); im::SetCursorPosX(slider_pos);
         ret |= im::SliderInt(label, reinterpret_cast<int *>(&val), min, max, fmt);
         ret |= swkbd::handle(label, &val, min, max);
     }
     return ret;
 };
 
+template <std::size_t N>
+bool new_combo(auto name, auto label, auto &val, const std::array<const char *, N> &names) {
+    auto [width, height] = im::GetIO().DisplaySize;
+    auto slider_pos = im::GetWindowPos().x + 0.04f * width;
+    im::TextUnformatted(name); im::SameLine(); im::SetCursorPosX(slider_pos);
+    return im::Combo(label, reinterpret_cast<int *>(&val), names.data(), names.size());
+}
+
 bool new_times(auto name, auto labelh, auto labelm, Time &t) {
     im::PushItemWidth(im::GetWindowWidth() * 0.2f);
-    ON_SCOPE_EXIT {im::PopItemWidth(); };
+    ON_SCOPE_EXIT { im::PopItemWidth(); };
 
     bool ret = false;
     im::SetCursorPosX(50.0f);
@@ -87,7 +101,7 @@ bool new_times(auto name, auto labelh, auto labelm, Time &t) {
 
 bool new_range(auto name, auto labelcb, auto labello, auto labelhi, ColorRange &range) {
     im::PushItemWidth(im::GetWindowWidth() * 0.2f);
-    ON_SCOPE_EXIT {im::PopItemWidth(); };
+    ON_SCOPE_EXIT { im::PopItemWidth(); };
 
     bool is_full_range = (range.lo == MIN_RANGE) && (range.hi == MAX_RANGE);
     bool ret = false;
@@ -191,6 +205,11 @@ Result draw_color_tab(cfg::Config &ctx) {
     ctx.is_editing_day_profile   |= new_slider("Day:",   "##tempd", ctx.temperature_day,   MIN_TEMP, MAX_TEMP, "%d°K");
     ctx.is_editing_night_profile |= new_slider("Night:", "##tempn", ctx.temperature_night, MIN_TEMP, MAX_TEMP, "%d°K");
 
+    im::Separator();
+    im::TextUnformatted("Filter");
+    ctx.is_editing_day_profile   |= new_combo("Day:",   "##filterd", ctx.filter_day,   filters_names);
+    ctx.is_editing_night_profile |= new_combo("Night:", "##filtern", ctx.filter_night, filters_names);
+
     // Brightness slider
     im::Separator();
     im::TextUnformatted("Screen brightness");
@@ -245,7 +264,7 @@ Result draw_time_tab(cfg::Config &ctx) {
         auto diff = ctx.dusk_end - ctx.dusk_begin;
         im::Text("Dusk will begin at %02u:%02u and last for %02uh%02um", ctx.dusk_begin.h, ctx.dusk_begin.m, diff.h, diff.m);
     } else {
-        im::TextColored({1.00f, 0.33f, 0.33f, 1.0f}, "Invalid dusk transition times!");
+        im::TextColored({ 1.00f, 0.33f, 0.33f, 1.0f }, "Invalid dusk transition times!");
     }
 
     // Dawn
@@ -258,7 +277,7 @@ Result draw_time_tab(cfg::Config &ctx) {
         auto diff = ctx.dawn_end - ctx.dawn_begin;
         im::Text("Dawn will begin at %02u:%02u and last for %02uh%02um", ctx.dawn_begin.h, ctx.dawn_begin.m, diff.h, diff.m);
     } else {
-        im::TextColored({1.00f, 0.33f, 0.33f, 1.0f}, "Invalid dawn transition times!");
+        im::TextColored({ 1.00f, 0.33f, 0.33f, 1.0f }, "Invalid dawn transition times!");
     }
 
     if (has_changed)
@@ -272,7 +291,7 @@ Result draw_help_tab(cfg::Config &ctx) {
     if (!im::BeginTabItem("Help"))
         return 0;
 
-    if (im::TreeNode("Usage")) {
+    if (im::CollapsingHeader("Usage")) {
         im::BulletText("\ue121 Touchscreen:\n"
             "Drag the sliders to set the values to your\n  liking.\n");
         im::BulletText("\ue122 Controller:\n"
@@ -281,14 +300,17 @@ Result draw_help_tab(cfg::Config &ctx) {
             "Use \ue001 to deselect an item.\n"
             "Use \ue002 to input a value using the keyboard.\n"
             "Use \ue0b3 to exit (\ue0b9 is not recommended).\n");
-        im::TreePop();
     }
 
-    if (im::TreeNode("Documentation")) {
+    if (im::CollapsingHeader("Documentation")) {
         im::BulletText(
 R"(The temperature slider adjusts the color
 temperature of the screen. Use this as a
 night color feature.)");
+        im::BulletText(
+R"(The filter feature can be used to restrict the
+color displayed to one single component
+(red, green, or blue).)");
         im::BulletText(
 R"(The gamma slider adjusts the regamma
 ramp. This can be useful on bad/old
@@ -305,7 +327,6 @@ range of color components. This can be
 useful on certain monitors. Unticking "Full
 range" is equivalent to using the "Limited
 range" official setting.)");
-        im::TreePop();
     }
 
     im::TextUnformatted("Compiled on " __DATE__ " " __TIME__);
@@ -317,7 +338,7 @@ range" official setting.)");
 } // namespace
 
 void draw_background(cfg::Config &ctx, DkResHandle background_handle) {
-    im::GetBackgroundDrawList()->AddImage(im::deko3d::makeTextureID(background_handle), {0, 0}, im::GetIO().DisplaySize);
+    im::GetBackgroundDrawList()->AddImage(im::deko3d::makeTextureID(background_handle), { 0, 0 }, im::GetIO().DisplaySize);
 }
 
 Result draw_main_window(cfg::Config &ctx) {
@@ -327,8 +348,8 @@ Result draw_main_window(cfg::Config &ctx) {
     ON_SCOPE_EXIT { im::End(); };
 
     auto [width, height] = im::GetIO().DisplaySize;
-    im::SetWindowPos( {0.03f * width, 0.13f * height}, ImGuiCond_Always);
-    im::SetWindowSize({0.40f * width, 0.74f * height}, ImGuiCond_Always);
+    im::SetWindowPos( { 0.03f * width, 0.13f * height }, ImGuiCond_Always);
+    im::SetWindowSize({ 0.40f * width, 0.74f * height }, ImGuiCond_Always);
 
     // Leave edit field, or it will pop the swkbd again
     im::GetCurrentContext()->TempInputId = 0;
@@ -367,8 +388,8 @@ void draw_preview_window(cfg::Config &ctx, DkResHandle preview_handle) {
     ON_SCOPE_EXIT { im::End(); };
 
     auto [width, height] = im::GetIO().DisplaySize;
-    im::SetWindowPos( {0.47f * width, 0.05f * height}, ImGuiCond_Always);
-    im::SetWindowSize({0.50f * width, 0.50f * height}, ImGuiCond_Always);
+    im::SetWindowPos( { 0.47f * width, 0.05f * height }, ImGuiCond_Always);
+    im::SetWindowSize({ 0.50f * width, 0.50f * height }, ImGuiCond_Always);
 
     if (preview_handle == static_cast<DkResHandle>(-1))
         return;
@@ -379,10 +400,10 @@ void draw_preview_window(cfg::Config &ctx, DkResHandle preview_handle) {
     else if (ctx.is_editing_night_profile)
         std::tie(r, g, b) = whitepoint(ctx.temperature_night);
 
-    im::Image(im::deko3d::makeTextureID(preview_handle), {0.23f * width, 0.23f * width});
+    im::Image(im::deko3d::makeTextureID(preview_handle), { 0.23f * width, 0.23f * width });
     im::SameLine();
-    im::Image(im::deko3d::makeTextureID(preview_handle), {0.23f * width, 0.23f * width},
-        {0, 0}, {1, 1}, {r, g, b, 1.0f});
+    im::Image(im::deko3d::makeTextureID(preview_handle), { 0.23f * width, 0.23f * width },
+        { 0, 0 }, { 1, 1 }, { r, g, b, 1.0f });
 }
 
 void draw_graph_window(cfg::Config &ctx) {
@@ -396,8 +417,8 @@ void draw_graph_window(cfg::Config &ctx) {
     ON_SCOPE_EXIT { im::End(); };
 
     auto [width, height] = im::GetIO().DisplaySize;
-    im::SetWindowPos( {0.53f * width, 0.60f * height}, ImGuiCond_Always);
-    im::SetWindowSize({0.38f * width, 0.35f * height}, ImGuiCond_Always);
+    im::SetWindowPos( { 0.53f * width, 0.60f * height }, ImGuiCond_Always);
+    im::SetWindowSize({ 0.38f * width, 0.35f * height }, ImGuiCond_Always);
 
     Gamma gamma = DEFAULT_GAMMA; Luminance luma = DEFAULT_LUMA; ColorRange range = DEFAULT_RANGE;
     if (ctx.is_editing_day_profile)
@@ -414,7 +435,7 @@ void draw_graph_window(cfg::Config &ctx) {
     apply_luma(lut2.data(), lut2.size(), luma);
     apply_range(lut2.data(), lut2.size(), range.lo, std::min(range.hi, lut2.back() / 255.0f));
 
-    std::array<float, 2>           linear = {0, 1};
+    std::array<float, 2>           linear = { 0, 1 };
     std::array<float, lut1.size()> lut1_float;
     std::array<float, lut2.size()> lut2_float;
 
@@ -438,17 +459,17 @@ void draw_graph_window(cfg::Config &ctx) {
     auto grid_col = IM_COL32(127.0f, 127.0f, 127.0f, 200.0f);
     for (int i = 0; i < nb_x_ticks; ++i) {
         float x = ImLerp(inner_bb.Min.x, inner_bb.Max.x, static_cast<float>(i) / static_cast<float>(nb_x_ticks - 1));
-        window->DrawList->AddLine({x, inner_bb.Min.y}, {x, inner_bb.Max.y}, grid_col);
+        window->DrawList->AddLine({ x, inner_bb.Min.y }, { x, inner_bb.Max.y }, grid_col);
     }
     for (int i = 0; i < nb_x_ticks; ++i) {
         float y = ImLerp(inner_bb.Min.y, inner_bb.Max.y, static_cast<float>(i) / static_cast<float>(nb_y_ticks - 1));
-        window->DrawList->AddLine({inner_bb.Min.x, y}, {inner_bb.Max.x, y}, grid_col);
+        window->DrawList->AddLine({ inner_bb.Min.x, y }, { inner_bb.Max.x, y }, grid_col);
     }
 
     // Draw plots
-    new_plot(lut1_float.data(), lut1_float.size(), {0, 1}, {255.0f, 128.0f,  56.0f, 255.0f}, inner_bb);
-    new_plot(linear.data(),     linear.size(),     {0, 1}, { 56.0f, 128.0f, 255.0f, 255.0f}, inner_bb);
-    new_plot(lut2_float.data(), lut2_float.size(), {0, 1}, { 56.0f, 255.0f, 128.0f, 255.0f}, inner_bb);
+    new_plot(lut1_float.data(), lut1_float.size(), { 0, 1 }, { 255.0f, 128.0f,  56.0f, 255.0f }, inner_bb);
+    new_plot(linear.data(),     linear.size(),     { 0, 1 }, {  56.0f, 128.0f, 255.0f, 255.0f }, inner_bb);
+    new_plot(lut2_float.data(), lut2_float.size(), { 0, 1 }, {  56.0f, 255.0f, 128.0f, 255.0f }, inner_bb);
 }
 
 void draw_error_window(cfg::Config &ctx, Result error) {

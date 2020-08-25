@@ -33,14 +33,15 @@ enum class ProfileId: std::uint32_t {
 };
 
 struct Profile {
-    Temperature temperature_day = DEFAULT_TEMP,  temperature_night = DEFAULT_TEMP;
-    Gamma       gamma_day       = DEFAULT_GAMMA, gamma_night       = DEFAULT_GAMMA;
-    Luminance   luminance_day   = DEFAULT_LUMA,  luminance_night   = DEFAULT_LUMA;
-    ColorRange  range_day       = DEFAULT_RANGE, range_night       = DEFAULT_RANGE;
-    Brightness  brightness_day  = 1.0f,          brightness_night  = 1.0f;
+    Temperature temperature_day = DEFAULT_TEMP,     temperature_night = DEFAULT_TEMP;
+    ColorFilter filter_day      = ColorFilter_None, filter_night      = ColorFilter_None;
+    Gamma       gamma_day       = DEFAULT_GAMMA,    gamma_night       = DEFAULT_GAMMA;
+    Luminance   luminance_day   = DEFAULT_LUMA,     luminance_night   = DEFAULT_LUMA;
+    ColorRange  range_day       = DEFAULT_RANGE,    range_night       = DEFAULT_RANGE;
+    Brightness  brightness_day  = 1.0f,             brightness_night  = 1.0f;
 
-    Time dusk_begin = {21, 00, 00}, dusk_end = {21, 30, 00};
-    Time dawn_begin = {07, 00, 00}, dawn_end = {07, 30, 00};
+    Time dusk_begin = { 21, 00, 00 }, dusk_end = { 21, 30, 00 };
+    Time dawn_begin = { 07, 00, 00 }, dawn_end = { 07, 30, 00 };
 
     bool is_transitionning = false;
 

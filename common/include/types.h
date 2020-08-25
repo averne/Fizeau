@@ -28,6 +28,13 @@ typedef uint32_t Temperature;
 #define MAX_TEMP     6500u // °K, D65 standard illuminant
 #define DEFAULT_TEMP MAX_TEMP
 
+typedef enum {
+    ColorFilter_None,
+    ColorFilter_Red,
+    ColorFilter_Green,
+    ColorFilter_Blue,
+} ColorFilter;
+
 typedef float Gamma;
 #define MIN_GAMMA     0.0f
 #define MAX_GAMMA     5.0f

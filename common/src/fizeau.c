@@ -42,14 +42,16 @@ typedef enum {
     FizeauProfileCmdId_SetDawnTime         = 3,
     FizeauProfileCmdId_GetCmuTemperature   = 4,
     FizeauProfileCmdId_SetCmuTemperature   = 5,
-    FizeauProfileCmdId_GetCmuGamma         = 6,
-    FizeauProfileCmdId_SetCmuGamma         = 7,
-    FizeauProfileCmdId_GetCmuLuminance     = 8,
-    FizeauProfileCmdId_SetCmuLuminance     = 9,
-    FizeauProfileCmdId_GetCmuColorRange    = 10,
-    FizeauProfileCmdId_SetCmuColorRange    = 11,
-    FizeauProfileCmdId_GetScreenBrightness = 12,
-    FizeauProfileCmdId_SetScreenBrightness = 13,
+    FizeauProfileCmdId_GetCmuColorFilter   = 6,
+    FizeauProfileCmdId_SetCmuColorFilter   = 7,
+    FizeauProfileCmdId_GetCmuGamma         = 8,
+    FizeauProfileCmdId_SetCmuGamma         = 9,
+    FizeauProfileCmdId_GetCmuLuminance     = 10,
+    FizeauProfileCmdId_SetCmuLuminance     = 11,
+    FizeauProfileCmdId_GetCmuColorRange    = 12,
+    FizeauProfileCmdId_SetCmuColorRange    = 13,
+    FizeauProfileCmdId_GetScreenBrightness = 14,
+    FizeauProfileCmdId_SetScreenBrightness = 15,
 } FizeauProfileCmdId;
 
 static Service g_fizeau_srv;
@@ -191,6 +193,28 @@ Result fizeauProfileSetCmuTemperature(FizeauProfile *p, Temperature temp_day, Te
         Temperature temp_day, temp_night;
     } in = { temp_day, temp_night };
     return serviceDispatchIn(&p->s, FizeauProfileCmdId_SetCmuTemperature, in);
+}
+
+Result fizeauProfileGetCmuColorFilter(FizeauProfile *p, ColorFilter *filter_day, ColorFilter *filter_night) {
+    struct {
+        ColorFilter filter_day, filter_night;
+    } tmp;
+    Result rc = serviceDispatchOut(&p->s, FizeauProfileCmdId_GetCmuColorFilter, tmp);
+
+    if (R_SUCCEEDED(rc)) {
+        if (filter_day)
+            *filter_day = tmp.filter_day;
+        if (filter_night)
+            *filter_night = tmp.filter_night;
+    }
+    return rc;
+}
+
+Result fizeauProfileSetCmuColorFilter(FizeauProfile *p, ColorFilter filter_day, ColorFilter filter_night) {
+    struct {
+        ColorFilter filter_day, filter_night;
+    } in = { filter_day, filter_night };
+    return serviceDispatchIn(&p->s, FizeauProfileCmdId_SetCmuColorFilter, in);
 }
 
 Result fizeauProfileGetCmuGamma(FizeauProfile *p, Gamma *gamma_day, Gamma *gamma_night) {

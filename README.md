@@ -6,6 +6,7 @@ Adjust the color of the screen of your Nintendo Switch.
 
 # Features
   - Modify the color temperature of the display.
+  - Filter colors to one single component.
   - Apply color corrections: gamma, luminance, and color range.
   - Control the screen backlight brightness.
   - Schedule settings to be applied to dusk/dawn time, with smooth transitions.
@@ -54,7 +55,7 @@ The CMU works in 3 passes:
 - the first pass converts 8-bit sRGB data into a 12-bit linear colorspace, using a LUT (look-up table). Therefore, it also increases the precision of the color data.
 
 - the second pass is a dot product between the CSC (Color Space Correction) matrix and the RGB data, as illustrated below.
-  <p align="center"><img src="https://i.imgur.com/L2fDUFV.png"></p>
+  <p align="center"><img src="https://i.imgur.com/qrO2Xdo.png"></p>
 
 - the third pass maps the 12-bit linear, now corrected color data back into 8-bit sRGB, using another LUT. Hence the precision after this pass is decreased. Moreover, this LUT is split into two parts: the first 512 entries map [0, 32), while the 448 other represent [32, 256). This allows greater precision for darker color components, which the human eye is more sensitive to.
 

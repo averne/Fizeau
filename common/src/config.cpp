@@ -37,6 +37,16 @@ static int ini_handler(void *user, const char *section, const char *name, const 
         return static_cast<FizeauProfileId>(str.back() - '0' - 1);
     };
 
+    auto parse_filter = [](const std::string_view &str) -> ColorFilter {
+        if (strcasecmp(str.data(), "red") == 0)
+            return ColorFilter_Red;
+        else if (strcasecmp(str.data(), "green") == 0)
+            return ColorFilter_Green;
+        else if (strcasecmp(str.data(), "blue") == 0)
+            return ColorFilter_Blue;
+        return ColorFilter_None;
+    };
+
     auto parse_time = [](const std::string_view &str) -> Time {
         Time t = {};
         t.h = std::atoi(str.data());
@@ -83,6 +93,10 @@ static int ini_handler(void *user, const char *section, const char *name, const 
             config->temperature_day   = std::atoi(value);
         else if (MATCH(name, "temperature_night"))
             config->temperature_night = std::atoi(value);
+        else if (MATCH(name, "filter_day"))
+            config->filter_day        = parse_filter(value);
+        else if (MATCH(name, "filter_night"))
+            config->filter_night      = parse_filter(value);
         else if (MATCH(name, "brightness_day"))
             config->brightness_day    = std::atof(value);
         else if (MATCH(name, "brightness_night"))
@@ -127,6 +141,15 @@ inline std::string make(Config &config) {
         return format("profile%u", id + 1);
     };
 
+    auto format_filter = [](ColorFilter f) -> std::string {
+        switch (f) {
+            case ColorFilter_Red:   return "red";
+            case ColorFilter_Green: return "green";
+            case ColorFilter_Blue:  return "blue";
+            default:                return "none";
+        }
+    };
+
     auto format_time = [&format](Time t) -> std::string {
         return format("%02d:%02d", t.h, t.m);
     };
@@ -159,6 +182,9 @@ inline std::string make(Config &config) {
 
         str += "temperature_day   = " + std::to_string(config.temperature_day)   + '\n';
         str += "temperature_night = " + std::to_string(config.temperature_night) + '\n';
+
+        str += "filter_day        = " + format_filter(config.filter_day)         + '\n';
+        str += "filter_night      = " + format_filter(config.filter_night)       + '\n';
 
         str += "brightness_day    = " + std::to_string(config.brightness_day)    + '\n';
         str += "brightness_night  = " + std::to_string(config.brightness_night)  + '\n';
@@ -193,6 +219,7 @@ Result update(Config &config) {
     R_TRY(fizeauProfileGetDuskTime(&config.cur_profile, &config.dusk_begin, &config.dusk_end));
     R_TRY(fizeauProfileGetDawnTime(&config.cur_profile, &config.dawn_begin, &config.dawn_end));
     R_TRY(fizeauProfileGetCmuTemperature(&config.cur_profile, &config.temperature_day, &config.temperature_night));
+    R_TRY(fizeauProfileGetCmuColorFilter(&config.cur_profile, &config.filter_day, &config.filter_night));
     R_TRY(fizeauProfileGetCmuGamma(&config.cur_profile, &config.gamma_day, &config.gamma_night));
     R_TRY(fizeauProfileGetCmuLuminance(&config.cur_profile, &config.luminance_day, &config.luminance_night));
     R_TRY(fizeauProfileGetCmuColorRange(&config.cur_profile, &config.range_day, &config.range_night));
@@ -204,6 +231,7 @@ Result apply(cfg::Config &config) {
     R_TRY(fizeauProfileSetDuskTime(&config.cur_profile, config.dusk_begin, config.dusk_end));
     R_TRY(fizeauProfileSetDawnTime(&config.cur_profile, config.dawn_begin, config.dawn_end));
     R_TRY(fizeauProfileSetCmuTemperature(&config.cur_profile, config.temperature_day, config.temperature_night));
+    R_TRY(fizeauProfileSetCmuColorFilter(&config.cur_profile, config.filter_day, config.filter_night));
     R_TRY(fizeauProfileSetCmuGamma(&config.cur_profile, config.gamma_day, config.gamma_night));
     R_TRY(fizeauProfileSetCmuLuminance(&config.cur_profile, config.luminance_day, config.luminance_night));
     R_TRY(fizeauProfileSetCmuColorRange(&config.cur_profile, config.range_day, config.range_night));

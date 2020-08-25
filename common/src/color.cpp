@@ -24,6 +24,32 @@
 
 namespace fz {
 
+std::array<float, 9> filter_matrix(ColorFilter filter) {
+    std::array<float, 9> arr = {};
+
+    static constexpr std::array luma_components = {
+        0.2126f, 0.7152f, 0.0722f,
+    };
+
+    if (filter == ColorFilter_None) {
+        arr[0] = arr[4] = arr[8] = 1.0f;
+        return arr;
+    }
+
+    std::size_t offset = 0;
+    switch (filter) {
+        default:
+        case ColorFilter_Red:   offset = 0; break;
+        case ColorFilter_Green: offset = 3; break;
+        case ColorFilter_Blue:  offset = 6; break;
+    }
+
+    for (std::size_t i = 0; i < 3; ++i)
+        arr[offset + i] = luma_components[i];
+
+    return arr;
+}
+
 std::tuple<float, float, float> whitepoint(Temperature temperature) {
     if (temperature == MAX_TEMP)
         return { 1.0f, 1.0f, 1.0f }; // Fast path

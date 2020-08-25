@@ -63,6 +63,8 @@ Result fizeauProfileGetDuskTime(FizeauProfile *p, Time *time_begin, Time *time_e
 Result fizeauProfileSetDuskTime(FizeauProfile *p, Time time_begin, Time time_end);
 Result fizeauProfileGetCmuTemperature(FizeauProfile *p, Temperature *temp_day, Temperature *temp_night);
 Result fizeauProfileSetCmuTemperature(FizeauProfile *p, Temperature temp_day, Temperature temp_night);
+Result fizeauProfileGetCmuColorFilter(FizeauProfile *p, ColorFilter *filter_day, ColorFilter *filter_night);
+Result fizeauProfileSetCmuColorFilter(FizeauProfile *p, ColorFilter filter_day, ColorFilter filter_night);
 Result fizeauProfileGetCmuGamma(FizeauProfile *p, Gamma *gamma_day, Gamma *gamma_night);
 Result fizeauProfileSetCmuGamma(FizeauProfile *p, Gamma gamma_day, Gamma gamma_night);
 Result fizeauProfileGetCmuLuminance(FizeauProfile *p, Luminance *luma_day, Luminance *luma_night);
