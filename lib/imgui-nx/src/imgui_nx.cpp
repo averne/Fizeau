@@ -66,7 +66,7 @@ void handleAppletHook(AppletHookType type, void *param) {
             // use docked mode resolution (1080p) and scale
             s_width  = 1920.0f, s_height = 1080.0f;
             ImGui::GetStyle().ScaleAllSizes(2.6f / 1.9f);
-            ImGui::GetIO().FontGlobalScale = 1.6f;
+            ImGui::GetIO().FontGlobalScale = 1.4f;
             break;
     }
 }
@@ -145,7 +145,7 @@ bool ImGui::nx::init() {
     } else {
         s_width  = 1920.0f, s_height = 1080.0f;
         style.ScaleAllSizes(2.6f);
-        io.FontGlobalScale = 1.6f;
+        io.FontGlobalScale = 1.4f;
     }
 
     // initialize applet hooks

@@ -293,10 +293,10 @@ Result draw_help_tab(cfg::Config &ctx) {
 
     if (im::CollapsingHeader("Usage")) {
         im::BulletText("\ue121 Touchscreen:\n"
-            "Drag the sliders to set the values to your\n  liking.\n");
+            "Drag the sliders to set the values to your liking.\n");
         im::BulletText("\ue122 Controller:\n"
             "Use the \ue0aa keypad to navigate the window.\n"
-            "Use \ue000 to select an item, then \ue0b1 \ue0b2 to\n  modify its value.\n"
+            "Use \ue000 to select an item, then \ue0b1 \ue0b2 to modify\n  its value.\n"
             "Use \ue001 to deselect an item.\n"
             "Use \ue002 to input a value using the keyboard.\n"
             "Use \ue0b3 to exit (\ue0b9 is not recommended).\n");
@@ -305,28 +305,26 @@ Result draw_help_tab(cfg::Config &ctx) {
     if (im::CollapsingHeader("Documentation")) {
         im::BulletText(
 R"(The temperature slider adjusts the color
-temperature of the screen. Use this as a
-night color feature.)");
+temperature of the screen. Use this as a night
+color feature.)");
         im::BulletText(
-R"(The filter feature can be used to restrict the
-color displayed to one single component
-(red, green, or blue).)");
+R"(The filter feature can be used to restrict the color
+displayed to one single component (red, green,
+or blue).)");
         im::BulletText(
-R"(The gamma slider adjusts the regamma
-ramp. This can be useful on bad/old
-monitors.)");
+R"(The gamma slider adjusts the regamma ramp.
+This can be useful on bad/old monitors.)");
         im::BulletText(
-R"(The luminance slider can increase/decrease
-the perceived luminance. This is different
-from the backlight brightness, but can be
-used along with it to lower the luminosity
-below normal limits.)");
+R"(The luminance slider can increase/decrease the
+perceived luminance. This is different from the
+backlight brightness, but can be used along with
+it to lower the luminosity below normal limits.)");
         im::BulletText(
 R"(The color range pickers adjust the intensity
-range of color components. This can be
-useful on certain monitors. Unticking "Full
-range" is equivalent to using the "Limited
-range" official setting.)");
+range of color components. This can be useful
+on certain monitors. Unticking "Full range" is
+equivalent to using the "Limited range" official
+setting.)");
     }
 
     im::TextUnformatted("Compiled on " __DATE__ " " __TIME__);
@@ -348,8 +346,8 @@ Result draw_main_window(cfg::Config &ctx) {
     ON_SCOPE_EXIT { im::End(); };
 
     auto [width, height] = im::GetIO().DisplaySize;
-    im::SetWindowPos( { 0.03f * width, 0.13f * height }, ImGuiCond_Always);
-    im::SetWindowSize({ 0.40f * width, 0.74f * height }, ImGuiCond_Always);
+    im::SetWindowPos( { 0.03f * width, 0.10f * height }, ImGuiCond_Always);
+    im::SetWindowSize({ 0.40f * width, 0.80f * height }, ImGuiCond_Always);
 
     // Leave edit field, or it will pop the swkbd again
     im::GetCurrentContext()->TempInputId = 0;
@@ -473,6 +471,11 @@ void draw_graph_window(cfg::Config &ctx) {
 }
 
 void draw_error_window(cfg::Config &ctx, Result error) {
+    if (!im::Begin("Fizeau, version " VERSION "-" COMMIT, nullptr, ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove))
+        return;
+    ON_SCOPE_EXIT { im::End(); };
+
     im::Text("Error: %#x (%04d-%04d)", error, R_MODULE(error) + 2000, R_DESCRIPTION(error));
     im::TextUnformatted(
 R"(An error happened.

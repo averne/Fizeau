@@ -166,10 +166,10 @@
         {
             "label": "application run",
             "type": "shell",
-            "command": "twib",
+            "command": "nxlink",
             "args": [
-                "run",
-                "-a",
+                "-p",
+                "Fizeau/Fizeau.nro",
                 "${workspaceRoot}/application/out/Fizeau.nro"
             ],
             "dependsOn": "application all",

@@ -63,7 +63,9 @@ ams::Result Man::set_hdmi_color_range(ColorRange range, bool disable) {
     R_TRY(nvioctlNvDisp_GetAviInfoframe(Man::disp1_fd, Man::infoframe));
     Man::infoframe.rgb_quant = static_cast<std::uint32_t>(disable ? RgbQuantRange::Default :
         (is_limited(range) ? RgbQuantRange::Limited : RgbQuantRange::Full));
-    R_TRY(nvioctlNvDisp_SetAviInfoframe(Man::disp1_fd, Man::infoframe));
+
+    // FIXME: Setting the infoframe leads to flickering in the applet client when docked
+    // R_TRY(nvioctlNvDisp_SetAviInfoframe(Man::disp1_fd, Man::infoframe));
     return ams::ResultSuccess();
 }
 

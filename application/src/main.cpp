@@ -88,6 +88,7 @@ int main(int argc, char **argv) {
     while (fz::gfx::loop()) {
         if (R_FAILED(rc)) {
             fz::gui::draw_error_window(config, rc);
+            fz::gfx::render();
             continue;
         }
 
