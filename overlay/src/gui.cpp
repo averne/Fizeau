@@ -117,15 +117,17 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     this->temp_slider = new tsl::elm::TrackBar("");
     this->temp_slider->setProgress(((this->is_day ? this->config.temperature_day : this->config.temperature_night) - MIN_TEMP)
         * 100 / (MAX_TEMP - MIN_TEMP));
+    this->temp_slider->setClickListener([this](std::uint64_t keys) {
+        if (keys & KEY_Y) {
+            this->temp_slider->setProgress((DEFAULT_TEMP - MIN_TEMP) * 100 / (MAX_TEMP - MIN_TEMP));
+            (this->is_day ? this->config.temperature_day : this->config.temperature_night) = DEFAULT_TEMP;
+            return true;
+        }
+        return false;
+    });
     this->temp_slider->setValueChangedListener([this](std::uint8_t val) {
         (this->is_day ? this->config.temperature_day : this->config.temperature_night) =
             val * (MAX_TEMP - MIN_TEMP) / 100 + MIN_TEMP;
-    });
-
-    this->filter_bar = new tsl::elm::NamedStepTrackBar("", { "None", "Red", "Green", "Blue" });
-    this->filter_bar->setProgress(static_cast<u8>(this->is_day ? this->config.filter_day : this->config.filter_night));
-    this->filter_bar->setValueChangedListener([this](u8 val) {
-        (this->is_day ? this->config.filter_day : this->config.filter_night) = static_cast<ColorFilter>(val);
     });
 
     this->brightness_slider = new tsl::elm::TrackBar("");
@@ -139,6 +141,14 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     this->gamma_slider = new tsl::elm::TrackBar("");
     this->gamma_slider->setProgress(((this->is_day ? this->config.gamma_day : this->config.gamma_night) - MIN_GAMMA)
         * 100 / (MAX_GAMMA - MIN_GAMMA));
+    this->gamma_slider->setClickListener([this](std::uint64_t keys) {
+        if (keys & KEY_Y) {
+            this->gamma_slider->setProgress((DEFAULT_GAMMA - MIN_GAMMA) * 100 / (MAX_GAMMA - MIN_GAMMA));
+            (this->is_day ? this->config.gamma_day : this->config.gamma_night) = DEFAULT_GAMMA;
+            return true;
+        }
+        return false;
+    });
     this->gamma_slider->setValueChangedListener([this](std::uint8_t val) {
         (this->is_day ? this->config.gamma_day : this->config.gamma_night) =
             val * (MAX_GAMMA - MIN_GAMMA) / 100 + MIN_GAMMA;
@@ -147,9 +157,31 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     this->luma_slider = new tsl::elm::TrackBar("");
     this->luma_slider->setProgress(((this->is_day ? this->config.luminance_day : this->config.luminance_night) - MIN_LUMA)
         * 100 / (MAX_LUMA - MIN_LUMA));
+    this->luma_slider->setClickListener([this](std::uint64_t keys) {
+        if (keys & KEY_Y) {
+            this->luma_slider->setProgress((DEFAULT_LUMA - MIN_LUMA) * 100 / (MAX_LUMA - MIN_LUMA));
+            (this->is_day ? this->config.luminance_day : this->config.luminance_night) = DEFAULT_LUMA;
+            return true;
+        }
+        return false;
+    });
     this->luma_slider->setValueChangedListener([this](std::uint8_t val) {
         (this->is_day ? this->config.luminance_day : this->config.luminance_night) =
             val * (MAX_LUMA - MIN_LUMA) / 100 + MIN_LUMA;
+    });
+
+    this->filter_bar = new tsl::elm::NamedStepTrackBar("", { "None", "Red", "Green", "Blue" });
+    this->filter_bar->setProgress(static_cast<u8>(this->is_day ? this->config.filter_day : this->config.filter_night));
+    this->filter_bar->setClickListener([this](std::uint64_t keys) {
+        if (keys & KEY_Y) {
+            this->filter_bar->setProgress(0);
+            (this->is_day ? this->config.filter_day : this->config.filter_night) = ColorFilter_None;
+            return true;
+        }
+        return false;
+    });
+    this->filter_bar->setValueChangedListener([this](u8 val) {
+        (this->is_day ? this->config.filter_day : this->config.filter_night) = static_cast<ColorFilter>(val);
     });
 
     this->range_button = new tsl::elm::ListItem("Color range");
@@ -180,14 +212,14 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     list->addItem(this->apply_button);
     list->addItem(this->temp_header);
     list->addItem(this->temp_slider);
-    list->addItem(this->filter_header);
-    list->addItem(this->filter_bar);
     list->addItem(this->brightness_header);
     list->addItem(this->brightness_slider);
     list->addItem(this->gamma_header);
     list->addItem(this->gamma_slider);
     list->addItem(this->luma_header);
     list->addItem(this->luma_slider);
+    list->addItem(this->filter_header);
+    list->addItem(this->filter_bar);
     list->addItem(this->range_button);
     frame->setContent(list);
     return frame;
