@@ -30,6 +30,7 @@
                 "__aarch64__",
                 "__SWITCH__",
                 "DEBUG",
+                "SYSMODULE",
                 "TWILI",
                 "VERSION=\"0.0.0\"",
                 "COMMIT=\"0000000\"",
