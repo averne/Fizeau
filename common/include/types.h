@@ -24,9 +24,10 @@
 #include <switch.h>
 
 typedef uint32_t Temperature;
-#define MIN_TEMP     1000u // °K
-#define MAX_TEMP     6500u // °K, D65 standard illuminant
-#define DEFAULT_TEMP MAX_TEMP
+#define MIN_TEMP     1000u  // °K
+#define D65_TEMP     6500u  // °K, D65 standard illuminant
+#define MAX_TEMP     10000u // °K
+#define DEFAULT_TEMP D65_TEMP
 
 typedef enum {
     ColorFilter_None,

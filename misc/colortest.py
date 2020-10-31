@@ -5,7 +5,7 @@ import math
 from PIL import Image
 
 MIN_TEMP = 1000
-MAX_TEMP = 6500
+MAX_TEMP = 10000
 
 clamp = lambda v, minv, maxv: max(minv, min(v, maxv))
 
@@ -37,7 +37,7 @@ def temp_to_col(temp):
 def main(argc, argv):
     im = Image.new("RGB", (1000, 1000))
     px = im.load()
-    for y, temp in enumerate(range(MIN_TEMP, MAX_TEMP, 100)):
+    for y, temp in enumerate(range(MIN_TEMP, MAX_TEMP, 10)):
         col = temp_to_col(temp)
         print(f"{temp} => r: {col[0] / 256}, g: {col[1] / 256}, b: {col[2] / 256}")
         for x in range(im.size[0]):

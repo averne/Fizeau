@@ -200,10 +200,16 @@ Result draw_color_tab(cfg::Config &ctx) {
     if (!im::BeginTabItem("Colors"))
         return 0;
 
+    static bool enable_extra_hot_temps = false;
+    if ((ctx.temperature_day > D65_TEMP) ||(ctx.temperature_night > D65_TEMP))
+        enable_extra_hot_temps = true;
+
     // Temperature slider
     im::TextUnformatted("Temperature");
-    ctx.is_editing_day_profile   |= new_slider("Day:",   "##tempd", ctx.temperature_day,   MIN_TEMP, MAX_TEMP, "%d°K");
-    ctx.is_editing_night_profile |= new_slider("Night:", "##tempn", ctx.temperature_night, MIN_TEMP, MAX_TEMP, "%d°K");
+    auto max_temp = enable_extra_hot_temps ? MAX_TEMP : D65_TEMP;
+    ctx.is_editing_day_profile   |= new_slider("Day:",   "##tempd", ctx.temperature_day,   MIN_TEMP, max_temp, "%d°K");
+    ctx.is_editing_night_profile |= new_slider("Night:", "##tempn", ctx.temperature_night, MIN_TEMP, max_temp, "%d°K");
+    im::Checkbox("Enable blue temperatures", &enable_extra_hot_temps);
 
     im::Separator();
     im::TextUnformatted("Filter");

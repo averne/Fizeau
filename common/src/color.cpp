@@ -51,7 +51,7 @@ std::array<float, 9> filter_matrix(ColorFilter filter) {
 }
 
 std::tuple<float, float, float> whitepoint(Temperature temperature) {
-    if (temperature == MAX_TEMP)
+    if (temperature == D65_TEMP)
         return { 1.0f, 1.0f, 1.0f }; // Fast path
 
     float temp = static_cast<float>(temperature) / 100.0f, red, green, blue;

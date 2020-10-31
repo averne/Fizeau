@@ -114,12 +114,16 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
         return false;
     });
 
+    static bool enable_extra_hot_temps = false;
+    if ((this->is_day ? this->config.temperature_day : this->config.temperature_night) > D65_TEMP)
+        enable_extra_hot_temps = true;
+
     this->temp_slider = new tsl::elm::TrackBar("");
     this->temp_slider->setProgress(((this->is_day ? this->config.temperature_day : this->config.temperature_night) - MIN_TEMP)
-        * 100 / (MAX_TEMP - MIN_TEMP));
-    this->temp_slider->setClickListener([this](std::uint64_t keys) {
+        * 100 / ((enable_extra_hot_temps ? MAX_TEMP : D65_TEMP) - MIN_TEMP));
+    this->temp_slider->setClickListener([&, this](std::uint64_t keys) {
         if (keys & KEY_Y) {
-            this->temp_slider->setProgress((DEFAULT_TEMP - MIN_TEMP) * 100 / (MAX_TEMP - MIN_TEMP));
+            this->temp_slider->setProgress((DEFAULT_TEMP - MIN_TEMP) * 100 / ((enable_extra_hot_temps ? MAX_TEMP : D65_TEMP) - MIN_TEMP));
             (this->is_day ? this->config.temperature_day : this->config.temperature_night) = DEFAULT_TEMP;
             return true;
         }
@@ -127,7 +131,7 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     });
     this->temp_slider->setValueChangedListener([this](std::uint8_t val) {
         (this->is_day ? this->config.temperature_day : this->config.temperature_night) =
-            val * (MAX_TEMP - MIN_TEMP) / 100 + MIN_TEMP;
+            val * ((enable_extra_hot_temps ? MAX_TEMP : D65_TEMP) - MIN_TEMP) / 100 + MIN_TEMP;
     });
 
     this->brightness_slider = new tsl::elm::TrackBar("");
