@@ -89,13 +89,13 @@ ams::Result ProfileManager::set_is_active(bool active) {
 ams::Result ProfileManager::commit(bool force_brightness) {
     std::scoped_lock lk(Man::commit_mutex);
 
-    auto apply_profile = [&force_brightness](Profile profile, bool internal) -> ams::Result {
+    auto apply_profile = [&force_brightness](Profile profile, bool dim, bool internal) -> ams::Result {
         auto time = Clock::get_current_time();
         bool apply_brightness = true;
 
         if (Clock::is_in_interval(time, profile.dusk_begin, profile.dusk_end)) {
             if (!profile.is_transitionning) {
-                BrightnessManager::get_brightness(profile.brightness_day);
+                R_TRY(BrightnessManager::get_brightness(profile.brightness_day));
                 profile.is_transitionning = true;
             }
             float factor = static_cast<float>(to_timestamp(profile.dusk_end - time))
@@ -103,7 +103,7 @@ ams::Result ProfileManager::commit(bool force_brightness) {
             profile = profile.interpolate(factor, false);
         } else if (Clock::is_in_interval(time, profile.dawn_begin, profile.dawn_end)) {
             if (!profile.is_transitionning) {
-                BrightnessManager::get_brightness(profile.brightness_night);
+                R_TRY(BrightnessManager::get_brightness(profile.brightness_night));
                 profile.is_transitionning = true;
             }
             float factor = static_cast<float>(to_timestamp(profile.dawn_end - time))
@@ -112,6 +112,21 @@ ams::Result ProfileManager::commit(bool force_brightness) {
         } else {
             profile.is_transitionning = false;
             apply_brightness = force_brightness;
+        }
+
+        if (dim) {
+            profile.luminance_day = profile.luminance_night =
+                internal ? dimmed_luma_internal : dimmed_luma_external;
+
+            apply_brightness = false;
+            if (internal)
+                R_TRY(BrightnessManager::enable_dimming());
+        } else if (internal) {
+            bool is_dimming;
+            R_TRY(BrightnessManager::is_dimming(is_dimming));
+
+            if (is_dimming)
+                R_TRY(BrightnessManager::disable_dimming());
         }
 
         if (Clock::is_in_interval(profile.dawn_begin, profile.dusk_begin)) {
@@ -140,8 +155,18 @@ ams::Result ProfileManager::commit(bool force_brightness) {
         return ams::ResultSuccess();
     };
 
-    R_TRY(apply_profile(Man::get_active_internal_profile(), true));
-    R_TRY(apply_profile(Man::get_active_external_profile(), false));
+    bool should_dim_internal = false, should_dim_external = false;
+    if (hosversionAtLeast(9, 0, 0)) {
+        std::uint64_t last_active = 0;
+        R_TRY(insrGetLastTick(3, &last_active));
+
+        auto timeout = armTicksToNs(armGetSystemTick() - last_active) / 1e9;
+        should_dim_internal = timeout >= to_timestamp(Man::get_active_internal_profile().dimming_timeout);
+        should_dim_external = timeout >= to_timestamp(Man::get_active_external_profile().dimming_timeout);
+    }
+
+    R_TRY(apply_profile(Man::get_active_internal_profile(), should_dim_internal, true));
+    R_TRY(apply_profile(Man::get_active_external_profile(), should_dim_external, false));
     return ams::ResultSuccess();
 }
 

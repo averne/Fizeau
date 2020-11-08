@@ -71,6 +71,10 @@ extern "C" void __appInit(void) {
     ams::sm::DoWithSession([] {
         R_ABORT_UNLESS(nvInitialize());
         R_ABORT_UNLESS(lblInitialize());
+
+        if (hosversionAtLeast(9, 0, 0))
+            R_ABORT_UNLESS(insrInitialize());
+
 #ifdef DEBUG
         R_ABORT_UNLESS(twiliInitialize());
         R_ABORT_UNLESS(twiliCreateNamedOutputPipe(&g_twlPipe, "fzout"));
@@ -83,6 +87,10 @@ extern "C" void __appInit(void) {
 extern "C" void __appExit(void) {
     nvExit();
     lblExit();
+
+    if (hosversionAtLeast(9, 0, 0))
+        insrExit();
+
 #ifdef DEBUG
     twiliClosePipe(&g_twlPipe);
     twiliExit();

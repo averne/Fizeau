@@ -32,6 +32,18 @@ class BrightnessManager {
         static ams::Result set_brightness(Brightness brightness);
         static ams::Result disable();
 
+        static ams::Result enable_dimming() {
+            return lblEnableDimming();
+        }
+
+        static ams::Result disable_dimming() {
+            return lblDisableDimming();
+        }
+
+        static ams::Result is_dimming(bool &is_dimming) {
+            return lblIsDimmingEnabled(&is_dimming);
+        }
+
     private:
         static inline Brightness saved_brightness;
 };

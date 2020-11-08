@@ -43,10 +43,14 @@ struct Profile {
     Time dusk_begin = { 21, 00, 00 }, dusk_end = { 21, 30, 00 };
     Time dawn_begin = { 07, 00, 00 }, dawn_end = { 07, 30, 00 };
 
+    Time dimming_timeout = { 00, 05, 00 };
+
     bool is_transitionning = false;
 
     Profile interpolate(float factor, bool from_day);
 };
+
+constexpr float dimmed_luma_internal = -0.1f, dimmed_luma_external = -0.7f; // Official values used in 6.0.0 am
 
 class ProfileManager {
     public:

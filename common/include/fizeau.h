@@ -73,6 +73,8 @@ Result fizeauProfileGetCmuColorRange(FizeauProfile *p, ColorRange *range_day, Co
 Result fizeauProfileSetCmuColorRange(FizeauProfile *p, ColorRange range_day, ColorRange range_night);
 Result fizeauProfileGetScreenBrightness(FizeauProfile *p, Brightness *brightness_day, Brightness *brightness_night);
 Result fizeauProfileSetScreenBrightness(FizeauProfile *p, Brightness brightness_day, Brightness brightness_night);
+Result fizeauProfileGetDimmingTimeout(FizeauProfile *p, Time *timeout);
+Result fizeauProfileSetDimmingTimeout(FizeauProfile *p, Time timeout);
 
 #ifdef __cplusplus
 }

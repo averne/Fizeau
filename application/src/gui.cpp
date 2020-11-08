@@ -289,6 +289,24 @@ Result draw_time_tab(cfg::Config &ctx) {
     if (has_changed)
         ctx.has_active_override = false;
 
+    // Dimming timeout
+    {
+        im::Separator();
+        im::TextUnformatted("Dimming timeout:");
+        im::PushItemWidth(im::GetWindowWidth() * 0.2f);
+        ON_SCOPE_EXIT { im::PopItemWidth(); };
+
+        im::SetCursorPosX(150.0f);
+        int int_m = ctx.dimming_timeout.m, int_s = ctx.dimming_timeout.s;
+        im::DragInt("##dimm", &int_m, 0.05f, 0, 59, "%02dm");
+        swkbd::handle("##dimm", &int_m, 0, 59);
+        im::SameLine();
+        im::DragInt("##dims", &int_s, 0.05f, 0, 59, "%02ds");
+        swkbd::handle("##dims", &int_s, 0, 59);
+
+        ctx.dimming_timeout.m = static_cast<std::uint8_t>(int_m), ctx.dimming_timeout.s = static_cast<std::uint8_t>(int_s);
+    }
+
     im::EndTabItem();
     return 0;
 }

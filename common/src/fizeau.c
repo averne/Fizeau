@@ -52,6 +52,8 @@ typedef enum {
     FizeauProfileCmdId_SetCmuColorRange    = 13,
     FizeauProfileCmdId_GetScreenBrightness = 14,
     FizeauProfileCmdId_SetScreenBrightness = 15,
+    FizeauProfileCmdId_GetDimmingTimeout   = 16,
+    FizeauProfileCmdId_SetDimmingTimeout   = 17,
 } FizeauProfileCmdId;
 
 static Service g_fizeau_srv;
@@ -303,4 +305,18 @@ Result fizeauProfileSetScreenBrightness(FizeauProfile *p, Brightness brightness_
         Brightness brightness_day, brightness_night;
     } in = { brightness_day, brightness_night };
     return serviceDispatchIn(&p->s, FizeauProfileCmdId_SetScreenBrightness, in);
+}
+
+Result fizeauProfileGetDimmingTimeout(FizeauProfile *p, Time *timeout) {
+    Time tmp;
+    Result rc = serviceDispatchOut(&p->s, FizeauProfileCmdId_GetDimmingTimeout, tmp);
+
+    if (R_SUCCEEDED(rc) && timeout)
+        *timeout = tmp;
+
+    return rc;
+}
+
+Result fizeauProfileSetDimmingTimeout(FizeauProfile *p, Time timeout) {
+    return serviceDispatchIn(&p->s, FizeauProfileCmdId_SetDimmingTimeout, timeout);
 }

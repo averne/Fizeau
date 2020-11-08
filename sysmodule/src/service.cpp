@@ -136,4 +136,14 @@ ams::Result IProfile::SetScreenBrightness(Brightness brightness_day, Brightness 
     return ProfileManager::on_profile_updated(this->id);
 }
 
+ams::Result IProfile::GetDimmingTimeout(ams::sf::Out<Time> timeout) {
+    timeout.SetValue(this->profile.dimming_timeout);
+    return ams::ResultSuccess();
+}
+
+ams::Result IProfile::SetDimmingTimeout(Time timeout) {
+    this->profile.dimming_timeout = timeout;
+    return ProfileManager::on_profile_updated(this->id);
+}
+
 } // namespace fz

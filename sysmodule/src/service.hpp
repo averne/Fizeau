@@ -44,6 +44,8 @@ class IProfile final: public ams::sf::IServiceObject {
             SetCmuColorRange    = 13,
             GetScreenBrightness = 14,
             SetScreenBrightness = 15,
+            GetDimmingTimeout   = 16,
+            SetDimmingTimeout   = 17,
         };
 
     public:
@@ -69,6 +71,9 @@ class IProfile final: public ams::sf::IServiceObject {
         ams::Result GetScreenBrightness(ams::sf::Out<Brightness> brightness_day, ams::sf::Out<Brightness> brightness_night);
         ams::Result SetScreenBrightness(Brightness brightness_day, Brightness brightness_night);
 
+        ams::Result GetDimmingTimeout(ams::sf::Out<Time> timeout);
+        ams::Result SetDimmingTimeout(Time timeout);
+
     public:
         DEFINE_SERVICE_DISPATCH_TABLE {
             MAKE_SERVICE_COMMAND_META(GetDuskTime),
@@ -87,6 +92,8 @@ class IProfile final: public ams::sf::IServiceObject {
             MAKE_SERVICE_COMMAND_META(SetCmuColorRange),
             MAKE_SERVICE_COMMAND_META(GetScreenBrightness),
             MAKE_SERVICE_COMMAND_META(SetScreenBrightness),
+            MAKE_SERVICE_COMMAND_META(GetDimmingTimeout),
+            MAKE_SERVICE_COMMAND_META(SetDimmingTimeout),
         };
 
     private:

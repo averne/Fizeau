@@ -44,6 +44,8 @@ struct Config {
     Luminance   luminance_day,   luminance_night;
     ColorRange  range_day,       range_night;
     Brightness  brightness_day,  brightness_night;
+
+    Time dimming_timeout;
 };
 
 Config read(const std::string_view &path);

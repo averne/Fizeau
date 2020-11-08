@@ -113,7 +113,10 @@ static int ini_handler(void *user, const char *section, const char *name, const 
             config->range_day         = parse_range(value);
         else if (MATCH(name, "range_night"))
             config->range_night       = parse_range(value);
-        else
+        else if (MATCH(name, "dimming_timeout")) {
+            auto t= parse_time(value);
+            config->dimming_timeout   = { 0, t.h, t.m };
+        } else
             return 0;
     } else {
         return 0;
@@ -198,6 +201,8 @@ inline std::string make(Config &config) {
         str += "range_day         = " + format_range(config.range_day)           + '\n';
         str += "range_night       = " + format_range(config.range_night)         + '\n';
 
+        str += "dimming_timeout   = " + format_time({ config.dimming_timeout.m, config.dimming_timeout.s }) + '\n';
+
         str += '\n';
     }
 
@@ -224,6 +229,7 @@ Result update(Config &config) {
     R_TRY(fizeauProfileGetCmuLuminance(&config.cur_profile, &config.luminance_day, &config.luminance_night));
     R_TRY(fizeauProfileGetCmuColorRange(&config.cur_profile, &config.range_day, &config.range_night));
     R_TRY(fizeauProfileGetScreenBrightness(&config.cur_profile, &config.brightness_day, &config.brightness_night));
+    R_TRY(fizeauProfileGetDimmingTimeout(&config.cur_profile, &config.dimming_timeout));
     return 0;
 }
 
@@ -236,6 +242,7 @@ Result apply(cfg::Config &config) {
     R_TRY(fizeauProfileSetCmuLuminance(&config.cur_profile, config.luminance_day, config.luminance_night));
     R_TRY(fizeauProfileSetCmuColorRange(&config.cur_profile, config.range_day, config.range_night));
     R_TRY(fizeauProfileSetScreenBrightness(&config.cur_profile, config.brightness_day, config.brightness_night));
+    R_TRY(fizeauProfileSetDimmingTimeout(&config.cur_profile, config.dimming_timeout));
     return 0;
 }
 
