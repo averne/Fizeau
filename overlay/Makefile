@@ -146,10 +146,4 @@ clean:
 mrproper: clean
 	@for dir in $(CUSTOM_LIBS); do $(MAKE) --no-print-directory -C $$dir clean; done
 
-application:
-	@:
-
-sysmodule:
-	@:
-
 -include $(DFILES)

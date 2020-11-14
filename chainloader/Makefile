@@ -6,31 +6,44 @@ TOPDIR           ?=    $(CURDIR)
 
 # -----------------------------------------------
 
-APP_TITLE         =    Fizeau
-APP_AUTHOR        =    averne
-APP_ICON          =    $(CURDIR)/icon.jpg
-APP_VERSION       =    $(FZ_VERSION)
+APP_TITLE         =    Fizeau-chl
 APP_TITLEID       =
 
-TARGET            =    Fizeau
-EXTENSION         =    nro
+TARGET            =    Fizeau-chl
+EXTENSION         =    nsp
 OUT               =    out
 BUILD             =    build
 SOURCES           =    src
 INCLUDES          =    include ../lib/libstratosphere/libstratosphere/include
-CUSTOM_LIBS       =    ../common ../lib/imgui-nx ../lib/imgui ../lib/inih ../lib/stb_image
-ROMFS             =    res
+CUSTOM_LIBS       =    ../common/ ../lib/inih ../lib/libstratosphere
+NPDM_JSON         =    config.json
 
-DEFINES           =    __SWITCH__ VERSION=\"$(FZ_VERSION)\" COMMIT=\"$(FZ_COMMIT)\"      \
-                       ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_NX           \
-                       ATMOSPHERE_ARCH_ARM64 ATMOSPHERE_OS_HORIZON APPLICATION TWILI
+DEFINES           =    __SWITCH__ ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_NX           \
+                       ATMOSPHERE_ARCH_ARM64 ATMOSPHERE_OS_HORIZON SYSMODULE TWILI
 ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
-FLAGS             =    -Wall -pipe -g -O2 -ffunction-sections -fdata-sections
-CFLAGS            =    -std=gnu11
-CXXFLAGS          =    -std=gnu++20 -fno-rtti -fno-exceptions
+FLAGS             =    -Wall -pipe -g -Os -ffunction-sections -fdata-sections
+CFLAGS            =    -std=gnu11 -fno-stack-protector -fno-common -flto
+CXXFLAGS          =    -std=gnu++20 -fno-rtti -fno-exceptions -fno-non-call-exceptions              \
+                       -fno-threadsafe-statics -fno-use-cxa-atexit                                  \
+                       -fno-asynchronous-unwind-tables -fno-unwind-tables
 ASFLAGS           =
-LDFLAGS           =    -Wl,-pie -specs=$(DEVKITPRO)/libnx/switch.specs -g
-LINKS             =    -lcommon -limgui-nx -limgui -lstbi -linih -ldeko3d -lnx
+LDFLAGS           =    -Wl,--wrap,__cxa_pure_virtual                                                \
+                       -Wl,--wrap,__cxa_throw                                                       \
+                       -Wl,--wrap,__cxa_rethrow                                                     \
+                       -Wl,--wrap,__cxa_allocate_exception                                          \
+                       -Wl,--wrap,__cxa_free_exception                                              \
+                       -Wl,--wrap,__cxa_begin_catch                                                 \
+                       -Wl,--wrap,__cxa_end_catch                                                   \
+                       -Wl,--wrap,__cxa_call_unexpected                                             \
+                       -Wl,--wrap,__cxa_call_terminate                                              \
+                       -Wl,--wrap,__gxx_personality_v0                                              \
+                       -Wl,--wrap,_Unwind_Resume                                                    \
+                       -Wl,--wrap,_ZSt19__throw_logic_errorPKc                                      \
+                       -Wl,--wrap,_ZSt20__throw_length_errorPKc                                     \
+                       -Wl,--wrap,_ZNSt11logic_errorC2EPKc                                          \
+                       -Wl,-pie -specs=$(DEVKITPRO)/libnx/switch.specs -g -Os                       \
+                       -flto -fuse-linker-plugin
+LINKS             =    -lcommon -linih -lstratosphere -lnx
 
 PREFIX            =    aarch64-none-elf-
 CC                =    $(PREFIX)gcc
@@ -58,7 +71,8 @@ DFILES            =    $(OFILES:.o=.d)
 LIBS_TARGET       =    $(shell find $(addsuffix /lib,$(CUSTOM_LIBS)) -name "*.a" 2>/dev/null)
 NX_TARGET         =    $(if $(OUT:=), $(OUT)/$(TARGET).$(EXTENSION), .$(OUT)/$(TARGET).$(EXTENSION))
 ELF_TARGET        =    $(if $(OUT:=), $(OUT)/$(TARGET).elf, .$(OUT)/$(TARGET).elf)
-NACP_TARGET       =    $(if $(OUT:=), $(OUT)/$(TARGET).nacp, .$(OUT)/$(TARGET).nacp)
+NSO_TARGET        =    $(if $(BUILD:=), $(BUILD)/$(TARGET).nso, .$(BUILD)/$(TARGET).nso)
+NPDM_TARGET       =    $(if $(OUT:=), $(OUT)/$(TARGET).npdm, .$(OUT)/$(TARGET).npdm)
 
 DEFINE_FLAGS      =    $(addprefix -D,$(DEFINES))
 INCLUDE_FLAGS     =    $(addprefix -I$(CURDIR)/,$(INCLUDES)) $(foreach dir,$(CUSTOM_LIBS),-I$(CURDIR)/$(dir)/include) \
@@ -67,61 +81,31 @@ LIB_FLAGS         =    $(foreach dir,$(LIBS),-L$(dir)/lib)
 
 # -----------------------------------------------
 
-ifeq ($(strip $(APP_TITLE)),)
-    APP_TITLE     =    $(TARGET)
-endif
-
-ifeq ($(strip $(APP_AUTHOR)),)
-    APP_AUTHOR    =    Unspecified
-endif
-
-ifeq ($(strip $(APP_VERSION)),)
-    APP_VERSION   =    Unspecified
-endif
-
-ifneq ($(APP_TITLEID),)
-    NACPFLAGS    +=    --titleid=$(strip $(APP_TITLEID))
-endif
-
-ifeq ($(strip $(APP_ICON)),)
-    APP_ICON      =    $(LIBNX)/default_icon.jpg
-endif
-
-NROFLAGS          =    --icon=$(strip $(APP_ICON)) --nacp=$(strip $(NACP_TARGET))
-
-ifneq ($(ROMFS),)
-    NROFLAGS     +=    --romfsdir=$(strip $(ROMFS))
-    ROMFS_TARGET +=    $(shell find $(ROMFS) -type 'f')
-endif
-
-# -----------------------------------------------
-
 .SUFFIXES:
 
-.PHONY: all libs run clean mrproper $(CUSTOM_LIBS)
+.PHONY: all libs clean mrproper $(CUSTOM_LIBS)
 
 all: $(NX_TARGET)
 
-run: all
-	@echo "Running" $(NX_TARGET)
-	@nxlink -p Fizeau/Fizeau.nro -s $(NX_TARGET)
-
 libs: $(CUSTOM_LIBS)
-
-shaders: ../lib/imgui-nx
-	@mkdir -p $(ROMFS)
-	$(shell find ../lib/imgui-nx/lib/ -type f -name '*.dksh' -exec cp -u {} $(ROMFS) \;)
 
 $(CUSTOM_LIBS):
 	@$(MAKE) -s --no-print-directory -C $@
 
-$(NX_TARGET): $(ROMFS_TARGET) $(APP_ICON) $(NACP_TARGET) $(ELF_TARGET) | shaders
-	@echo " NRO " $@
-	@mkdir -p $(dir $@)
-	@elf2nro $(ELF_TARGET) $@ $(NROFLAGS) > /dev/null
-	@echo "Built" $(notdir $@)
+$(NX_TARGET): $(NSO_TARGET) $(NPDM_TARGET)
+	@echo " NSP " $@
+	@mkdir -p $(BUILD)/exefs
+	@cp $(NSO_TARGET) $(BUILD)/exefs/main
+	@cp $(NPDM_TARGET) $(BUILD)/exefs/main.npdm
+	@build_pfs0 $(BUILD)/exefs $@
+	@echo Built $(notdir $@)
 
-$(ELF_TARGET): $(OFILES) $(LIBS_TARGET) | libs
+$(NSO_TARGET): $(ELF_TARGET)
+	@echo " NSO " $@
+	@mkdir -p $(dir $@)
+	@elf2nso $< $@
+
+$(ELF_TARGET): $(OFILES) | libs
 	@echo " LD  " $@
 	@mkdir -p $(dir $@)
 	@$(LD) $(ARCH) $(LDFLAGS) -Wl,-Map,$(BUILD)/$(TARGET).map $(LIB_FLAGS) $(OFILES) $(LINKS) -o $@
@@ -142,10 +126,10 @@ $(BUILD)/%.s.o: %.s %.S
 	@mkdir -p $(dir $@)
 	@$(AS) -MMD -MP -x assembler-with-cpp $(ARCH) $(FLAGS) $(ASFLAGS) $(INCLUDE_FLAGS) -c $(CURDIR)/$< -o $@
 
-%.nacp:
-	@echo " NACP" $@
+%.npdm: $(NPDM_JSON)
+	@echo " NPDM" $@
 	@mkdir -p $(dir $@)
-	@nacptool --create "$(APP_TITLE)" "$(APP_AUTHOR)" "$(APP_VERSION)" $@ $(NACPFLAGS)
+	@npdmtool $(NPDM_JSON) $@
 
 clean:
 	@echo Cleaning...

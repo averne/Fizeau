@@ -1,4 +1,4 @@
-export FZ_VERSION =    2.0.1
+export FZ_VERSION =    2.1.0
 export FZ_COMMIT  =    $(shell git rev-parse --short HEAD)
 export FZ_TID     =    0100000000000F12
 
@@ -18,9 +18,11 @@ DIST_TARGET       =    $(OUT)/Fizeau-$(FZ_VERSION)-$(FZ_COMMIT).zip
 
 # -----------------------------------------------
 
-.PHONY: all application sysmodule overlay dist clean mrproper
+MODULES           =    application sysmodule overlay chainloader
 
-all: application sysmodule overlay
+.PHONY: all dist clean mrproper $(MODULES)
+
+all: $(MODULES)
 	@:
 
 dist: $(DIST_TARGET)
@@ -49,18 +51,19 @@ clean:
 	@rm -rf out
 
 mrproper: clean
-	@$(MAKE) --no-print-directory -C application mrproper
-	@$(MAKE) --no-print-directory -C sysmodule mrproper
-	@$(MAKE) --no-print-directory -C overlay mrproper
+	@for dir in $(MODULES); do $(MAKE) --no-print-directory -C $$dir mrproper; done
 
 application:
-	@$(MAKE) -s -C $@ $(filter-out $@ dist,$(MAKECMDGOALS)) --no-print-directory
+	@$(MAKE) -s -C $@ $(filter-out $(MODULES) dist,$(MAKECMDGOALS)) --no-print-directory
 
 sysmodule:
-	@$(MAKE) -s -C $@ $(filter-out $@ dist,$(MAKECMDGOALS)) --no-print-directory
+	@$(MAKE) -s -C $@ $(filter-out $(MODULES) dist,$(MAKECMDGOALS)) --no-print-directory
 
 overlay:
-	@$(MAKE) -s -C $@ $(filter-out $@ dist,$(MAKECMDGOALS)) --no-print-directory
+	@$(MAKE) -s -C $@ $(filter-out $(MODULES) dist,$(MAKECMDGOALS)) --no-print-directory
+
+chainloader:
+	@$(MAKE) -s -C $@ $(filter-out $(MODULES) dist,$(MAKECMDGOALS)) --no-print-directory
 
 %:
 	@:
