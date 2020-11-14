@@ -17,7 +17,7 @@ jobs:
 
     - name: Build
       run: |
-        make dist -j$(nproc)
+        make dist dist-chl -j$(nproc)
 
     - uses: actions/upload-artifact@master
       with:
