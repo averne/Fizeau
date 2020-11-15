@@ -10,6 +10,7 @@ Adjust the color of the screen of your Nintendo Switch.
   - Apply color corrections: gamma, luminance, and color range.
   - Control the screen backlight brightness.
   - Schedule settings to be applied to dusk/dawn time, with smooth transitions.
+  - Configurable screen dimming.
 
 # Images
 <p float="left">

@@ -161,8 +161,14 @@ ams::Result ProfileManager::commit(bool force_brightness) {
         R_TRY(insrGetLastTick(3, &last_active));
 
         auto timeout = armTicksToNs(armGetSystemTick() - last_active) / 1e9;
-        should_dim_internal = timeout >= to_timestamp(Man::get_active_internal_profile().dimming_timeout);
-        should_dim_external = timeout >= to_timestamp(Man::get_active_external_profile().dimming_timeout);
+
+        auto should_dim = [](auto profile, auto timeout) {
+            auto ts = to_timestamp(profile.dimming_timeout);
+            return ts && (timeout >= ts);
+        };
+
+        should_dim_internal = should_dim(Man::get_active_internal_profile(), timeout);
+        should_dim_external = should_dim(Man::get_active_external_profile(), timeout);
     }
 
     R_TRY(apply_profile(Man::get_active_internal_profile(), should_dim_internal, true));
