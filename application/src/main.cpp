@@ -53,10 +53,10 @@ extern "C" void userAppExit(void) {
     appletUnlockExit();
 }
 
+fz::cfg::Config config;
+
 int main(int argc, char **argv) {
     LOG("Starting Fizeau\n");
-
-    fz::cfg::Config config;
 
     if (!fz::gfx::init() )
         LOG("Failed to init\n");
