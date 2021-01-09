@@ -65,7 +65,7 @@ FizeauOverlayGui::FizeauOverlayGui() {
         return;
 
     FizeauProfileId id;
-    if (perf_mode == ApmPerformanceMode_Handheld) {
+    if (perf_mode == ApmPerformanceMode_Normal) {
         this->rc = fizeauGetActiveInternalProfileId(&id);
     } else {
         this->rc = fizeauGetActiveExternalProfileId(&id);

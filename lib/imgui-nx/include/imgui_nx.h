@@ -27,10 +27,12 @@
 
 #pragma once
 
+#include <cstdint>
+
 namespace ImGui::nx {
 
 bool init();
 void exit();
-void newFrame();
+std::uint64_t newFrame();
 
 } // namespace ImGui::nx

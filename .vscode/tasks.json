@@ -171,6 +171,7 @@
             "args": [
                 "-p",
                 "Fizeau/Fizeau.nro",
+                "-s",
                 "${workspaceRoot}/application/out/Fizeau.nro"
             ],
             "dependsOn": "application all",

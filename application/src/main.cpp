@@ -38,6 +38,7 @@ extern "C" void userAppInit() {
     plInitialize(PlServiceType_User);
     romfsInit();
     appletLockExit();
+    hidInitializeTouchScreen();
 }
 
 extern "C" void userAppExit(void) {
