@@ -81,7 +81,7 @@ extern "C" void __appInit(void) {
 #endif
     });
 
-    ams::CheckApiVersion();
+    // ams::CheckApiVersion();
 }
 
 extern "C" void __appExit(void) {
