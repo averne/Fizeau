@@ -133,6 +133,59 @@ Config read(const std::string_view &path) {
     return config;
 }
 
+bool validate(Config &config) {
+    auto validate_minmax = []<typename T>(T val, T min, T max) {
+        return (min <= val) && (val <= max);
+    };
+
+    auto validate_time = [](Time &time) {
+        return (time.h < 24) && (time.m < 60) && (time.s < 60);
+    };
+
+    auto validate_colorrange = [&](ColorRange range) {
+        return validate_minmax(range.lo, MIN_RANGE, MAX_RANGE) && validate_minmax(range.hi, MIN_RANGE, MAX_RANGE);
+    };
+
+    if ((config.active_external_profile > FizeauProfileId_Profile4)
+            || (config.active_internal_profile > FizeauProfileId_Profile4))
+        return false;
+
+    for (int id = FizeauProfileId_Profile1; id < FizeauProfileId_Total; ++id) {
+        if (auto rc = open_profile(config, static_cast<FizeauProfileId>(id)); R_FAILED(rc))
+            return false;
+        if (auto rc = update(config); R_FAILED(rc))
+            return false;
+
+        if (!validate_time(config.dusk_begin) || !validate_time(config.dusk_end)
+                || !validate_time(config.dawn_begin) || !validate_time(config.dawn_end))
+            return false;
+
+        if (!validate_minmax(config.temperature_day, MIN_TEMP, MAX_TEMP)
+                || !validate_minmax(config.temperature_night, MIN_TEMP, MAX_TEMP))
+            return false;
+
+        if ((config.filter_day > ColorFilter_Blue) || (config.filter_night > ColorFilter_Blue))
+            return false;
+
+        if (!validate_minmax(config.gamma_day, MIN_GAMMA, MAX_GAMMA)
+                || !validate_minmax(config.gamma_night, MIN_GAMMA, MAX_GAMMA))
+            return false;
+
+        if (!validate_minmax(config.luminance_day, MIN_LUMA, MAX_LUMA)
+                || !validate_minmax(config.luminance_night, MIN_LUMA, MAX_LUMA))
+            return false;
+
+        if (!validate_colorrange(config.range_day) || !validate_colorrange(config.range_night))
+            return false;
+
+        if (!validate_minmax(config.brightness_day, MIN_BRIGHTNESS, MAX_BRIGHTNESS)
+                || !validate_minmax(config.brightness_night, MIN_BRIGHTNESS, MAX_BRIGHTNESS))
+            return false;
+    }
+
+    return true;
+}
+
 inline std::string make(Config &config) {
     auto format = []<typename ...Args>(const std::string_view &fmt, Args &&...args) -> std::string {
         std::string str(std::snprintf(nullptr, 0, fmt.data(), args...), 0);
@@ -210,9 +263,13 @@ inline std::string make(Config &config) {
 }
 
 void dump(const std::string_view &path, Config &config) {
+    if (!validate(config))
+        fatalThrow(0xdab);
+
     auto str = make(config);
     FILE *fp = fopen(path.data(), "w");
-    fwrite(str.c_str(), str.length(), 1, fp);
+    if (fp)
+        fwrite(str.c_str(), str.length(), 1, fp);
     fclose(fp);
 }
 
