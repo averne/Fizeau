@@ -95,7 +95,7 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
 
     this->active_button = new tsl::elm::ListItem("Correction active");
     this->active_button->setClickListener([this](std::uint64_t keys) {
-        if (keys & KEY_A) {
+        if (keys & HidNpadButton_A) {
             this->config.active ^= 1;
             this->rc = fizeauSetIsActive(this->config.active);
             this->active_button->setValue(this->config.active ? "Active": "Inactive");
@@ -107,7 +107,7 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
 
     this->apply_button = new tsl::elm::ListItem("Apply settings");
     this->apply_button->setClickListener([this](std::uint64_t keys) {
-        if (keys & KEY_A) {
+        if (keys & HidNpadButton_A) {
             this->rc = cfg::apply(this->config);
             return true;
         }
@@ -122,7 +122,7 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     this->temp_slider->setProgress(((this->is_day ? this->config.temperature_day : this->config.temperature_night) - MIN_TEMP)
         * 100 / ((enable_extra_hot_temps ? MAX_TEMP : D65_TEMP) - MIN_TEMP));
     this->temp_slider->setClickListener([&, this](std::uint64_t keys) {
-        if (keys & KEY_Y) {
+        if (keys & HidNpadButton_Y) {
             this->temp_slider->setProgress((DEFAULT_TEMP - MIN_TEMP) * 100 / ((enable_extra_hot_temps ? MAX_TEMP : D65_TEMP) - MIN_TEMP));
             (this->is_day ? this->config.temperature_day : this->config.temperature_night) = DEFAULT_TEMP;
             return true;
@@ -146,7 +146,7 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     this->gamma_slider->setProgress(((this->is_day ? this->config.gamma_day : this->config.gamma_night) - MIN_GAMMA)
         * 100 / (MAX_GAMMA - MIN_GAMMA));
     this->gamma_slider->setClickListener([this](std::uint64_t keys) {
-        if (keys & KEY_Y) {
+        if (keys & HidNpadButton_Y) {
             this->gamma_slider->setProgress((DEFAULT_GAMMA - MIN_GAMMA) * 100 / (MAX_GAMMA - MIN_GAMMA));
             (this->is_day ? this->config.gamma_day : this->config.gamma_night) = DEFAULT_GAMMA;
             return true;
@@ -162,7 +162,7 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     this->luma_slider->setProgress(((this->is_day ? this->config.luminance_day : this->config.luminance_night) - MIN_LUMA)
         * 100 / (MAX_LUMA - MIN_LUMA));
     this->luma_slider->setClickListener([this](std::uint64_t keys) {
-        if (keys & KEY_Y) {
+        if (keys & HidNpadButton_Y) {
             this->luma_slider->setProgress((DEFAULT_LUMA - MIN_LUMA) * 100 / (MAX_LUMA - MIN_LUMA));
             (this->is_day ? this->config.luminance_day : this->config.luminance_night) = DEFAULT_LUMA;
             return true;
@@ -177,7 +177,7 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     this->filter_bar = new tsl::elm::NamedStepTrackBar("", { "None", "Red", "Green", "Blue" });
     this->filter_bar->setProgress(static_cast<u8>(this->is_day ? this->config.filter_day : this->config.filter_night));
     this->filter_bar->setClickListener([this](std::uint64_t keys) {
-        if (keys & KEY_Y) {
+        if (keys & HidNpadButton_Y) {
             this->filter_bar->setProgress(0);
             (this->is_day ? this->config.filter_day : this->config.filter_night) = ColorFilter_None;
             return true;
@@ -190,7 +190,7 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
 
     this->range_button = new tsl::elm::ListItem("Color range");
     this->range_button->setClickListener([this](std::uint64_t keys) {
-        if (keys & KEY_A) {
+        if (keys & HidNpadButton_A) {
             auto &range = (this->is_day ? this->config.range_day : this->config.range_night);
             if (is_full(range))
                 range = DEFAULT_LIMITED_RANGE;
