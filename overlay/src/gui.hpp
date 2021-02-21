@@ -48,13 +48,13 @@ class FizeauOverlayGui: public tsl::Gui {
         virtual void update() final override;
 
         cfg::Config &get_config() {
-            return this->config;
+            return *this->config;
         }
 
     private:
         Result rc;
         bool is_day;
-        cfg::Config config = {};
+        std::unique_ptr<cfg::Config> config = std::make_unique<cfg::Config>();
 
         tsl::elm::CustomDrawer      *info_header;
         tsl::elm::ListItem          *active_button;
