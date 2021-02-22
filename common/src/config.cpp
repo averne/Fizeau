@@ -264,7 +264,7 @@ inline std::string make(Config &config) {
 
 void dump(const std::string_view &path, Config &config) {
     if (!validate(config))
-        fatalThrow(0xdab);
+        return;
 
     auto str = make(config);
     FILE *fp = fopen(path.data(), "w");
