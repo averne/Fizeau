@@ -62,6 +62,18 @@ void ProfileManager::transition_thread_func([[maybe_unused]] void *args) {
 }
 
 ams::Result ProfileManager::initialize() {
+    ams::sm::DoWithSession([]() {
+        if (auto rc = splInitialize(); R_FAILED(rc))
+            Man::is_lite = false;
+        ON_SCOPE_EXIT { splExit(); };
+
+        ams::spl::HardwareType type;
+        if (auto rc = splGetConfig(SplConfigItem_HardwareType, reinterpret_cast<u64 *>(&type)); R_FAILED(rc))
+            Man::is_lite = false;
+
+        Man::is_lite = type == ams::spl::HardwareType::Hoag;
+    });
+
     R_TRY(Man::thread.Initialize(Man::transition_thread_func, nullptr, 0x3f));
     return Man::thread.Start();
 }
@@ -172,7 +184,9 @@ ams::Result ProfileManager::commit(bool force_brightness) {
     }
 
     R_TRY(apply_profile(Man::get_active_internal_profile(), should_dim_internal, true));
-    R_TRY(apply_profile(Man::get_active_external_profile(), should_dim_external, false));
+    if (!Man::is_lite)
+        R_TRY(apply_profile(Man::get_active_external_profile(), should_dim_external, false));
+
     return ams::ResultSuccess();
 }
 

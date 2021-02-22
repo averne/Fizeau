@@ -95,6 +95,7 @@ class ProfileManager {
         static void transition_thread_func(void *args);
 
     private:
+        static inline bool is_lite   = false;
         static inline bool is_active = false;
 
         static inline ams::os::StaticThread<2 * ams::os::MemoryPageSize> thread;
