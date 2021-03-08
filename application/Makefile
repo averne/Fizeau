@@ -17,8 +17,8 @@ EXTENSION         =    nro
 OUT               =    out
 BUILD             =    build
 SOURCES           =    src
-INCLUDES          =    include ../lib/libstratosphere/libstratosphere/include
-CUSTOM_LIBS       =    ../common ../lib/imgui-nx ../lib/imgui ../lib/inih ../lib/stb_image
+INCLUDES          =    include ../lib/libstratosphere/libstratosphere/include ../lib/nvjpg/oss-nvjpg/include
+CUSTOM_LIBS       =    ../common ../lib/imgui-nx ../lib/imgui ../lib/inih ../lib/nvjpg
 ROMFS             =    res
 
 DEFINES           =    __SWITCH__ VERSION=\"$(FZ_VERSION)\" COMMIT=\"$(FZ_COMMIT)\"      \
@@ -30,7 +30,7 @@ CFLAGS            =    -std=gnu11
 CXXFLAGS          =    -std=gnu++20 -fno-rtti -fno-exceptions
 ASFLAGS           =
 LDFLAGS           =    -Wl,-pie -specs=$(DEVKITPRO)/libnx/switch.specs -g
-LINKS             =    -lcommon -limgui-nx -limgui -lstbi -linih -ldeko3d -lnx
+LINKS             =    -lcommon -limgui-nx -limgui -lnvjpg -linih -ldeko3d -lnx
 
 PREFIX            =    aarch64-none-elf-
 CC                =    $(PREFIX)gcc

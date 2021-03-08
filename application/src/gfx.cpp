@@ -18,7 +18,6 @@
 #include <imgui.h>
 #include <switch.h>
 #include <deko3d.hpp>
-#include <stb_image.h>
 #include <common.hpp>
 
 #include "imgui_deko3d.h"
@@ -263,39 +262,13 @@ void exit() {
     deko3dExit();
 }
 
-DkResHandle create_texture(std::uint8_t *data, int width, int height, std::uint32_t sampler_id, std::uint32_t image_id) {
-    auto image_size = width * height * 4;
-
-    // wait for previous commands to complete
-    s_queue.waitIdle();
-
-    dk::ImageLayout layout;
-    dk::ImageLayoutMaker{s_device}
-        .setFlags(0)
-        .setFormat(DkImageFormat_RGBA8_Unorm)
-        .setDimensions(width, height)
-        .initialize(layout);
-
-    auto mem_block = dk::MemBlockMaker{s_device, im::deko3d::align(image_size, DK_MEMBLOCK_ALIGNMENT)}
-        .setFlags(DkMemBlockFlags_CpuUncached | DkMemBlockFlags_GpuCached)
-        .create();
-
-    s_imageMemBlock = dk::MemBlockMaker{s_device, im::deko3d::align(layout.getSize(), DK_MEMBLOCK_ALIGNMENT)}
-        .setFlags(DkMemBlockFlags_GpuCached | DkMemBlockFlags_Image)
-        .create();
-
-    std::memcpy(mem_block.getCpuAddr(), data, image_size);
-
+DkResHandle create_texture(const nj::Surface &surf, std::uint32_t sampler_id, std::uint32_t image_id) {
+    // upload data to deko3d
     dk::Image image;
-    image.initialize(layout, s_imageMemBlock, 0);
-    s_imageDescriptors[sampler_id].initialize(image);
+    std::tie(s_imageMemBlock, image) = surf.to_deko3d(s_device, s_queue, 0, DkImageFormat_RGBA8_Unorm);
 
-    // copy texture to image
-    dk::ImageView imageView(image);
-    s_cmdBuf[0].copyBufferToImage({mem_block.getGpuAddr()},
-        imageView,
-        {0, 0, 0, static_cast<std::uint32_t>(width), static_cast<std::uint32_t>(height), 1});
-    s_queue.submitCommands(s_cmdBuf[0].finishList());
+    // initialize image descriptor
+    s_imageDescriptors[sampler_id].initialize(image);
 
     // initialize sampler descriptor
     s_samplerDescriptors[sampler_id].initialize(
@@ -303,32 +276,7 @@ DkResHandle create_texture(std::uint8_t *data, int width, int height, std::uint3
             .setFilter(DkFilter_Linear, DkFilter_Linear)
             .setWrapMode(DkWrapMode_ClampToEdge, DkWrapMode_ClampToEdge, DkWrapMode_ClampToEdge));
 
-    // wait for commands to complete before releasing memblocks
-    s_queue.waitIdle();
-
     return dkMakeTextureHandle(image_id, sampler_id);
-}
-
-void TextureDecoder::start(const std::string_view &path, std::uint32_t sampler_id, std::uint32_t image_id) {
-    this->sampler_id = sampler_id, this->image_id = image_id;
-    this->thread = std::thread([&, this] {
-        this->data = stbi_load(path.data(), &this->width, &this->height, nullptr, 4);
-        if (!this->data)
-            LOG("Failed to load background image: %s\n", stbi_failure_reason());
-        this->is_done = true;
-    });
-
-    // Set the thread priority to the highest possible to speed to loading times
-    svcSetThreadPriority(reinterpret_cast<Thread *>(this->thread.native_handle())->handle, 0x3f);
-}
-
-void TextureDecoder::end() {
-    if (this->has_joined)
-        return;
-    this->thread.join();
-    this->handle = create_texture(this->data, this->width, this->height, this->sampler_id, this->image_id);
-    stbi_image_free(this->data);
-    this->has_joined = true;
 }
 
 } // namespace fz::gfx

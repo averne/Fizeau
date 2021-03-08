@@ -10,3 +10,6 @@
 [submodule "lib/libtesla"]
 	path = lib/libtesla
 	url = https://github.com/WerWolv/libtesla.git
+[submodule "lib/nvjpg/oss-nvjpg"]
+	path = lib/nvjpg/oss-nvjpg
+	url = https://github.com/averne/oss-nvjpg.git

@@ -9,7 +9,7 @@
                 "${workspaceFolder}/lib/imgui-nx/include",
                 "${workspaceFolder}/lib/inih/include",
                 "${workspaceFolder}/lib/libstratosphere/include",
-                "${workspaceFolder}/lib/stb_image/include",
+                "${workspaceFolder}/lib/nvjpg/oss-nvjpg/include",
                 "${workspaceFolder}/lib/libtesla/include",
 
                 "${workspaceFolder}/**",

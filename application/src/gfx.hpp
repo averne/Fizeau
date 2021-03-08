@@ -20,6 +20,7 @@
 #include <string_view>
 #include <thread>
 #include <deko3d.hpp>
+#include <nvjpg.hpp>
 
 namespace fz::gfx {
 
@@ -27,37 +28,7 @@ bool init();
 bool loop();
 void render();
 void exit();
-DkResHandle create_texture(std::uint8_t *data, int width, int height, std::uint32_t sampler_id, std::uint32_t image_id);
 
-class TextureDecoder {
-    public:
-        TextureDecoder() = default;
-
-        TextureDecoder(const std::string_view &path, std::uint32_t sampler_id, std::uint32_t image_id) {
-            this->start(path, sampler_id, image_id);
-        }
-
-        void start(const std::string_view &path, std::uint32_t sampler_id, std::uint32_t image_id);
-        void end();
-
-        bool done() const {
-            return this->is_done;
-        }
-
-        DkResHandle get_handle() {
-            this->end();
-            return this->handle;
-        }
-
-    private:
-        std::atomic_bool is_done = false;
-        bool has_joined = false;
-        std::thread thread;
-
-        std::uint8_t *data;
-        int width, height;
-        std::uint32_t sampler_id, image_id;
-        DkResHandle handle;
-};
+DkResHandle create_texture(const nj::Surface &surf, std::uint32_t sampler_id, std::uint32_t image_id);
 
 } // namespace fz::gfx

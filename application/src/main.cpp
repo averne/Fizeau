@@ -20,6 +20,7 @@
 #include <string>
 #include <switch.h>
 #include <stratosphere.hpp>
+#include <nvjpg.hpp>
 #include <common.hpp>
 
 #include "gfx.hpp"
@@ -59,11 +60,45 @@ fz::cfg::Config config;
 int main(int argc, char **argv) {
     LOG("Starting Fizeau\n");
 
-    if (!fz::gfx::init() )
+    if (R_FAILED(nj::initialize())) {
+        LOG("Failed to init nvjpg");
+        return 1;
+    }
+    NJ_SCOPEGUARD([] { nj::finalize(); });
+
+    nj::Decoder decoder;
+    if (auto rc = decoder.initialize(); rc) {
+        LOG("Failed to initialize decoder: %#x\n", rc);
+        return 1;
+    }
+    NJ_SCOPEGUARD([&decoder] { decoder.finalize(); });
+
+    nj::Image background("romfs:/background.jpg"), preview("romfs:/preview.jpg");
+    if (!background.is_valid() || background.parse() || !preview.is_valid() || preview.parse()) {
+        LOG("Invalid file");
+        return 1;
+    }
+
+    nj::Surface background_surf(background.width, background.height, nj::PixelFormat::RGBA);
+    nj::Surface preview_surf   (preview.width,    preview.height,    nj::PixelFormat::RGBA);
+    if (R_FAILED(background_surf.allocate()) || R_FAILED(preview_surf.allocate())) {
+        LOG("Failed to allocate surface\n");
+        return 1;
+    }
+
+    if (R_FAILED(decoder.render(background, background_surf, 255)))
+        LOG("Failed to render image\n");
+    decoder.wait(background_surf);
+
+    if (R_FAILED(decoder.render(preview, preview_surf, 255)))
+        LOG("Failed to render image\n");
+    decoder.wait(preview_surf);
+
+    if (!fz::gfx::init())
         LOG("Failed to init\n");
 
-    fz::gfx::TextureDecoder background_decoder("romfs:/background.jpg", 1, 1),
-        preview_decoder("romfs:/preview.jpg", 2, 2);
+    auto background_hdl = fz::gfx::create_texture(background_surf, 1, 1),
+        preview_hdl = fz::gfx::create_texture(preview_surf, 2, 2);
 
     fz::gui::init();
 
@@ -93,10 +128,8 @@ int main(int argc, char **argv) {
             continue;
         }
 
-        if (background_decoder.done())
-            fz::gui::draw_background(config, background_decoder.get_handle());
-
-        fz::gui::draw_preview_window(config, preview_decoder.done() ? preview_decoder.get_handle() : -1);
+        fz::gui::draw_background(config, background_hdl);
+        fz::gui::draw_preview_window(config, preview_hdl);
         fz::gui::draw_graph_window(config);
         rc = fz::gui::draw_main_window(config);
 
@@ -112,8 +145,6 @@ int main(int argc, char **argv) {
     }
 
     fz::cfg::dump(fz::cfg::path, config);
-
-    background_decoder.end(), preview_decoder.end();
 
     LOG("Exiting Fizeau\n");
     fizeauProfileClose(&config.cur_profile);
