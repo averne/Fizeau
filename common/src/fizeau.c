@@ -61,9 +61,9 @@ static Service g_fizeau_srv;
 NX_GENERATE_SERVICE_GUARD(fizeau);
 
 Result fizeauIsServiceActive(bool *out) {
-    bool tmp;
+    bool tmp = false;
     SmServiceName name = smEncodeName("fizeau");
-    Result rc = serviceDispatchInOut(smGetServiceSession(), 65100, name, tmp); // AMS extension
+    Result rc = tipcDispatchInOut(smGetServiceSessionTipc(), 65100, name, tmp); // AMS extension
     if (R_SUCCEEDED(rc) && out)
         *out = tmp;
     return rc;
