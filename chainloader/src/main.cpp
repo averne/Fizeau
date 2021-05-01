@@ -48,8 +48,6 @@ extern "C" void __appInit(void) {
     R_ABORT_UNLESS(twiliInitialize());
     R_ABORT_UNLESS(twiliCreateNamedOutputPipe(&g_twlPipe, "fzout"));
 #endif
-
-    ams::CheckApiVersion();
 }
 
 extern "C" void __appExit(void) {
