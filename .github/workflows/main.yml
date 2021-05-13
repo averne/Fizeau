@@ -25,6 +25,7 @@ jobs:
 
     - name: Build
       run: |
+        make -C common -j$(nproc)
         make dist -j$(nproc)
         make dist-chl -j$(nproc)
 
