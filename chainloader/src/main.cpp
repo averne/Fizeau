@@ -73,7 +73,7 @@ int main() {
 
     LOG("Applying settings\n");
     static auto config = fz::cfg::read(fz::cfg::path);
-    R_ABORT_UNLESS(fizeauSetIsActive(true));
+    R_ABORT_UNLESS(fizeauSetIsActive(config.active));
     fizeauProfileClose(&config.cur_profile);
 
     LOG("Done, exiting\n");
