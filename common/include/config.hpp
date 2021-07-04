@@ -25,7 +25,7 @@
 
 namespace fz::cfg {
 
-constexpr std::string_view path = "/switch/Fizeau/config.ini";
+constexpr std::string_view path = "/config/Fizeau/config.ini";
 
 struct Config {
     bool active = true, has_active_override = false;
