@@ -33,8 +33,9 @@ dist: $(DIST_TARGET)
 $(DIST_TARGET): | application overlay sysmodule
 	@rm -rf $(OUT)/Fizeau*.zip
 
+	@mkdir -p $(OUT)/config/Fizeau
 	@mkdir -p $(OUT)/switch/Fizeau
-	@cp misc/default.ini $(OUT)/switch/Fizeau/config.ini
+	@cp misc/default.ini $(OUT)/config/Fizeau/config.ini
 	@cp application/out/Fizeau.nro $(OUT)/switch/Fizeau/Fizeau.nro
 
 	@mkdir -p $(OUT)/switch/.overlays
@@ -45,8 +46,8 @@ $(DIST_TARGET): | application overlay sysmodule
 	@cp sysmodule/toolbox.json $(OUT)/atmosphere/contents/$(FZ_TID)/toolbox.json
 	@touch $(OUT)/atmosphere/contents/$(FZ_TID)/flags/boot2.flag
 
-	@7z a $@ ./$(OUT)/atmosphere ./$(OUT)/switch >/dev/null
-	@rm -r $(OUT)/atmosphere $(OUT)/switch
+	@7z a $@ ./$(OUT)/atmosphere ./$(OUT)/config ./$(OUT)/switch >/dev/null
+	@rm -r $(OUT)/atmosphere $(OUT)/config $(OUT)/switch
 	@echo Compressed release to $@
 
 dist-chl: $(DIST_CHL_TARGET)
@@ -55,8 +56,9 @@ dist-chl: $(DIST_CHL_TARGET)
 $(DIST_CHL_TARGET): | all
 	@rm -rf $(OUT)/Fizeau-chl*.zip
 
+	@mkdir -p $(OUT)/config/Fizeau
 	@mkdir -p $(OUT)/switch/Fizeau
-	@cp misc/default.ini $(OUT)/switch/Fizeau/config.ini
+	@cp misc/default.ini $(OUT)/config/Fizeau/config.ini
 	@cp application/out/Fizeau.nro $(OUT)/switch/Fizeau/Fizeau.nro
 
 	@mkdir -p $(OUT)/switch/.overlays
@@ -70,8 +72,8 @@ $(DIST_CHL_TARGET): | all
 	@cp chainloader/out/Fizeau-chl.nsp $(OUT)/atmosphere/contents/$(FZ_CHL_TID)/exefs.nsp
 	@touch $(OUT)/atmosphere/contents/$(FZ_CHL_TID)/flags/boot2.flag
 
-	@7z a $@ ./$(OUT)/atmosphere ./$(OUT)/switch >/dev/null
-	@rm -r $(OUT)/atmosphere $(OUT)/switch
+	@7z a $@ ./$(OUT)/atmosphere ./$(OUT)/config ./$(OUT)/switch >/dev/null
+	@rm -r $(OUT)/atmosphere $(OUT)/config $(OUT)/switch
 	@echo Compressed release to $@
 
 clean:
