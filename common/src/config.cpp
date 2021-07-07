@@ -19,6 +19,7 @@
 #include <string>
 #include <ini.h>
 #include <common.hpp>
+#include <sys/stat.h>
 
 #include "fizeau.h"
 #include "config.hpp"
@@ -124,9 +125,18 @@ static int ini_handler(void *user, const char *section, const char *name, const 
     return 1;
 }
 
-Config read(const std::string_view &path) {
+std::string_view find_config() {
+    struct stat tmp;
+    for (auto loc: config_locations) {
+        if (stat(loc, &tmp) == 0)
+            return loc;
+    }
+    return config_locations[1];
+};
+
+Config read() {
     Config config{};
-    ini_parse(path.data(), ini_handler, &config);
+    ini_parse(find_config().data(), ini_handler, &config);
     if (config.cur_profile_id != FizeauProfileId_Invalid)
         if (auto rc = apply(config); R_FAILED(rc))
             LOG("Failed to apply config: %#x\n", rc);
@@ -262,12 +272,12 @@ inline std::string make(Config &config) {
     return str;
 }
 
-void dump(const std::string_view &path, Config &config) {
+void dump(Config &config) {
     if (!validate(config))
         return;
 
     auto str = make(config);
-    FILE *fp = fopen(path.data(), "w");
+    FILE *fp = fopen(find_config().data(), "w");
     if (fp)
         fwrite(str.c_str(), str.length(), 1, fp);
     fclose(fp);
