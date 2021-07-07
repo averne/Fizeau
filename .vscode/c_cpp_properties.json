@@ -3,7 +3,7 @@
         {
             "name": "DKP Aarch64",
             "includePath": [
-                "${workspaceFolder}/common",
+                "${workspaceFolder}/common/include",
 
                 "${workspaceFolder}/lib/imgui/include",
                 "${workspaceFolder}/lib/imgui-nx/include",
@@ -40,7 +40,7 @@
             "compilerPath": "${DEVKITPRO}/devkitA64/bin/aarch64-none-elf-gcc",
             "cStandard": "gnu11",
             "cppStandard": "gnu++20",
-            "intelliSenseMode": "gcc-arm64"
+            "intelliSenseMode": "linux-gcc-arm64"
         }
     ],
     "version": 4
