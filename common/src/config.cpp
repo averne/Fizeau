@@ -26,6 +26,11 @@
 
 namespace fz::cfg {
 
+constexpr std::array config_locations = {
+    "/switch/Fizeau/config.ini",
+    "/config/Fizeau/config.ini"
+};
+
 #define COMMENT ";"
 
 #define MATCH(s1, s2)     (std::strcmp(s1, s2) == 0)

@@ -25,11 +25,6 @@
 
 namespace fz::cfg {
 
-constexpr std::array config_locations = {
-    "/switch/Fizeau/config.ini",
-    "/config/Fizeau/config.ini"
-};
-
 struct Config {
     bool active = true, has_active_override = false;
 
