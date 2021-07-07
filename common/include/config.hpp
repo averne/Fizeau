@@ -25,8 +25,6 @@
 
 namespace fz::cfg {
 
-constexpr std::string_view path = "/switch/Fizeau/config.ini";
-
 struct Config {
     bool active = true, has_active_override = false;
 
@@ -48,9 +46,10 @@ struct Config {
     Time dimming_timeout;
 };
 
-Config read(const std::string_view &path);
+std::string_view find_config();
+Config read();
 std::string make(Config &config);
-void dump(const std::string_view &path, Config &config);
+void dump(Config &config);
 
 Result update(Config &config);
 Result apply(Config &config);

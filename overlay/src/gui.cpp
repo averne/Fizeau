@@ -58,7 +58,7 @@ FizeauOverlayGui::FizeauOverlayGui() {
     if (R_FAILED(rc))
         return;
 
-    tsl::hlp::doWithSDCardHandle([this] { *this->config = cfg::read(cfg::path); });
+    tsl::hlp::doWithSDCardHandle([this] { *this->config = cfg::read(); });
 
     ApmPerformanceMode perf_mode;
     if (this->rc = apmGetPerformanceMode(&perf_mode); R_FAILED(this->rc))
@@ -80,7 +80,7 @@ FizeauOverlayGui::FizeauOverlayGui() {
 }
 
 FizeauOverlayGui::~FizeauOverlayGui() {
-    tsl::hlp::doWithSDCardHandle([this] { cfg::dump(cfg::path, *this->config); });
+    tsl::hlp::doWithSDCardHandle([this] { cfg::dump(*this->config); });
     fizeauProfileClose(&this->config->cur_profile);
     fizeauExit();
 }

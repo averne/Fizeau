@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
         rc = fizeauInitialize();
 
     if (R_SUCCEEDED(rc))
-        config = fz::cfg::read(fz::cfg::path);
+        config = fz::cfg::read();
 
     if (R_SUCCEEDED(rc))
         rc = fz::cfg::open_profile(config, FizeauProfileId_Profile1);
@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
         fz::gfx::render();
     }
 
-    fz::cfg::dump(fz::cfg::path, config);
+    fz::cfg::dump(config);
 
     LOG("Exiting Fizeau\n");
     fizeauProfileClose(&config.cur_profile);
