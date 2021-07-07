@@ -72,8 +72,9 @@ int main() {
     ON_SCOPE_EXIT { fizeauExit(); };
 
     LOG("Applying settings\n");
-    static auto config = fz::cfg::read(fz::cfg::path);
-    R_ABORT_UNLESS(fizeauSetIsActive(config.active));
+    auto config = fz::cfg::read(fz::cfg::path);
+    if (config.has_active_override)
+        R_ABORT_UNLESS(fizeauSetIsActive(config.active));
     fizeauProfileClose(&config.cur_profile);
 
     LOG("Done, exiting\n");

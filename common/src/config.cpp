@@ -77,8 +77,10 @@ static int ini_handler(void *user, const char *section, const char *name, const 
             if (config->cur_profile.s.session)
                 if (auto rc = apply(*config); R_FAILED(rc))
                     LOG("Failed to apply config: %#x\n", rc);
+            bool saved_active = config->active;
             if (auto rc = open_profile(*config, id); R_FAILED(rc))
                 LOG("Failed to open profile: %#x\n", rc);
+            config->active = saved_active;
         }
 
         if (MATCH(name, "dusk_begin"))
@@ -114,7 +116,7 @@ static int ini_handler(void *user, const char *section, const char *name, const 
         else if (MATCH(name, "range_night"))
             config->range_night       = parse_range(value);
         else if (MATCH(name, "dimming_timeout")) {
-            auto t= parse_time(value);
+            auto t = parse_time(value);
             config->dimming_timeout   = { 0, t.h, t.m };
         } else
             return 0;
