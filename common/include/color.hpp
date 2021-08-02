@@ -25,8 +25,19 @@
 
 namespace fz {
 
-std::array<float, 9> filter_matrix(ColorFilter filter);
+using ColorMatrix = std::array<float, 9>;
+
+constexpr ColorMatrix dot(const ColorMatrix &r, const ColorMatrix &l) {
+    return {
+        r[0]*l[0] + r[1]*l[3] + r[2]*l[6], r[0]*l[1] + r[1]*l[4] + r[2]*l[7], r[0]*l[2] + r[1]*l[5] + r[2]*l[8],
+        r[3]*l[0] + r[4]*l[3] + r[5]*l[6], r[3]*l[1] + r[4]*l[4] + r[5]*l[7], r[3]*l[2] + r[4]*l[5] + r[5]*l[8],
+        r[6]*l[0] + r[7]*l[3] + r[8]*l[6], r[6]*l[1] + r[7]*l[4] + r[8]*l[7], r[6]*l[2] + r[7]*l[5] + r[8]*l[8],
+    };
+}
+
+ColorMatrix filter_matrix(ColorFilter filter);
 std::tuple<float, float, float> whitepoint(Temperature temperature);
+ColorMatrix saturation_matrix(Saturation sat);
 
 float degamma(float x, Gamma gamma);
 float regamma(float x, Gamma gamma);

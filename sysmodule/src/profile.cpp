@@ -144,10 +144,10 @@ ams::Result ProfileManager::commit(bool force_brightness) {
         if (Clock::is_in_interval(profile.dawn_begin, profile.dusk_begin)) {
             if (internal) {
                 R_TRY(DispControlManager::set_cmu_internal(profile.temperature_day, profile.filter_day,
-                    profile.gamma_day, profile.luminance_day, profile.range_day));
+                    profile.gamma_day, profile.sat_day, profile.luminance_day, profile.range_day));
             } else {
                 R_TRY(DispControlManager::set_cmu_external(profile.temperature_day, profile.filter_day,
-                    profile.gamma_day, profile.luminance_day, profile.range_day));
+                    profile.gamma_day, profile.sat_day, profile.luminance_day, profile.range_day));
                 R_TRY(DispControlManager::set_hdmi_color_range(profile.range_day));
             }
             if (internal && apply_brightness)
@@ -155,10 +155,10 @@ ams::Result ProfileManager::commit(bool force_brightness) {
         } else {
             if (internal) {
                 R_TRY(DispControlManager::set_cmu_internal(profile.temperature_night, profile.filter_night,
-                    profile.gamma_night, profile.luminance_night, profile.range_night));
+                    profile.gamma_night, profile.sat_night, profile.luminance_night, profile.range_night));
             } else {
                 R_TRY(DispControlManager::set_cmu_external(profile.temperature_night, profile.filter_night,
-                    profile.gamma_night, profile.luminance_night, profile.range_night));
+                    profile.gamma_night, profile.sat_night, profile.luminance_night, profile.range_night));
                 R_TRY(DispControlManager::set_hdmi_color_range(profile.range_night));
             }
             if (internal && apply_brightness)

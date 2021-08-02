@@ -36,6 +36,7 @@ struct Profile {
     Temperature temperature_day = DEFAULT_TEMP,     temperature_night = DEFAULT_TEMP;
     ColorFilter filter_day      = ColorFilter_None, filter_night      = ColorFilter_None;
     Gamma       gamma_day       = DEFAULT_GAMMA,    gamma_night       = DEFAULT_GAMMA;
+    Saturation  sat_day         = DEFAULT_SAT,      sat_night         = DEFAULT_SAT;
     Luminance   luminance_day   = DEFAULT_LUMA,     luminance_night   = DEFAULT_LUMA;
     ColorRange  range_day       = DEFAULT_RANGE,    range_night       = DEFAULT_RANGE;
     Brightness  brightness_day  = 1.0f,             brightness_night  = 1.0f;

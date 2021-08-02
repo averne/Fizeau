@@ -235,6 +235,10 @@ Result draw_correction_tab(cfg::Config &ctx) {
     ctx.is_editing_day_profile   |= new_slider("Day:",   "##gammad", ctx.gamma_day,   MIN_GAMMA, MAX_GAMMA, "%.2f");
     ctx.is_editing_night_profile |= new_slider("Night:", "##gamman", ctx.gamma_night, MIN_GAMMA, MAX_GAMMA, "%.2f");
 
+    im::TextUnformatted("Saturation");
+    ctx.is_editing_day_profile   |= new_slider("Day:",   "##satd", ctx.sat_day,   MIN_SAT, MAX_SAT, "%.2f");
+    ctx.is_editing_night_profile |= new_slider("Night:", "##satn", ctx.sat_night, MIN_SAT, MAX_SAT, "%.2f");
+
     // Luminance slider
     im::Separator();
     im::TextUnformatted("Luminance");
@@ -370,8 +374,8 @@ Result draw_main_window(cfg::Config &ctx) {
     ON_SCOPE_EXIT { im::End(); };
 
     auto [width, height] = im::GetIO().DisplaySize;
-    im::SetWindowPos( { 0.03f * width, 0.10f * height }, ImGuiCond_Always);
-    im::SetWindowSize({ 0.40f * width, 0.80f * height }, ImGuiCond_Always);
+    im::SetWindowPos( { 0.03f * width, 0.09f * height }, ImGuiCond_Always);
+    im::SetWindowSize({ 0.40f * width, 0.82f * height }, ImGuiCond_Always);
 
     // Leave edit field, or it will pop the swkbd again
     im::GetCurrentContext()->TempInputId = 0;

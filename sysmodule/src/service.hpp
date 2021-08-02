@@ -38,14 +38,16 @@ class IProfile final: public ams::sf::IServiceObject {
             SetCmuColorFilter   = 7,
             GetCmuGamma         = 8,
             SetCmuGamma         = 9,
-            GetCmuLuminance     = 10,
-            SetCmuLuminance     = 11,
-            GetCmuColorRange    = 12,
-            SetCmuColorRange    = 13,
-            GetScreenBrightness = 14,
-            SetScreenBrightness = 15,
-            GetDimmingTimeout   = 16,
-            SetDimmingTimeout   = 17,
+            GetCmuSaturation    = 10,
+            SetCmuSaturation    = 11,
+            GetCmuLuminance     = 12,
+            SetCmuLuminance     = 13,
+            GetCmuColorRange    = 14,
+            SetCmuColorRange    = 15,
+            GetScreenBrightness = 16,
+            SetScreenBrightness = 17,
+            GetDimmingTimeout   = 18,
+            SetDimmingTimeout   = 19,
         };
 
     public:
@@ -63,6 +65,8 @@ class IProfile final: public ams::sf::IServiceObject {
         ams::Result SetCmuColorFilter(ColorFilter filter_day, ColorFilter filter_night);
         ams::Result GetCmuGamma(ams::sf::Out<Gamma> gamma_day, ams::sf::Out<Gamma> gamma_night);
         ams::Result SetCmuGamma(Gamma gamma_day, Gamma gamma_night);
+        ams::Result GetCmuSaturation(ams::sf::Out<Saturation> sat_day, ams::sf::Out<Saturation> sat_night);
+        ams::Result SetCmuSaturation(Saturation sat_day, Saturation sat_night);
         ams::Result GetCmuLuminance(ams::sf::Out<Luminance> luma_day, ams::sf::Out<Luminance> luma_night);
         ams::Result SetCmuLuminance(Luminance luma_day, Luminance luma_night);
         ams::Result GetCmuColorRange(ams::sf::Out<ColorRange> range_day, ams::sf::Out<ColorRange> range_night);
@@ -86,6 +90,8 @@ class IProfile final: public ams::sf::IServiceObject {
             MAKE_SERVICE_COMMAND_META(SetCmuColorFilter),
             MAKE_SERVICE_COMMAND_META(GetCmuGamma),
             MAKE_SERVICE_COMMAND_META(SetCmuGamma),
+            MAKE_SERVICE_COMMAND_META(GetCmuSaturation),
+            MAKE_SERVICE_COMMAND_META(SetCmuSaturation),
             MAKE_SERVICE_COMMAND_META(GetCmuLuminance),
             MAKE_SERVICE_COMMAND_META(SetCmuLuminance),
             MAKE_SERVICE_COMMAND_META(GetCmuColorRange),

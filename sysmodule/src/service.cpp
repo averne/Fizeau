@@ -106,6 +106,16 @@ ams::Result IProfile::SetCmuGamma(Gamma gamma_day, Gamma gamma_night) {
     return ProfileManager::on_profile_updated(this->id);
 }
 
+ams::Result IProfile::GetCmuSaturation(ams::sf::Out<Saturation> sat_day, ams::sf::Out<Saturation> sat_night) {
+    sat_day.SetValue(this->profile.sat_day), sat_night.SetValue(this->profile.sat_night);
+    return ams::ResultSuccess();
+}
+
+ams::Result IProfile::SetCmuSaturation(Saturation sat_day, Saturation sat_night) {
+    this->profile.sat_day = sat_day, this->profile.sat_night = sat_night;
+    return ProfileManager::on_profile_updated(this->id);
+}
+
 ams::Result IProfile::GetCmuLuminance(ams::sf::Out<Luminance> luminance_day, ams::sf::Out<Luminance> luminance_night) {
     luminance_day.SetValue(this->profile.luminance_day), luminance_night.SetValue(this->profile.luminance_night);
     return ams::ResultSuccess();

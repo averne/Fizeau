@@ -24,8 +24,8 @@
 
 namespace fz {
 
-std::array<float, 9> filter_matrix(ColorFilter filter) {
-    std::array<float, 9> arr = {};
+ColorMatrix filter_matrix(ColorFilter filter) {
+    ColorMatrix arr = {};
 
     static constexpr std::array luma_components = {
         0.2126f, 0.7152f, 0.0722f,
@@ -77,6 +77,14 @@ std::tuple<float, float, float> whitepoint(Temperature temperature) {
         std::clamp(red,   0.0f, 255.0f) / 255.0f,
         std::clamp(green, 0.0f, 255.0f) / 255.0f,
         std::clamp(blue,  0.0f, 255.0f) / 255.0f,
+    };
+}
+
+ColorMatrix saturation_matrix(Saturation sat) {
+    return {
+        (1.0f - sat) * 0.2126f + sat, (1.0f - sat) * 0.7152f      , (1.0f - sat) * 0.0722f,
+        (1.0f - sat) * 0.2126f      , (1.0f - sat) * 0.7152f + sat, (1.0f - sat) * 0.0722f,
+        (1.0f - sat) * 0.2126f      , (1.0f - sat) * 0.7152f      , (1.0f - sat) * 0.0722f + sat,
     };
 }
 

@@ -46,6 +46,11 @@ typedef float Luminance;
 #define MAX_LUMA     1.0f
 #define DEFAULT_LUMA 0.0f
 
+typedef float Saturation;
+#define MIN_SAT      0.0f
+#define MAX_SAT      2.0f
+#define DEFAULT_SAT  1.0f
+
 typedef struct {
     float lo, hi;
 } ColorRange;

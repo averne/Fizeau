@@ -158,6 +158,22 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
             val * (MAX_GAMMA - MIN_GAMMA) / 100 + MIN_GAMMA;
     });
 
+    this->sat_slider = new tsl::elm::TrackBar("");
+    this->sat_slider->setProgress(((this->is_day ? this->config->sat_day : this->config->sat_night) - MIN_SAT)
+        * 100 / (MAX_SAT - MIN_SAT));
+    this->sat_slider->setClickListener([this](std::uint64_t keys) {
+        if (keys & HidNpadButton_Y) {
+            this->sat_slider->setProgress((DEFAULT_SAT - MIN_SAT) * 100 / (MAX_SAT - MIN_SAT));
+            (this->is_day ? this->config->sat_day : this->config->sat_night) = DEFAULT_SAT;
+            return true;
+        }
+        return false;
+    });
+    this->sat_slider->setValueChangedListener([this](std::uint8_t val) {
+        (this->is_day ? this->config->sat_day : this->config->sat_night) =
+            val * (MAX_SAT - MIN_SAT) / 100 + MIN_SAT;
+    });
+
     this->luma_slider = new tsl::elm::TrackBar("");
     this->luma_slider->setProgress(((this->is_day ? this->config->luminance_day : this->config->luminance_night) - MIN_LUMA)
         * 100 / (MAX_LUMA - MIN_LUMA));
@@ -207,6 +223,7 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     this->filter_header     = new tsl::elm::CategoryHeader("Filter");
     this->brightness_header = new tsl::elm::CategoryHeader("");
     this->gamma_header      = new tsl::elm::CategoryHeader("");
+    this->sat_header        = new tsl::elm::CategoryHeader("");
     this->luma_header       = new tsl::elm::CategoryHeader("");
 
     auto *frame = new tsl::elm::OverlayFrame("Fizeau", VERSION "-" COMMIT);
@@ -220,6 +237,8 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     list->addItem(this->brightness_slider);
     list->addItem(this->gamma_header);
     list->addItem(this->gamma_slider);
+    list->addItem(this->sat_header);
+    list->addItem(this->sat_slider);
     list->addItem(this->luma_header);
     list->addItem(this->luma_slider);
     list->addItem(this->filter_header);
@@ -240,6 +259,8 @@ void FizeauOverlayGui::update() {
         this->is_day ? this->config->brightness_day  : this->config->brightness_night));
     this->gamma_header->setText(format("Gamma: %.2f",
         this->is_day ? this->config->gamma_day       : this->config->gamma_night));
+    this->sat_header->setText(format("Saturation: %.2f",
+        this->is_day ? this->config->sat_day         : this->config->sat_night));
     this->luma_header->setText(format("Luminance: %.2f",
         this->is_day ? this->config->luminance_day   : this->config->luminance_night));
 }

@@ -67,6 +67,8 @@ Result fizeauProfileGetCmuColorFilter(FizeauProfile *p, ColorFilter *filter_day,
 Result fizeauProfileSetCmuColorFilter(FizeauProfile *p, ColorFilter filter_day, ColorFilter filter_night);
 Result fizeauProfileGetCmuGamma(FizeauProfile *p, Gamma *gamma_day, Gamma *gamma_night);
 Result fizeauProfileSetCmuGamma(FizeauProfile *p, Gamma gamma_day, Gamma gamma_night);
+Result fizeauProfileGetCmuSaturation(FizeauProfile *p, Saturation *sat_day, Saturation *sat_night);
+Result fizeauProfileSetCmuSaturation(FizeauProfile *p, Saturation sat_day, Saturation sat_night);
 Result fizeauProfileGetCmuLuminance(FizeauProfile *p, Luminance *luma_day, Luminance *luma_night);
 Result fizeauProfileSetCmuLuminance(FizeauProfile *p, Luminance luma_day, Luminance luma_night);
 Result fizeauProfileGetCmuColorRange(FizeauProfile *p, ColorRange *range_day, ColorRange *range_night);

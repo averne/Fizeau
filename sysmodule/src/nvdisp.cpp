@@ -27,7 +27,8 @@ namespace fz {
 
 using Man = DispControlManager;
 
-ams::Result Man::set_cmu(std::uint32_t fd, Temperature temp, ColorFilter filter, Gamma gamma, Luminance luma, ColorRange range) {
+ams::Result Man::set_cmu(std::uint32_t fd,
+        Temperature temp, ColorFilter filter, Gamma gamma, Saturation sat, Luminance luma, ColorRange range) {
     auto &cmu = Man::cmu;
     cmu.reset();
 
@@ -38,6 +39,8 @@ ams::Result Man::set_cmu(std::uint32_t fd, Temperature temp, ColorFilter filter,
     auto [krr, kgg, kbb] = whitepoint(temp);
     krr = degamma(krr, 2.4f), kgg = degamma(kgg, 2.4f), kbb = degamma(kbb, 2.4f);
     coeffs[0] *= krr, coeffs[4] *= kgg, coeffs[8] *= kbb;
+
+    coeffs = dot(coeffs, saturation_matrix(sat));
 
     std::transform(coeffs.begin(), coeffs.end(), &cmu.krr, [](float c) -> QS18 { return c; });
 
@@ -65,7 +68,7 @@ ams::Result Man::set_hdmi_color_range(ColorRange range, bool disable) {
         (is_limited(range) ? RgbQuantRange::Limited : RgbQuantRange::Full));
 
     // FIXME: Setting the infoframe leads to flickering in the applet client when docked
-    // R_TRY(nvioctlNvDisp_SetAviInfoframe(Man::disp1_fd, Man::infoframe));
+    R_TRY(nvioctlNvDisp_SetAviInfoframe(Man::disp1_fd, Man::infoframe));
     return ams::ResultSuccess();
 }
 

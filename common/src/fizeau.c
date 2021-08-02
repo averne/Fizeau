@@ -46,14 +46,16 @@ typedef enum {
     FizeauProfileCmdId_SetCmuColorFilter   = 7,
     FizeauProfileCmdId_GetCmuGamma         = 8,
     FizeauProfileCmdId_SetCmuGamma         = 9,
-    FizeauProfileCmdId_GetCmuLuminance     = 10,
-    FizeauProfileCmdId_SetCmuLuminance     = 11,
-    FizeauProfileCmdId_GetCmuColorRange    = 12,
-    FizeauProfileCmdId_SetCmuColorRange    = 13,
-    FizeauProfileCmdId_GetScreenBrightness = 14,
-    FizeauProfileCmdId_SetScreenBrightness = 15,
-    FizeauProfileCmdId_GetDimmingTimeout   = 16,
-    FizeauProfileCmdId_SetDimmingTimeout   = 17,
+    FizeauProfileCmdId_GetCmuSaturation    = 10,
+    FizeauProfileCmdId_SetCmuSaturation    = 11,
+    FizeauProfileCmdId_GetCmuLuminance     = 12,
+    FizeauProfileCmdId_SetCmuLuminance     = 13,
+    FizeauProfileCmdId_GetCmuColorRange    = 14,
+    FizeauProfileCmdId_SetCmuColorRange    = 15,
+    FizeauProfileCmdId_GetScreenBrightness = 16,
+    FizeauProfileCmdId_SetScreenBrightness = 17,
+    FizeauProfileCmdId_GetDimmingTimeout   = 18,
+    FizeauProfileCmdId_SetDimmingTimeout   = 19,
 } FizeauProfileCmdId;
 
 static Service g_fizeau_srv;
@@ -240,6 +242,27 @@ Result fizeauProfileSetCmuGamma(FizeauProfile *p, Gamma gamma_day, Gamma gamma_n
     } in = { gamma_day, gamma_night };
     return serviceDispatchIn(&p->s, FizeauProfileCmdId_SetCmuGamma, in);
 }
+
+Result fizeauProfileGetCmuSaturation(FizeauProfile *p, Saturation *sat_day, Saturation *sat_night) {
+    struct {
+        Saturation sat_day, sat_night;
+    } tmp;
+    Result rc = serviceDispatchOut(&p->s, FizeauProfileCmdId_GetCmuSaturation, tmp);
+
+    if (R_SUCCEEDED(rc)) {
+        if (sat_day)
+            *sat_day = tmp.sat_day;
+        if (sat_night)
+            *sat_night = tmp.sat_night;
+    }
+    return rc;
+}
+
+Result fizeauProfileSetCmuSaturation(FizeauProfile *p, Saturation sat_day, Saturation sat_night) {
+    struct {
+        Saturation sat_day, sat_night;
+    } in = { sat_day, sat_night };
+    return serviceDispatchIn(&p->s, FizeauProfileCmdId_SetCmuSaturation, in);}
 
 Result fizeauProfileGetCmuLuminance(FizeauProfile *p, Luminance *luma_day, Luminance *luma_night) {
     struct {

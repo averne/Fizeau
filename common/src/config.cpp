@@ -113,6 +113,10 @@ static int ini_handler(void *user, const char *section, const char *name, const 
             config->gamma_day         = std::atof(value);
         else if (MATCH(name, "gamma_night"))
             config->gamma_night       = std::atof(value);
+        else if (MATCH(name, "saturation_day"))
+            config->sat_day           = std::atof(value);
+        else if (MATCH(name, "saturation_night"))
+            config->sat_night         = std::atof(value);
         else if (MATCH(name, "luminance_day"))
             config->luminance_day     = std::atof(value);
         else if (MATCH(name, "luminance_night"))
@@ -186,6 +190,10 @@ bool validate(Config &config) {
 
         if (!validate_minmax(config.gamma_day, MIN_GAMMA, MAX_GAMMA)
                 || !validate_minmax(config.gamma_night, MIN_GAMMA, MAX_GAMMA))
+            return false;
+
+        if (!validate_minmax(config.sat_day, MIN_SAT, MAX_SAT)
+                || !validate_minmax(config.sat_night, MIN_SAT, MAX_SAT))
             return false;
 
         if (!validate_minmax(config.luminance_day, MIN_LUMA, MAX_LUMA)
@@ -265,6 +273,9 @@ inline std::string make(Config &config) {
         str += "gamma_day         = " + std::to_string(config.gamma_day)         + '\n';
         str += "gamma_night       = " + std::to_string(config.gamma_night)       + '\n';
 
+        str += "saturation_day    = " + std::to_string(config.sat_day)           + '\n';
+        str += "saturation_night  = " + std::to_string(config.sat_night)         + '\n';
+
         str += "luminance_day     = " + std::to_string(config.luminance_day)     + '\n';
         str += "luminance_night   = " + std::to_string(config.luminance_night)   + '\n';
 
@@ -300,6 +311,7 @@ Result update(Config &config) {
     R_TRY(fizeauProfileGetCmuTemperature(&config.cur_profile, &config.temperature_day, &config.temperature_night));
     R_TRY(fizeauProfileGetCmuColorFilter(&config.cur_profile, &config.filter_day, &config.filter_night));
     R_TRY(fizeauProfileGetCmuGamma(&config.cur_profile, &config.gamma_day, &config.gamma_night));
+    R_TRY(fizeauProfileGetCmuSaturation(&config.cur_profile, &config.sat_day, &config.sat_night));
     R_TRY(fizeauProfileGetCmuLuminance(&config.cur_profile, &config.luminance_day, &config.luminance_night));
     R_TRY(fizeauProfileGetCmuColorRange(&config.cur_profile, &config.range_day, &config.range_night));
     R_TRY(fizeauProfileGetScreenBrightness(&config.cur_profile, &config.brightness_day, &config.brightness_night));
@@ -313,6 +325,7 @@ Result apply(cfg::Config &config) {
     R_TRY(fizeauProfileSetCmuTemperature(&config.cur_profile, config.temperature_day, config.temperature_night));
     R_TRY(fizeauProfileSetCmuColorFilter(&config.cur_profile, config.filter_day, config.filter_night));
     R_TRY(fizeauProfileSetCmuGamma(&config.cur_profile, config.gamma_day, config.gamma_night));
+    R_TRY(fizeauProfileSetCmuSaturation(&config.cur_profile, config.sat_day, config.sat_night));
     R_TRY(fizeauProfileSetCmuLuminance(&config.cur_profile, config.luminance_day, config.luminance_night));
     R_TRY(fizeauProfileSetCmuColorRange(&config.cur_profile, config.range_day, config.range_night));
     R_TRY(fizeauProfileSetScreenBrightness(&config.cur_profile, config.brightness_day, config.brightness_night));
@@ -323,6 +336,7 @@ Result apply(cfg::Config &config) {
 Result reset(Config &config) {
     config.temperature_day = DEFAULT_TEMP,   config.temperature_night = DEFAULT_TEMP;
     config.gamma_day       = DEFAULT_GAMMA,  config.gamma_night       = DEFAULT_GAMMA;
+    config.sat_day         = DEFAULT_SAT,    config.sat_night         = DEFAULT_SAT;
     config.luminance_day   = DEFAULT_LUMA,   config.luminance_night   = DEFAULT_LUMA;
     config.range_day       = DEFAULT_RANGE,  config.range_night       = DEFAULT_RANGE;
     config.brightness_day  = MAX_BRIGHTNESS, config.brightness_night  = MAX_BRIGHTNESS;

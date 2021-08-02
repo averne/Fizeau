@@ -39,6 +39,7 @@ struct Config {
     Temperature temperature_day, temperature_night;
     ColorFilter filter_day,      filter_night;
     Gamma       gamma_day,       gamma_night;
+    Saturation  sat_day,         sat_night;
     Luminance   luminance_day,   luminance_night;
     ColorRange  range_day,       range_night;
     Brightness  brightness_day,  brightness_night;

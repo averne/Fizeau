@@ -21,20 +21,24 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <bit>
 #include <concepts>
 #include <switch.h>
 #include <common.hpp>
 
 namespace fz {
 
-// Represents a fixed-point fractionel number
-template <std::size_t M, std::size_t N, typename U = std::uint16_t>
+// Represents a fixed-point fractional number
+template <bool Signed, std::size_t M, std::size_t N, typename Rep>
 struct Q {
-    constexpr static std::size_t Integer    = M;
-    constexpr static std::size_t Fractional = N;
-    constexpr static std::size_t NbBits     = Integer + Fractional;
+    constexpr static std::size_t Sign          = Signed;
+    constexpr static std::size_t Integer       = M;
+    constexpr static std::size_t Fractional    = N;
 
-    using Underlying = U;
+    constexpr static std::size_t NbIntegerBits = Integer + Fractional;
+    constexpr static std::size_t NbBits        = Sign + NbIntegerBits;
+
+    using Underlying = Rep;
 
     constexpr Q() = default;
 
@@ -44,7 +48,7 @@ struct Q {
 
     template <typename T>
     constexpr Q(T n) requires std::floating_point<T>:
-        rep(static_cast<Underlying>(n * static_cast<T>(1 << Fractional)) & ((1 << NbBits) - 1)) { }
+        rep(static_cast<Underlying>(n * static_cast<T>(1 << Fractional))) { }
 
     template <typename T>
     constexpr operator T() const requires std::integral<T> {
@@ -53,17 +57,19 @@ struct Q {
 
     template <typename T>
     constexpr operator T() const requires std::floating_point<T> {
-        return static_cast<T>(this->rep) / static_cast<T>(1 << Fractional);
+        return (this->rep & (1 << NbIntegerBits) ? -1.0f : 1.0f) *
+            static_cast<T>(this->rep & ((1 << NbIntegerBits) - 1)) / static_cast<T>(1 << Fractional);
     }
 
     private:
         Underlying rep = 0;
 };
 
-using QS18 = Q<1, 8>;
-ASSERT_SIZE(QS18, 2);
-static_assert(static_cast<float>(QS18(0x100))       == 1.0f);
-static_assert(static_cast<std::uint16_t>(QS18(1.0)) == 0x100);
+using QS18 = Q<true, 1, 8, std::int16_t>;
+static_assert(static_cast<float>(QS18(0x100))          == 1.0f);
+static_assert(static_cast<float>(QS18(-1.0f))          == -1.0f);
+static_assert(std::bit_cast<std::uint16_t>(QS18(1.0))  == 0x100);
+static_assert(std::bit_cast<std::uint16_t>(QS18(-1.0)) == 0xff00);
 
 struct Cmu {
     __nv_in std::uint16_t enable;
@@ -142,14 +148,17 @@ class DispControlManager {
             return nvClose(DispControlManager::disp0_fd) | nvClose(DispControlManager::disp1_fd);
         }
 
-        static ams::Result set_cmu(std::uint32_t fd, Temperature temp, ColorFilter filter, Gamma gamma, Luminance luma, ColorRange range);
+        static ams::Result set_cmu(std::uint32_t fd,
+            Temperature temp, ColorFilter filter, Gamma gamma, Saturation sat, Luminance luma, ColorRange range);
 
-        static inline ams::Result set_cmu_internal(Temperature temp, ColorFilter filter, Gamma gamma, Luminance luma, ColorRange range) {
-            return DispControlManager::set_cmu(DispControlManager::disp0_fd, temp, filter, gamma, luma, range);
+        static inline ams::Result set_cmu_internal(
+                Temperature temp, ColorFilter filter, Gamma gamma, Saturation sat, Luminance luma, ColorRange range) {
+            return DispControlManager::set_cmu(DispControlManager::disp0_fd, temp, filter, gamma, sat, luma, range);
         }
 
-        static inline ams::Result set_cmu_external(Temperature temp, ColorFilter filter, Gamma gamma, Luminance luma, ColorRange range) {
-            return DispControlManager::set_cmu(DispControlManager::disp1_fd, temp, filter, gamma, luma, range);
+        static inline ams::Result set_cmu_external(
+                Temperature temp, ColorFilter filter, Gamma gamma, Saturation sat, Luminance luma, ColorRange range) {
+            return DispControlManager::set_cmu(DispControlManager::disp1_fd, temp, filter, gamma, sat, luma, range);
         }
 
         static ams::Result set_hdmi_color_range(ColorRange range, bool disable = false);
