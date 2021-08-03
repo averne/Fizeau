@@ -400,7 +400,7 @@ Result draw_main_window(cfg::Config &ctx) {
 }
 
 void draw_preview_window(cfg::Config &ctx, DkResHandle preview_handle) {
-    std::array<char, 0x20> buf;
+    std::array<char, 0x40> buf;
     std::snprintf(buf.data(), buf.size(), "Preview (%s)###preview",
         ctx.is_editing_day_profile ? "day" : ctx.is_editing_night_profile ? "night" : "none");
 
@@ -429,7 +429,7 @@ void draw_preview_window(cfg::Config &ctx, DkResHandle preview_handle) {
 }
 
 void draw_graph_window(cfg::Config &ctx) {
-    std::array<char, 0x20> buf;
+    std::array<char, 0x40> buf;
     std::snprintf(buf.data(), buf.size(), "Gamma ramps (%s)###gammaramp",
         ctx.is_editing_day_profile ? "day" : ctx.is_editing_night_profile ? "night" : "none");
 
