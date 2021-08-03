@@ -104,7 +104,7 @@ void updateKeys(ImGuiIO &io_) {
     };
 
     padUpdate(&s_pad);
-    auto down = padGetButtonsDown(&s_pad);
+    auto down = padGetButtons(&s_pad);
 
     for (auto [im, nx]: mapping)
         if (down & nx)
