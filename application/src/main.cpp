@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
     NJ_SCOPEGUARD([] { nj::finalize(); });
 
     nj::Decoder decoder;
-    if (auto rc = decoder.initialize(); rc) {
+    if (auto rc = decoder.initialize(2); rc) {
         LOG("Failed to initialize decoder: %#x\n", rc);
         return 1;
     }
@@ -82,21 +82,20 @@ int main(int argc, char **argv) {
     nj::Surface background_surf(background.width, background.height, nj::PixelFormat::RGBA);
     nj::Surface preview_surf   (preview.width,    preview.height,    nj::PixelFormat::RGBA);
     if (R_FAILED(background_surf.allocate()) || R_FAILED(preview_surf.allocate())) {
-        LOG("Failed to allocate surface\n");
+        LOG("Failed to allocate surfaces\n");
         return 1;
     }
 
     if (R_FAILED(decoder.render(background, background_surf, 255)))
         LOG("Failed to render image\n");
-    decoder.wait(background_surf);
 
     if (R_FAILED(decoder.render(preview, preview_surf, 255)))
         LOG("Failed to render image\n");
-    decoder.wait(preview_surf);
 
     if (!fz::gfx::init())
         LOG("Failed to init\n");
 
+    decoder.wait(background_surf, preview_surf);
     auto background_hdl = fz::gfx::create_texture(background_surf, 1, 1),
         preview_hdl = fz::gfx::create_texture(preview_surf, 2, 2);
 
