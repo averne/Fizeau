@@ -217,10 +217,12 @@ Result draw_color_tab(cfg::Config &ctx) {
     ctx.is_editing_night_profile |= new_combo("Night:", "##filtern", ctx.filter_night, filters_names);
 
     // Brightness slider
-    im::Separator();
-    im::TextUnformatted("Screen brightness");
-    ctx.is_editing_day_profile   |= new_slider("Day:",   "##brightd", ctx.brightness_day,   MIN_BRIGHTNESS, MAX_BRIGHTNESS, "%.2f");
-    ctx.is_editing_night_profile |= new_slider("Night:", "##brightn", ctx.brightness_night, MIN_BRIGHTNESS, MAX_BRIGHTNESS, "%.2f");
+    if (ctx.cur_profile_id != ctx.active_external_profile) {
+        im::Separator();
+        im::TextUnformatted("Screen brightness");
+        ctx.is_editing_day_profile   |= new_slider("Day:",   "##brightd", ctx.brightness_day,   MIN_BRIGHTNESS, MAX_BRIGHTNESS, "%.2f");
+        ctx.is_editing_night_profile |= new_slider("Night:", "##brightn", ctx.brightness_night, MIN_BRIGHTNESS, MAX_BRIGHTNESS, "%.2f");
+    }
 
     im::EndTabItem();
     return 0;

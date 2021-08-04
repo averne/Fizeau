@@ -233,8 +233,12 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     list->addItem(this->apply_button);
     list->addItem(this->temp_header);
     list->addItem(this->temp_slider);
-    list->addItem(this->brightness_header);
-    list->addItem(this->brightness_slider);
+
+    if (config->cur_profile_id != config->active_external_profile) {
+        list->addItem(this->brightness_header);
+        list->addItem(this->brightness_slider);
+    }
+
     list->addItem(this->gamma_header);
     list->addItem(this->gamma_slider);
     list->addItem(this->sat_header);
