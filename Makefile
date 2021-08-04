@@ -66,10 +66,10 @@ $(DIST_CHL_TARGET): | all
 
 	@mkdir -p $(OUT)/atmosphere/contents/$(FZ_TID)
 	@cp sysmodule/out/Fizeau.nsp $(OUT)/atmosphere/contents/$(FZ_TID)/exefs.nsp
-	@cp sysmodule/toolbox.json $(OUT)/atmosphere/contents/$(FZ_TID)/toolbox.json
 
 	@mkdir -p $(OUT)/atmosphere/contents/$(FZ_CHL_TID)/flags
 	@cp chainloader/out/Fizeau-chl.nsp $(OUT)/atmosphere/contents/$(FZ_CHL_TID)/exefs.nsp
+	@cp chainloader/toolbox.json $(OUT)/atmosphere/contents/$(FZ_CHL_TID)/toolbox.json
 	@touch $(OUT)/atmosphere/contents/$(FZ_CHL_TID)/flags/boot2.flag
 
 	@7z a $@ ./$(OUT)/atmosphere ./$(OUT)/config ./$(OUT)/switch >/dev/null
