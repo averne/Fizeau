@@ -54,5 +54,14 @@ class FizeauOverlay: public tsl::Overlay {
 
 int main(int argc, char **argv) {
     LOG("Starting overlay\n");
+
+    bool is_active = false;
+    tsl::hlp::doWithSmSession([&is_active] {
+        fizeauIsServiceActive(&is_active);
+    });
+
+    if (!is_active)
+        return 1;
+
     return tsl::loop<FizeauOverlay>(argc, argv);
 }
