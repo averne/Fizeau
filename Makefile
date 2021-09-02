@@ -31,7 +31,7 @@ dist: $(DIST_TARGET)
 	@:
 
 $(DIST_TARGET): | application overlay sysmodule
-	@rm -rf $(OUT)/Fizeau*.zip
+	@rm -rf $(OUT)/Fizeau-?.?.?-*.zip
 
 	@mkdir -p $(OUT)/config/Fizeau
 	@mkdir -p $(OUT)/switch/Fizeau
