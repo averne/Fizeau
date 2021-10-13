@@ -22,7 +22,7 @@ Adjust the color of the screen of your Nintendo Switch.
 
 # Installation
 
-Download the latest zip from the [release page](https://github.com/averne/Fizeau/releases/latest), unzip it to the root of your sd card (be careful to merge and not overwrite folders), and reboot.
+Download the latest zip from the [release page](https://github.com/averne/Fizeau/releases/latest), unzip it to the root of your sd card (be careful to merge and not overwrite folders), and reboot. Choose the chainloader ("-chl") version if you wish for your settings to be automatically applied at boot, instead of needing to open the application/overlay.
 
 Only the latest version of the [Atmosphère](https://github.com/Atmosphere-NX/Atmosphere) CFW is supported.
 
@@ -38,7 +38,7 @@ All firmares are expected working. The software was tested working on 1.0.0, 2.0
 
 ## Settings:
   - Settings are saved at /switch/Fizeau/config.ini, which you can also edit.
-  - To reduce the memory usage of the sysmodule, settings are not read at boot. Instead, they are applied on application/overlay launch. Thus, you will need to **launch a client after a reboot to fully restart Fizeau**.
+  - To reduce the memory usage of the sysmodule, settings are not read at boot. Instead, they are applied on application/overlay launch. Thus, you will need to **launch a client after a reboot to fully restart Fizeau**. The chainloader version automatically applies settings at boot, at the expense of needing an additional loader module.
 
 # Building
   - Compiling requires a working [devkitA64](https://devkitpro.org/wiki/devkitPro_pacman) installation, with package `switch-glm` installed.
