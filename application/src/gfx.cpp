@@ -34,7 +34,7 @@ namespace {
 constexpr auto MAX_SAMPLERS = 3;
 constexpr auto MAX_IMAGES   = 4;
 
-constexpr auto FB_NUM       = 2u;
+constexpr auto FB_NUM       = 3u;
 
 constexpr auto CMDBUF_SIZE  = 1024 * 1024;
 
