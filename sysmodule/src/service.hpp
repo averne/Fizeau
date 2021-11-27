@@ -23,6 +23,9 @@
 
 #include "profile.hpp"
 
+#define MAKE_SERVICE_COMMAND_META_MAX(func) \
+    MAKE_SERVICE_COMMAND_META(func, ams::hos::Version_Min, static_cast<ams::hos::Version>(0xffffffff))
+
 namespace fz {
 
 class IProfile final: public ams::sf::IServiceObject {
@@ -80,26 +83,26 @@ class IProfile final: public ams::sf::IServiceObject {
 
     public:
         DEFINE_SERVICE_DISPATCH_TABLE {
-            MAKE_SERVICE_COMMAND_META(GetDuskTime),
-            MAKE_SERVICE_COMMAND_META(SetDuskTime),
-            MAKE_SERVICE_COMMAND_META(GetDawnTime),
-            MAKE_SERVICE_COMMAND_META(SetDawnTime),
-            MAKE_SERVICE_COMMAND_META(GetCmuTemperature),
-            MAKE_SERVICE_COMMAND_META(SetCmuTemperature),
-            MAKE_SERVICE_COMMAND_META(GetCmuColorFilter),
-            MAKE_SERVICE_COMMAND_META(SetCmuColorFilter),
-            MAKE_SERVICE_COMMAND_META(GetCmuGamma),
-            MAKE_SERVICE_COMMAND_META(SetCmuGamma),
-            MAKE_SERVICE_COMMAND_META(GetCmuSaturation),
-            MAKE_SERVICE_COMMAND_META(SetCmuSaturation),
-            MAKE_SERVICE_COMMAND_META(GetCmuLuminance),
-            MAKE_SERVICE_COMMAND_META(SetCmuLuminance),
-            MAKE_SERVICE_COMMAND_META(GetCmuColorRange),
-            MAKE_SERVICE_COMMAND_META(SetCmuColorRange),
-            MAKE_SERVICE_COMMAND_META(GetScreenBrightness),
-            MAKE_SERVICE_COMMAND_META(SetScreenBrightness),
-            MAKE_SERVICE_COMMAND_META(GetDimmingTimeout),
-            MAKE_SERVICE_COMMAND_META(SetDimmingTimeout),
+            MAKE_SERVICE_COMMAND_META_MAX(GetDuskTime),
+            MAKE_SERVICE_COMMAND_META_MAX(SetDuskTime),
+            MAKE_SERVICE_COMMAND_META_MAX(GetDawnTime),
+            MAKE_SERVICE_COMMAND_META_MAX(SetDawnTime),
+            MAKE_SERVICE_COMMAND_META_MAX(GetCmuTemperature),
+            MAKE_SERVICE_COMMAND_META_MAX(SetCmuTemperature),
+            MAKE_SERVICE_COMMAND_META_MAX(GetCmuColorFilter),
+            MAKE_SERVICE_COMMAND_META_MAX(SetCmuColorFilter),
+            MAKE_SERVICE_COMMAND_META_MAX(GetCmuGamma),
+            MAKE_SERVICE_COMMAND_META_MAX(SetCmuGamma),
+            MAKE_SERVICE_COMMAND_META_MAX(GetCmuSaturation),
+            MAKE_SERVICE_COMMAND_META_MAX(SetCmuSaturation),
+            MAKE_SERVICE_COMMAND_META_MAX(GetCmuLuminance),
+            MAKE_SERVICE_COMMAND_META_MAX(SetCmuLuminance),
+            MAKE_SERVICE_COMMAND_META_MAX(GetCmuColorRange),
+            MAKE_SERVICE_COMMAND_META_MAX(SetCmuColorRange),
+            MAKE_SERVICE_COMMAND_META_MAX(GetScreenBrightness),
+            MAKE_SERVICE_COMMAND_META_MAX(SetScreenBrightness),
+            MAKE_SERVICE_COMMAND_META_MAX(GetDimmingTimeout),
+            MAKE_SERVICE_COMMAND_META_MAX(SetDimmingTimeout),
         };
 
     private:
@@ -132,15 +135,14 @@ class FizeauService final: public ams::sf::IServiceObject {
 
     public:
         DEFINE_SERVICE_DISPATCH_TABLE {
-            MAKE_SERVICE_COMMAND_META(GetIsActive),
-            MAKE_SERVICE_COMMAND_META(SetIsActive),
-            MAKE_SERVICE_COMMAND_META(OpenProfile),
-            MAKE_SERVICE_COMMAND_META(GetActiveInternalProfileId),
-            MAKE_SERVICE_COMMAND_META(SetActiveInternalProfileId),
-            MAKE_SERVICE_COMMAND_META(GetActiveExternalProfileId),
-            MAKE_SERVICE_COMMAND_META(SetActiveExternalProfileId),
+            MAKE_SERVICE_COMMAND_META_MAX(GetIsActive),
+            MAKE_SERVICE_COMMAND_META_MAX(SetIsActive),
+            MAKE_SERVICE_COMMAND_META_MAX(OpenProfile),
+            MAKE_SERVICE_COMMAND_META_MAX(GetActiveInternalProfileId),
+            MAKE_SERVICE_COMMAND_META_MAX(SetActiveInternalProfileId),
+            MAKE_SERVICE_COMMAND_META_MAX(GetActiveExternalProfileId),
+            MAKE_SERVICE_COMMAND_META_MAX(SetActiveExternalProfileId),
         };
 };
 
 } // namespace fz
-
