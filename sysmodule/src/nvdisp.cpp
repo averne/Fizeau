@@ -27,8 +27,8 @@ namespace fz {
 
 using Man = DispControlManager;
 
-ams::Result Man::set_cmu(std::uint32_t fd,
-        Temperature temp, ColorFilter filter, Gamma gamma, Saturation sat, Luminance luma, ColorRange range) {
+ams::Result Man::set_cmu(std::uint32_t fd, Temperature temp, ColorFilter filter, Gamma gamma,
+        Saturation sat, Luminance luma, ColorRange range, std::array<std::uint16_t, 9> &saved_csc) {
     auto &cmu = Man::cmu;
     cmu.reset();
 
@@ -43,6 +43,7 @@ ams::Result Man::set_cmu(std::uint32_t fd,
     coeffs = dot(coeffs, saturation_matrix(sat));
 
     std::transform(coeffs.begin(), coeffs.end(), &cmu.krr, [](float c) -> QS18 { return c; });
+    std::memcpy(saved_csc.data(), &cmu.krr, sizeof(saved_csc));
 
     // Calculate gamma ramps
     degamma_ramp(cmu.lut_1.data(), cmu.lut_1.size(), DEFAULT_GAMMA, 12);                  // Set the LUT1 with a fixed gamma corresponding to the incoming data

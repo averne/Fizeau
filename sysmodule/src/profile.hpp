@@ -104,6 +104,7 @@ class ProfileManager {
 
         static inline ProfileId active_internal_profile = ProfileId::Profile1, active_external_profile = ProfileId::Profile2;
         static inline std::array<Profile, static_cast<std::size_t>(ProfileId::Total)> profiles;
+        static inline std::array<std::uint16_t, 9> saved_internal_csc, saved_external_csc;
 
         static inline ams::os::Mutex commit_mutex;
 };

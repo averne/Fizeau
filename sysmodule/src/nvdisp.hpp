@@ -148,17 +148,17 @@ class DispControlManager {
             return nvClose(DispControlManager::disp0_fd) | nvClose(DispControlManager::disp1_fd);
         }
 
-        static ams::Result set_cmu(std::uint32_t fd,
-            Temperature temp, ColorFilter filter, Gamma gamma, Saturation sat, Luminance luma, ColorRange range);
+        static ams::Result set_cmu(std::uint32_t fd, Temperature temp, ColorFilter filter, Gamma gamma,
+            Saturation sat, Luminance luma, ColorRange range, std::array<std::uint16_t, 9> &saved_csc);
 
-        static inline ams::Result set_cmu_internal(
-                Temperature temp, ColorFilter filter, Gamma gamma, Saturation sat, Luminance luma, ColorRange range) {
-            return DispControlManager::set_cmu(DispControlManager::disp0_fd, temp, filter, gamma, sat, luma, range);
+        static inline ams::Result set_cmu_internal(Temperature temp, ColorFilter filter, Gamma gamma,
+                Saturation sat, Luminance luma, ColorRange range, std::array<std::uint16_t, 9> &saved_csc) {
+            return DispControlManager::set_cmu(DispControlManager::disp0_fd, temp, filter, gamma, sat, luma, range, saved_csc);
         }
 
-        static inline ams::Result set_cmu_external(
-                Temperature temp, ColorFilter filter, Gamma gamma, Saturation sat, Luminance luma, ColorRange range) {
-            return DispControlManager::set_cmu(DispControlManager::disp1_fd, temp, filter, gamma, sat, luma, range);
+        static inline ams::Result set_cmu_external(Temperature temp, ColorFilter filter, Gamma gamma,
+                Saturation sat, Luminance luma, ColorRange range, std::array<std::uint16_t, 9> &saved_csc) {
+            return DispControlManager::set_cmu(DispControlManager::disp1_fd, temp, filter, gamma, sat, luma, range, saved_csc);
         }
 
         static ams::Result set_hdmi_color_range(ColorRange range, bool disable = false);

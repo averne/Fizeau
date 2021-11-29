@@ -126,6 +126,15 @@
         {
             "type" : "min_kernel_version",
             "value": "0x0030"
+        },
+		{
+            "type": "map",
+            "value": {
+                "address": "0x54200000",
+                "size": "0x80000",
+                "is_ro": false,
+                "is_io": true
+            }
         }
 	]
 }

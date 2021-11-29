@@ -17,13 +17,24 @@
 
 #include <cmath>
 #include <mutex>
+#include <thread>
 #include <common.hpp>
+#include <omm.h>
 
 #include "brightness.hpp"
+#include "disp1_regs.hpp"
 #include "nvdisp.hpp"
 #include "profile.hpp"
 
+using namespace std::chrono_literals;
+
 namespace fz {
+
+namespace {
+
+std::uint64_t g_disp_va_base;
+
+} // namespace
 
 using Man = ProfileManager;
 
@@ -52,12 +63,43 @@ Profile Profile::interpolate(float factor, bool from_day) {
 
 void ProfileManager::transition_thread_func([[maybe_unused]] void *args) {
     while (!Man::stop.stop_requested()) {
-        svcSleepThread(1e9l);
+        std::this_thread::sleep_for(50ms);
         if (!Man::is_active)
             continue;
 
-        // Regularly reapply the settings, as they are overriden when waking from sleeping/dithering, etc
-        Man::commit(false);
+        bool need_apply = false;
+
+        AppletOperationMode mode;
+        R_ABORT_UNLESS(ommGetOperationMode(&mode));
+
+        // Poll DISPLAY_A in handheld mode, DISPLAY_B in docked mode
+        std::uint64_t iobase = g_disp_va_base + ((mode == AppletOperationMode_Handheld) ? 0 : 0x40000);
+
+        {
+            std::scoped_lock lk(Man::commit_mutex);
+
+            auto &csc = (mode == AppletOperationMode_Handheld) ? Man::saved_internal_csc : Man::saved_external_csc;
+
+            for (std::size_t i = 0; i < csc.size(); ++i) {
+                if (csc[i] != READ(iobase + DC_COM_CMU_CSC_KRR + i * sizeof(std::uint32_t))) {
+                    need_apply = true;
+                    break;
+                }
+            }
+        }
+
+        auto &profile = (mode == AppletOperationMode_Handheld) ?
+            Man::get_active_internal_profile() : Man::get_active_external_profile();
+        auto time = Clock::get_current_time();
+        if (!need_apply && (profile.is_transitionning || Clock::is_in_interval(time, profile.dusk_begin, profile.dusk_end) ||
+                Clock::is_in_interval(time, profile.dawn_begin, profile.dawn_end))) {
+            // First wait a second to avoid calculating/applying the coefficients too much
+            std::this_thread::sleep_for(1s);
+            need_apply = true;
+        }
+
+        if (need_apply)
+            Man::commit(false);
     }
 }
 
@@ -72,13 +114,20 @@ ams::Result ProfileManager::initialize() {
             Man::is_lite = false;
 
         Man::is_lite = type == ams::spl::HardwareType::Hoag;
+
+        R_ABORT_UNLESS(ommInitialize());
     });
+
+    std::uint64_t size;
+    R_TRY(svcQueryIoMapping(reinterpret_cast<std::uint64_t *>(&g_disp_va_base), &size, DISP_IO_BASE, DISP_IO_SIZE));
 
     R_TRY(Man::thread.Initialize(Man::transition_thread_func, nullptr, 0x3f));
     return Man::thread.Start();
 }
 
 ams::Result ProfileManager::finalize() {
+    ommExit();
+
     Man::stop.request_stop();
     return Man::thread.Join();
 }
@@ -144,10 +193,12 @@ ams::Result ProfileManager::commit(bool force_brightness) {
         if (Clock::is_in_interval(profile.dawn_begin, profile.dusk_begin)) {
             if (internal) {
                 R_TRY(DispControlManager::set_cmu_internal(profile.temperature_day, profile.filter_day,
-                    profile.gamma_day, profile.sat_day, profile.luminance_day, profile.range_day));
+                    profile.gamma_day, profile.sat_day, profile.luminance_day, profile.range_day,
+                    Man::saved_internal_csc));
             } else {
                 R_TRY(DispControlManager::set_cmu_external(profile.temperature_day, profile.filter_day,
-                    profile.gamma_day, profile.sat_day, profile.luminance_day, profile.range_day));
+                    profile.gamma_day, profile.sat_day, profile.luminance_day, profile.range_day,
+                    Man::saved_external_csc));
                 R_TRY(DispControlManager::set_hdmi_color_range(profile.range_day));
             }
             if (internal && apply_brightness)
@@ -155,10 +206,12 @@ ams::Result ProfileManager::commit(bool force_brightness) {
         } else {
             if (internal) {
                 R_TRY(DispControlManager::set_cmu_internal(profile.temperature_night, profile.filter_night,
-                    profile.gamma_night, profile.sat_night, profile.luminance_night, profile.range_night));
+                    profile.gamma_night, profile.sat_night, profile.luminance_night, profile.range_night,
+                    Man::saved_internal_csc));
             } else {
                 R_TRY(DispControlManager::set_cmu_external(profile.temperature_night, profile.filter_night,
-                    profile.gamma_night, profile.sat_night, profile.luminance_night, profile.range_night));
+                    profile.gamma_night, profile.sat_night, profile.luminance_night, profile.range_night,
+                    Man::saved_external_csc));
                 R_TRY(DispControlManager::set_hdmi_color_range(profile.range_night));
             }
             if (internal && apply_brightness)
@@ -186,6 +239,9 @@ ams::Result ProfileManager::commit(bool force_brightness) {
     R_TRY(apply_profile(Man::get_active_internal_profile(), should_dim_internal, true));
     if (!Man::is_lite)
         R_TRY(apply_profile(Man::get_active_external_profile(), should_dim_external, false));
+
+    // Wait two frames worth of time (assuming 30Hz), since the CMU registers are double buffered
+    svcSleepThread(2e9 / 30);
 
     return ams::ResultSuccess();
 }

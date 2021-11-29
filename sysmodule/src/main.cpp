@@ -118,6 +118,7 @@ int main(int argc, char **argv) {
     server_manager.LoopProcess();
 
     LOG("Exiting\n");
+    fz::ProfileManager::finalize();
     fz::DispControlManager::finalize();
     fz::BrightnessManager::finalize();
     return 0;
