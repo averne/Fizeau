@@ -240,9 +240,6 @@ ams::Result ProfileManager::commit(bool force_brightness) {
     if (!Man::is_lite)
         R_TRY(apply_profile(Man::get_active_external_profile(), should_dim_external, false));
 
-    // Wait two frames worth of time (assuming 30Hz), since the CMU registers are double buffered
-    svcSleepThread(2e9 / 30);
-
     return ams::ResultSuccess();
 }
 
