@@ -43,7 +43,10 @@ ams::Result Man::set_cmu(std::uint32_t fd, Temperature temp, ColorFilter filter,
     coeffs = dot(coeffs, saturation_matrix(sat));
 
     std::transform(coeffs.begin(), coeffs.end(), &cmu.krr, [](float c) -> QS18 { return c; });
-    std::memcpy(saved_csc.data(), &cmu.krr, sizeof(saved_csc));
+
+    // Copy calculated color matrix, masking only the meaningful bits
+    std::transform(&cmu.krr, &cmu.krr + 9, saved_csc.begin(),
+        [](QS18 c) -> std::uint16_t { return static_cast<std::uint16_t>(c) & QS18::BitMask; });
 
     // Calculate gamma ramps
     degamma_ramp(cmu.lut_1.data(), cmu.lut_1.size(), DEFAULT_GAMMA, 12);                  // Set the LUT1 with a fixed gamma corresponding to the incoming data

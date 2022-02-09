@@ -38,6 +38,8 @@ struct Q {
     constexpr static std::size_t NbIntegerBits = Integer + Fractional;
     constexpr static std::size_t NbBits        = Sign + NbIntegerBits;
 
+    constexpr static std::size_t BitMask       = (1 << NbBits) - 1;
+
     using Underlying = Rep;
 
     constexpr Q() = default;
