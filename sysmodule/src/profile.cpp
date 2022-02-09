@@ -43,6 +43,7 @@ Profile Profile::interpolate(float factor, bool from_day) {
     if (from_day) {
         p.temperature_day   = std::lerp(this->temperature_day,   this->temperature_night, factor);
         p.gamma_day         = std::lerp(this->gamma_day,         this->gamma_night,       factor);
+        p.sat_day           = std::lerp(this->sat_day,           this->sat_night,         factor);
         p.luminance_day     = std::lerp(this->luminance_day,     this->luminance_night,   factor);
         p.brightness_day    = std::lerp(this->brightness_day,    this->brightness_night,  factor);
         p.range_day         = { std::lerp(this->range_day.lo,   this->range_night.lo, factor),
@@ -50,6 +51,7 @@ Profile Profile::interpolate(float factor, bool from_day) {
     } else {
         p.temperature_night = std::lerp(this->temperature_night, this->temperature_day,   factor);
         p.gamma_night       = std::lerp(this->gamma_night,       this->gamma_day,         factor);
+        p.sat_night         = std::lerp(this->sat_day,           this->sat_night,         factor);
         p.luminance_night   = std::lerp(this->luminance_night,   this->luminance_day,     factor);
         p.brightness_night  = std::lerp(this->brightness_night,  this->brightness_day,    factor);
         p.range_night       = { std::lerp(this->range_night.lo, this->range_day.lo,   factor),
