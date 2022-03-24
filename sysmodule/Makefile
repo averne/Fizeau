@@ -19,7 +19,7 @@ CUSTOM_LIBS       =    ../common ../lib/libstratosphere
 NPDM_JSON         =    config.json
 
 DEFINES           =    __SWITCH__ ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_NX           \
-                       ATMOSPHERE_ARCH_ARM64 ATMOSPHERE_OS_HORIZON SYSMODULE TWILI
+                       ATMOSPHERE_ARCH_ARM64 ATMOSPHERE_OS_HORIZON SYSMODULE
 ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
 FLAGS             =    -Wall -pipe -g -Os -ffunction-sections -fdata-sections                       \
                        -fno-stack-protector -fno-common

@@ -40,6 +40,8 @@ extern TwiliPipe g_twlPipe;
         })
 #   elif (defined(APPLICATION) && defined(TWILI)) || defined(NXLINK)
 #       define LOG(...) printf(__VA_ARGS__)
+#   else
+#      define LOG(...) ({})
 #   endif
 #else
 #   define LOG(...) ({})

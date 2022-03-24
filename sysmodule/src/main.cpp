@@ -48,7 +48,7 @@ namespace ams {
     }
 }
 
-#ifdef DEBUG
+#if defined(DEBUG) && defined(TWILI)
 TwiliPipe g_twlPipe;
 #endif
 
@@ -66,16 +66,27 @@ extern "C" void __libnx_exception_handler(ThreadExceptionDump *ctx) {
 }
 
 extern "C" void __appInit(void) {
+#if defined(DEBUG) && !defined(TWILI)
+    u64 has_debugger = 0;
+    while (!has_debugger) {
+        R_ABORT_UNLESS(svcGetInfo(&has_debugger, InfoType_DebuggerAttached, INVALID_HANDLE, 0));
+        if (has_debugger)
+            break;
+        svcSleepThread(1e6);
+    }
+#endif
+
     ams::hos::InitializeForStratosphere();
 
     ams::sm::DoWithSession([] {
         R_ABORT_UNLESS(nvInitialize());
-        R_ABORT_UNLESS(lblInitialize());
+        if (hosversionBefore(14, 0, 0))
+            R_ABORT_UNLESS(lblInitialize());
 
         if (hosversionAtLeast(9, 0, 0))
             R_ABORT_UNLESS(insrInitialize());
 
-#ifdef DEBUG
+#if defined(DEBUG) && defined(TWILI)
         R_ABORT_UNLESS(twiliInitialize());
         R_ABORT_UNLESS(twiliCreateNamedOutputPipe(&g_twlPipe, "fzout"));
 #endif
@@ -86,12 +97,13 @@ extern "C" void __appInit(void) {
 
 extern "C" void __appExit(void) {
     nvExit();
-    lblExit();
+    if (hosversionBefore(14, 0, 0))
+        lblExit();
 
     if (hosversionAtLeast(9, 0, 0))
         insrExit();
 
-#ifdef DEBUG
+#if defined(DEBUG) && defined(TWILI)
     twiliClosePipe(&g_twlPipe);
     twiliExit();
 #endif
@@ -109,7 +121,8 @@ ams::sf::hipc::ServerManager<num_servers, ams::sf::hipc::DefaultServerManagerOpt
 int main(int argc, char **argv) {
     LOG("Initializing\n");
     R_ABORT_UNLESS(fz::DispControlManager::initialize());
-    R_ABORT_UNLESS(fz::BrightnessManager::initialize());
+    if (hosversionBefore(14, 0, 0))
+        R_ABORT_UNLESS(fz::BrightnessManager::initialize());
     R_ABORT_UNLESS(fz::ProfileManager::initialize());
     R_ABORT_UNLESS(fz::Clock::initialize());
 
@@ -120,6 +133,7 @@ int main(int argc, char **argv) {
     LOG("Exiting\n");
     fz::ProfileManager::finalize();
     fz::DispControlManager::finalize();
-    fz::BrightnessManager::finalize();
+    if (hosversionBefore(14, 0, 0))
+        fz::BrightnessManager::finalize();
     return 0;
 }

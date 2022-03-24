@@ -144,7 +144,8 @@ ams::Result ProfileManager::set_is_active(bool active) {
         R_TRY(Man::commit());
     } else {
         R_TRY(DispControlManager::disable());
-        R_TRY(BrightnessManager::disable());
+        if (hosversionBefore(14, 0, 0))
+            R_TRY(BrightnessManager::disable());
     }
     return ams::ResultSuccess();
 }
@@ -158,7 +159,8 @@ ams::Result ProfileManager::commit(bool force_brightness) {
 
         if (Clock::is_in_interval(time, profile.dusk_begin, profile.dusk_end)) {
             if (!profile.is_transitionning) {
-                R_TRY(BrightnessManager::get_brightness(profile.brightness_day));
+                if (hosversionBefore(14, 0, 0))
+                    R_TRY(BrightnessManager::get_brightness(profile.brightness_day));
                 profile.is_transitionning = true;
             }
             float factor = static_cast<float>(to_timestamp(profile.dusk_end - time))
@@ -166,7 +168,8 @@ ams::Result ProfileManager::commit(bool force_brightness) {
             profile = profile.interpolate(factor, false);
         } else if (Clock::is_in_interval(time, profile.dawn_begin, profile.dawn_end)) {
             if (!profile.is_transitionning) {
-                R_TRY(BrightnessManager::get_brightness(profile.brightness_night));
+                if (hosversionBefore(14, 0, 0))
+                    R_TRY(BrightnessManager::get_brightness(profile.brightness_night));
                 profile.is_transitionning = true;
             }
             float factor = static_cast<float>(to_timestamp(profile.dawn_end - time))
@@ -182,9 +185,9 @@ ams::Result ProfileManager::commit(bool force_brightness) {
                 internal ? dimmed_luma_internal : dimmed_luma_external;
 
             apply_brightness = false;
-            if (internal)
+            if (internal && hosversionBefore(14, 0, 0))
                 R_TRY(BrightnessManager::enable_dimming());
-        } else if (internal) {
+        } else if (internal && hosversionBefore(14, 0, 0)) {
             bool is_dimming;
             R_TRY(BrightnessManager::is_dimming(is_dimming));
 
@@ -203,7 +206,7 @@ ams::Result ProfileManager::commit(bool force_brightness) {
                     Man::saved_external_csc));
                 R_TRY(DispControlManager::set_hdmi_color_range(profile.range_day));
             }
-            if (internal && apply_brightness)
+            if (internal && apply_brightness && hosversionBefore(14, 0, 0))
                 R_TRY(BrightnessManager::set_brightness(profile.brightness_day));
         } else {
             if (internal) {
@@ -216,7 +219,7 @@ ams::Result ProfileManager::commit(bool force_brightness) {
                     Man::saved_external_csc));
                 R_TRY(DispControlManager::set_hdmi_color_range(profile.range_night));
             }
-            if (internal && apply_brightness)
+            if (internal && apply_brightness && hosversionBefore(14, 0, 0))
                 R_TRY(BrightnessManager::set_brightness(profile.brightness_night));
         }
         return ams::ResultSuccess();
@@ -227,7 +230,7 @@ ams::Result ProfileManager::commit(bool force_brightness) {
         std::uint64_t last_active = 0;
         R_TRY(insrGetLastTick(3, &last_active));
 
-        auto timeout = armTicksToNs(armGetSystemTick() - last_active) / 1e9;
+        auto timeout = armTicksToNs(armGetSystemTick() - last_active) / static_cast<u64>(1e9);
 
         auto should_dim = [](auto profile, auto timeout) {
             auto ts = to_timestamp(profile.dimming_timeout);
