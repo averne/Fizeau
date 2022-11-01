@@ -66,13 +66,14 @@ Profile Profile::interpolate(float factor, bool from_day) {
 void ProfileManager::transition_thread_func([[maybe_unused]] void *args) {
     while (!Man::stop.stop_requested()) {
         std::this_thread::sleep_for(50ms);
-        if (!Man::is_active)
+        if (!Man::is_active || !Man::should_poll_mmio)
             continue;
 
         bool need_apply = false;
 
         AppletOperationMode mode;
-        R_ABORT_UNLESS(ommGetOperationMode(&mode));
+        if (R_FAILED(ommGetOperationMode(&mode)))
+            break;
 
         // Poll DISPLAY_A in handheld mode, DISPLAY_B in docked mode
         std::uint64_t iobase = g_disp_va_base + ((mode == AppletOperationMode_Handheld) ? 0 : 0x40000);
@@ -105,6 +106,30 @@ void ProfileManager::transition_thread_func([[maybe_unused]] void *args) {
     }
 }
 
+void ProfileManager::psc_thread_func([[maybe_unused]] void *args) {
+    while (!Man::stop.stop_requested()) {
+        if (R_SUCCEEDED(eventWait(&Man::psc_module.event, UINT64_MAX))) {
+            PscPmState state;
+            ON_SCOPE_EXIT { pscPmModuleAcknowledge(&Man::psc_module, state); };
+            if (R_SUCCEEDED(pscPmModuleGetRequest(&Man::psc_module, &state, nullptr))) {
+                switch (state) {
+                    case PscPmState_ReadyAwaken:
+                    case PscPmState_ReadyAwakenCritical:
+                    case PscPmState_Awake:
+                        Man::should_poll_mmio = true;
+                        break;
+                    default:
+                    case PscPmState_ReadySleep:
+                    case PscPmState_ReadySleepCritical:
+                    case PscPmState_ReadyShutdown:
+                        Man::should_poll_mmio = false;
+                        break;
+                }
+            }
+        }
+    }
+}
+
 ams::Result ProfileManager::initialize() {
     ams::sm::DoWithSession([]() {
         if (auto rc = splInitialize(); R_FAILED(rc))
@@ -123,15 +148,29 @@ ams::Result ProfileManager::initialize() {
     std::uint64_t size;
     R_TRY(svcQueryIoMapping(reinterpret_cast<std::uint64_t *>(&g_disp_va_base), &size, DISP_IO_BASE, DISP_IO_SIZE));
 
-    R_TRY(Man::thread.Initialize(Man::transition_thread_func, nullptr, 0x3f));
-    return Man::thread.Start();
+    std::array deps = {u32(PscPmModuleId_Display)};
+    R_TRY(pscmGetPmModule(&Man::psc_module, PscPmModuleId(125), deps.data(), deps.size(), true));
+
+    R_TRY(Man::transition_thread.Initialize(Man::transition_thread_func, nullptr, 0x3f));
+    R_TRY(Man::transition_thread.Start());
+
+    R_TRY(Man::psc_thread.Initialize(Man::psc_thread_func, nullptr, 0x3f));
+    R_TRY(Man::psc_thread.Start());
+
+    return 0;
 }
 
 ams::Result ProfileManager::finalize() {
     ommExit();
+    pscPmModuleFinalize(&Man::psc_module);
+    pscPmModuleClose(&Man::psc_module);
+    eventClose(&Man::psc_module.event);
 
     Man::stop.request_stop();
-    return Man::thread.Join();
+    R_TRY(Man::transition_thread.Join());
+    R_TRY(Man::psc_thread.Join());
+
+    return 0;
 }
 
 bool ProfileManager::get_is_active() {

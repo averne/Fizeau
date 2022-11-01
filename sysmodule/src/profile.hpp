@@ -94,13 +94,17 @@ class ProfileManager {
 
     private:
         static void transition_thread_func(void *args);
+        static void psc_thread_func(void *args);
 
     private:
         static inline bool is_lite   = false;
         static inline bool is_active = false;
+        static inline bool should_poll_mmio = true;
 
-        static inline ams::os::StaticThread<2 * ams::os::MemoryPageSize> thread;
+        static inline ams::os::StaticThread<2 * ams::os::MemoryPageSize> transition_thread;
+        static inline ams::os::StaticThread<ams::os::MemoryPageSize> psc_thread;
         static inline std::stop_source stop;
+        static inline PscPmModule psc_module;
 
         static inline ProfileId active_internal_profile = ProfileId::Profile1, active_external_profile = ProfileId::Profile2;
         static inline std::array<Profile, static_cast<std::size_t>(ProfileId::Total)> profiles;

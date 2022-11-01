@@ -80,6 +80,7 @@ extern "C" void __appInit(void) {
 
     ams::sm::DoWithSession([] {
         R_ABORT_UNLESS(nvInitialize());
+        R_ABORT_UNLESS(pscmInitialize());
         if (hosversionBefore(14, 0, 0))
             R_ABORT_UNLESS(lblInitialize());
 
@@ -97,6 +98,7 @@ extern "C" void __appInit(void) {
 
 extern "C" void __appExit(void) {
     nvExit();
+    pscmExit();
     if (hosversionBefore(14, 0, 0))
         lblExit();
 
