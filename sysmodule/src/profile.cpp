@@ -182,7 +182,9 @@ ams::Result ProfileManager::set_is_active(bool active) {
     if (active) {
         R_TRY(Man::commit());
     } else {
-        R_TRY(DispControlManager::disable());
+        R_TRY(DispControlManager::disable(true));
+        if (!Man::is_lite)
+            R_TRY(DispControlManager::disable(false));
         if (hosversionBefore(14, 0, 0))
             R_TRY(BrightnessManager::disable());
     }

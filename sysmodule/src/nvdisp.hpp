@@ -165,7 +165,7 @@ class DispControlManager {
 
         static ams::Result set_hdmi_color_range(ColorRange range, bool disable = false);
 
-        static ams::Result disable();
+        static ams::Result disable(bool internal);
 
     private:
         static inline Cmu           cmu;
