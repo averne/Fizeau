@@ -41,6 +41,9 @@ All firmares are expected working. The software was tested working on 1.0.0, 2.0
   - To reduce the memory usage of the sysmodule, settings are not read at boot. Instead, they are applied on application/overlay launch. Thus, you will need to **launch a client after a reboot to fully restart Fizeau**. The chainloader version automatically applies settings at boot, at the expense of needing an additional loader module.
 
 # Building
+  > **Warning**
+  > For the moment devkitA64 version r18 or earlier is required
+
   - Compiling requires a working [devkitA64](https://devkitpro.org/wiki/devkitPro_pacman) installation, with package `switch-glm` installed.
   - Clone this repository recursively (`git clone --recursive https://github.com/averne/Fizeau`)
   - Navigate to its directory (`cd Fizeau`).
