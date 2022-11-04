@@ -5,19 +5,11 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: devkitpro/devkita64:latest
+    container: devkitpro/devkita64:20220216
 
     steps:
     - name: Install 7z
       run: sudo apt update && sudo apt install -y p7zip-full
-
-    - name: Build and install libnx master
-      run: |
-        git clone https://github.com/switchbrew/libnx.git
-        sed -i 's/ lib\/libnxd\.a//g' libnx/nx/Makefile
-        make -C libnx -j$(nproc)
-        sudo -E make -C libnx install
-        rm -rf *
 
     - uses: actions/checkout@v1
       with:
