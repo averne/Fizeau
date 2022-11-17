@@ -106,7 +106,7 @@ $(NSO_TARGET): $(ELF_TARGET)
 	@mkdir -p $(dir $@)
 	@elf2nso $< $@
 
-$(ELF_TARGET): $(OFILES) | libs
+$(ELF_TARGET): $(OFILES) $(LIBS_TARGET) | libs
 	@echo " LD  " $@
 	@mkdir -p $(dir $@)
 	@$(LD) $(ARCH) $(LDFLAGS) -Wl,-Map,$(BUILD)/$(TARGET).map $(LIB_FLAGS) $(OFILES) $(LINKS) -o $@

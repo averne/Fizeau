@@ -89,16 +89,16 @@ ColorMatrix saturation_matrix(Saturation sat) {
 }
 
 float degamma(float x, Gamma gamma) {
-    if (x <= 0.040045f)
-        return x /= gamma * 12.92f / DEFAULT_GAMMA;
+    if (x <= 0.040045f) // x * pow((0.040045 + 0.055) / (1.0 + 0.055), gamma) / 0.040045;
+        return x * 24.972f * std::pow(0.090f, gamma);
     return std::pow((x + 0.055f) / (1.0f + 0.055f), gamma);
 }
 
 float regamma(float x, Gamma gamma) {
-    if (x <= 0.0031308f)
-        return x *= gamma * 12.92f / DEFAULT_GAMMA;
-    else
-        return (1.0f + 0.055f) * std::pow(x, 1.0f / gamma) - 0.055f;
+    if (x <= 0.0031308f) // ((1.0 + 0.055) * std::pow(0.0031308, 1.0f / gamma) - 0.055) / 0.0031308
+        return x * (1.055f * std::pow(0.0031308f, (1.0f - gamma) / gamma) - 17.567f);
+    return (1.0f + 0.055f) * std::pow(x, 1.0f / gamma) - 0.055f;
+
 }
 
 void gamma_ramp(float (*func)(float, Gamma), std::uint16_t *array, std::size_t size, Gamma gamma, std::size_t nb_bits, float lo, float hi) {
