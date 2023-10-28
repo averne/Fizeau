@@ -66,6 +66,8 @@ Profile Profile::interpolate(float factor, bool from_day) {
 void ProfileManager::transition_thread_func([[maybe_unused]] void *args) {
     while (!Man::stop.stop_requested()) {
         std::this_thread::sleep_for(50ms);
+
+        std::scoped_lock lk(Man::mmio_mutex);
         if (!Man::is_active || !Man::should_poll_mmio)
             continue;
 
@@ -109,23 +111,12 @@ void ProfileManager::transition_thread_func([[maybe_unused]] void *args) {
 void ProfileManager::psc_thread_func([[maybe_unused]] void *args) {
     while (!Man::stop.stop_requested()) {
         if (R_SUCCEEDED(eventWait(&Man::psc_module.event, UINT64_MAX))) {
+            std::scoped_lock lk(Man::mmio_mutex);
+
             PscPmState state;
             ON_SCOPE_EXIT { pscPmModuleAcknowledge(&Man::psc_module, state); };
-            if (R_SUCCEEDED(pscPmModuleGetRequest(&Man::psc_module, &state, nullptr))) {
-                switch (state) {
-                    case PscPmState_ReadyAwaken:
-                    case PscPmState_ReadyAwakenCritical:
-                    case PscPmState_Awake:
-                        Man::should_poll_mmio = true;
-                        break;
-                    default:
-                    case PscPmState_ReadySleep:
-                    case PscPmState_ReadySleepCritical:
-                    case PscPmState_ReadyShutdown:
-                        Man::should_poll_mmio = false;
-                        break;
-                }
-            }
+            if (R_SUCCEEDED(pscPmModuleGetRequest(&Man::psc_module, &state, nullptr)))
+                Man::should_poll_mmio = state == PscPmState_Awake;
         }
     }
 }
@@ -148,7 +139,7 @@ ams::Result ProfileManager::initialize() {
     std::uint64_t size;
     R_TRY(svcQueryIoMapping(reinterpret_cast<std::uint64_t *>(&g_disp_va_base), &size, DISP_IO_BASE, DISP_IO_SIZE));
 
-    std::array deps = {u32(PscPmModuleId_Display)};
+    std::array deps = {u32(PscPmModuleId_Display), u32(PscPmModuleId_Omm)};
     R_TRY(pscmGetPmModule(&Man::psc_module, PscPmModuleId(125), deps.data(), deps.size(), true));
 
     R_TRY(Man::transition_thread.Initialize(Man::transition_thread_func, nullptr, 0x3f));
