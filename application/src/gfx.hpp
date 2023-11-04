@@ -29,6 +29,6 @@ bool loop();
 void render();
 void exit();
 
-DkResHandle create_texture(const nj::Surface &surf, std::uint32_t sampler_id, std::uint32_t image_id);
+void register_texture(dk::MemBlock memblk, dk::Image &image, const nj::Surface &surf, std::uint32_t sampler_id, std::uint32_t image_id);
 
 } // namespace fz::gfx

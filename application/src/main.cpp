@@ -96,8 +96,13 @@ int main(int argc, char **argv) {
         LOG("Failed to init\n");
 
     decoder.wait(background_surf, preview_surf);
-    auto background_hdl = fz::gfx::create_texture(background_surf, 1, 1),
-        preview_hdl = fz::gfx::create_texture(preview_surf, 2, 2);
+
+    dk::UniqueMemBlock background_memblk, preview_memblk;
+    dk::Image background_img, preview_img;
+    DkResHandle background_hdl = dkMakeTextureHandle(1, 1), preview_hdl = dkMakeTextureHandle(2, 2);
+
+    fz::gfx::register_texture(background_memblk, background_img, background_surf, 1, 1);
+    fz::gfx::register_texture(preview_memblk,    preview_img,    preview_surf,    2, 2);
 
     fz::gui::init();
 
@@ -149,6 +154,8 @@ int main(int argc, char **argv) {
     fizeauProfileClose(&config.cur_profile);
     fizeauExit();
     fz::gui::exit();
+
+    background_memblk = nullptr, preview_memblk = nullptr;
     fz::gfx::exit();
 
     return 0;

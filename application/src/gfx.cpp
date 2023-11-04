@@ -52,8 +52,6 @@ dk::Image              s_frameBuffers[FB_NUM];
 dk::UniqueMemBlock     s_cmdMemBlock[FB_NUM];
 dk::UniqueCmdBuf       s_cmdBuf[FB_NUM];
 
-dk::UniqueMemBlock     s_imageMemBlock;
-
 dk::UniqueMemBlock     s_descriptorMemBlock;
 dk::SamplerDescriptor *s_samplerDescriptors = nullptr;
 dk::ImageDescriptor   *s_imageDescriptors   = nullptr;
@@ -172,7 +170,6 @@ void deko3dInit() {
 
 void deko3dExit() {
     // clean up all of the deko3d objects
-    s_imageMemBlock      = nullptr;
     s_descriptorMemBlock = nullptr;
 
     for (unsigned i = 0; i < FB_NUM; ++i) {
@@ -262,21 +259,18 @@ void exit() {
     deko3dExit();
 }
 
-DkResHandle create_texture(const nj::Surface &surf, std::uint32_t sampler_id, std::uint32_t image_id) {
+void register_texture(dk::MemBlock memblk, dk::Image &image, const nj::Surface &surf, std::uint32_t sampler_id, std::uint32_t image_id) {
     // upload data to deko3d
-    dk::Image image;
-    std::tie(s_imageMemBlock, image) = surf.to_deko3d(s_device, s_queue, 0, DkImageFormat_RGBA8_Unorm);
+    std::tie(memblk, image) = surf.to_deko3d(s_device, 0);
 
     // initialize image descriptor
-    s_imageDescriptors[sampler_id].initialize(image);
+    s_imageDescriptors[image_id].initialize(image);
 
     // initialize sampler descriptor
     s_samplerDescriptors[sampler_id].initialize(
         dk::Sampler{}
             .setFilter(DkFilter_Linear, DkFilter_Linear)
             .setWrapMode(DkWrapMode_ClampToEdge, DkWrapMode_ClampToEdge, DkWrapMode_ClampToEdge));
-
-    return dkMakeTextureHandle(image_id, sampler_id);
 }
 
 } // namespace fz::gfx
