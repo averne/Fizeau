@@ -32,6 +32,7 @@ namespace fz {
 
 namespace {
 
+constexpr std::uint32_t ins_evt_id = 0;
 std::uint64_t g_disp_va_base;
 
 } // namespace
@@ -71,19 +72,15 @@ void ProfileManager::transition_thread_func([[maybe_unused]] void *args) {
         if (!Man::is_active || !Man::should_poll_mmio)
             continue;
 
-        bool need_apply = false;
-
-        AppletOperationMode mode;
-        if (R_FAILED(ommGetOperationMode(&mode)))
-            break;
+        bool need_apply = false, is_handheld = Man::operation_mode == AppletOperationMode_Handheld;
 
         // Poll DISPLAY_A in handheld mode, DISPLAY_B in docked mode
-        std::uint64_t iobase = g_disp_va_base + ((mode == AppletOperationMode_Handheld) ? 0 : 0x40000);
+        std::uint64_t iobase = g_disp_va_base + (is_handheld ? 0 : 0x40000);
 
         {
             std::scoped_lock lk(Man::commit_mutex);
 
-            auto &csc = (mode == AppletOperationMode_Handheld) ? Man::saved_internal_csc : Man::saved_external_csc;
+            auto &csc = is_handheld ? Man::saved_internal_csc : Man::saved_external_csc;
 
             for (std::size_t i = 0; i < csc.size(); ++i) {
                 if (csc[i] != READ(iobase + DC_COM_CMU_CSC_KRR + i * sizeof(std::uint32_t))) {
@@ -93,8 +90,7 @@ void ProfileManager::transition_thread_func([[maybe_unused]] void *args) {
             }
         }
 
-        auto &profile = (mode == AppletOperationMode_Handheld) ?
-            Man::get_active_internal_profile() : Man::get_active_external_profile();
+        auto &profile = is_handheld ? Man::get_active_internal_profile() : Man::get_active_external_profile();
         auto time = Clock::get_current_time();
         if (!need_apply && (profile.is_transitionning || Clock::is_in_interval(time, profile.dusk_begin, profile.dusk_end) ||
                 Clock::is_in_interval(time, profile.dawn_begin, profile.dawn_end))) {
@@ -103,20 +99,49 @@ void ProfileManager::transition_thread_func([[maybe_unused]] void *args) {
             need_apply = true;
         }
 
+        if (!need_apply) {
+            std::uint64_t timeout = armNsToTicks(to_timestamp(profile.dimming_timeout) * 1e9),
+                delta = armGetSystemTick() - Man::activity_tick;
+
+            if (!Man::is_dimming && delta > timeout)
+                need_apply = true, Man::is_dimming = true;
+            else if (Man::is_dimming && delta <= timeout)
+                need_apply = true, Man::is_dimming = false;
+        }
+
         if (need_apply)
             Man::commit(false);
     }
 }
 
-void ProfileManager::psc_thread_func([[maybe_unused]] void *args) {
+void ProfileManager::event_monitor_thread_func([[maybe_unused]] void *args) {
     while (!Man::stop.stop_requested()) {
-        if (R_SUCCEEDED(eventWait(&Man::psc_module.event, UINT64_MAX))) {
-            std::scoped_lock lk(Man::mmio_mutex);
+        int idx;
+        auto rc = waitMulti(&idx, UINT64_MAX,
+            waiterForEvent(&Man::psc_module.event),
+            waiterForEvent(&Man::operation_mode_event),
+            waiterForEvent(&Man::activity_event));
+        if (R_FAILED(rc))
+            continue;
 
-            PscPmState state;
-            ON_SCOPE_EXIT { pscPmModuleAcknowledge(&Man::psc_module, state); };
-            if (R_SUCCEEDED(pscPmModuleGetRequest(&Man::psc_module, &state, nullptr)))
-                Man::should_poll_mmio = state == PscPmState_Awake;
+        std::scoped_lock lk(Man::mmio_mutex);
+
+        switch (idx) {
+            case 0:
+                PscPmState state;
+                if (R_SUCCEEDED(pscPmModuleGetRequest(&Man::psc_module, &state, nullptr)))
+                    Man::should_poll_mmio = state == PscPmState_Awake;
+
+                pscPmModuleAcknowledge(&Man::psc_module, state);
+                break;
+            case 1:
+                ommGetOperationMode(&Man::operation_mode);
+                break;
+            case 2:
+                insrGetLastTick(ins_evt_id, &Man::activity_tick);
+                break;
+            default:
+                break;
         }
     }
 }
@@ -139,14 +164,20 @@ ams::Result ProfileManager::initialize() {
     std::uint64_t size;
     R_TRY(svcQueryIoMapping(reinterpret_cast<std::uint64_t *>(&g_disp_va_base), &size, DISP_IO_BASE, DISP_IO_SIZE));
 
-    std::array deps = {u32(PscPmModuleId_Display), u32(PscPmModuleId_Omm)};
+    std::array deps = {u32(PscPmModuleId_Display)};
     R_TRY(pscmGetPmModule(&Man::psc_module, PscPmModuleId(125), deps.data(), deps.size(), true));
+
+    R_TRY(ommGetOperationMode(&Man::operation_mode));
+    R_TRY(ommGetOperationModeChangeEvent(&Man::operation_mode_event, false));
+
+    R_TRY(insrGetReadableEvent(ins_evt_id, &Man::activity_event));
+    R_TRY(insrGetLastTick(ins_evt_id, &Man::activity_tick));
 
     R_TRY(Man::transition_thread.Initialize(Man::transition_thread_func, nullptr, 0x3f));
     R_TRY(Man::transition_thread.Start());
 
-    R_TRY(Man::psc_thread.Initialize(Man::psc_thread_func, nullptr, 0x3f));
-    R_TRY(Man::psc_thread.Start());
+    R_TRY(Man::event_monitor_thread.Initialize(Man::event_monitor_thread_func, nullptr, 0x3f));
+    R_TRY(Man::event_monitor_thread.Start());
 
     return 0;
 }
@@ -156,10 +187,11 @@ ams::Result ProfileManager::finalize() {
     pscPmModuleFinalize(&Man::psc_module);
     pscPmModuleClose(&Man::psc_module);
     eventClose(&Man::psc_module.event);
+    eventClose(&Man::operation_mode_event);
 
     Man::stop.request_stop();
     R_TRY(Man::transition_thread.Join());
-    R_TRY(Man::psc_thread.Join());
+    R_TRY(Man::event_monitor_thread.Join());
 
     return 0;
 }
@@ -188,6 +220,7 @@ ams::Result ProfileManager::commit(bool force_brightness) {
     auto apply_profile = [&force_brightness](Profile profile, bool dim, bool internal) -> ams::Result {
         auto time = Clock::get_current_time();
         bool apply_brightness = true;
+        Luminance luminance_day = profile.luminance_day, luminance_night = profile.luminance_night;
 
         if (Clock::is_in_interval(time, profile.dusk_begin, profile.dusk_end)) {
             if (!profile.is_transitionning) {
@@ -213,7 +246,7 @@ ams::Result ProfileManager::commit(bool force_brightness) {
         }
 
         if (dim) {
-            profile.luminance_day = profile.luminance_night =
+            luminance_day = luminance_night =
                 internal ? dimmed_luma_internal : dimmed_luma_external;
 
             apply_brightness = false;
@@ -230,11 +263,11 @@ ams::Result ProfileManager::commit(bool force_brightness) {
         if (Clock::is_in_interval(profile.dawn_begin, profile.dusk_begin)) {
             if (internal) {
                 R_TRY(DispControlManager::set_cmu_internal(profile.temperature_day, profile.filter_day,
-                    profile.gamma_day, profile.sat_day, profile.luminance_day, profile.range_day,
+                    profile.gamma_day, profile.sat_day, luminance_day, profile.range_day,
                     Man::saved_internal_csc));
             } else {
                 R_TRY(DispControlManager::set_cmu_external(profile.temperature_day, profile.filter_day,
-                    profile.gamma_day, profile.sat_day, profile.luminance_day, profile.range_day,
+                    profile.gamma_day, profile.sat_day, luminance_day, profile.range_day,
                     Man::saved_external_csc));
                 R_TRY(DispControlManager::set_hdmi_color_range(profile.range_day));
             }
@@ -243,11 +276,11 @@ ams::Result ProfileManager::commit(bool force_brightness) {
         } else {
             if (internal) {
                 R_TRY(DispControlManager::set_cmu_internal(profile.temperature_night, profile.filter_night,
-                    profile.gamma_night, profile.sat_night, profile.luminance_night, profile.range_night,
+                    profile.gamma_night, profile.sat_night, luminance_night, profile.range_night,
                     Man::saved_internal_csc));
             } else {
                 R_TRY(DispControlManager::set_cmu_external(profile.temperature_night, profile.filter_night,
-                    profile.gamma_night, profile.sat_night, profile.luminance_night, profile.range_night,
+                    profile.gamma_night, profile.sat_night, luminance_night, profile.range_night,
                     Man::saved_external_csc));
                 R_TRY(DispControlManager::set_hdmi_color_range(profile.range_night));
             }
@@ -259,10 +292,7 @@ ams::Result ProfileManager::commit(bool force_brightness) {
 
     bool should_dim_internal = false, should_dim_external = false;
     if (hosversionAtLeast(9, 0, 0)) {
-        std::uint64_t last_active = 0;
-        R_TRY(insrGetLastTick(3, &last_active));
-
-        auto timeout = armTicksToNs(armGetSystemTick() - last_active) / static_cast<u64>(1e9);
+        auto timeout = armTicksToNs(armGetSystemTick() - Man::activity_tick) / static_cast<u64>(1e9);
 
         auto should_dim = [](auto profile, auto timeout) {
             auto ts = to_timestamp(profile.dimming_timeout);

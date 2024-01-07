@@ -49,7 +49,7 @@ Result ommGetOperationMode(AppletOperationMode *mode) {
     return rc;
 }
 
-Result ommGetOperationModeChangeEvent(Event *out) {
+Result ommGetOperationModeChangeEvent(Event *out, bool autoclear) {
     Handle evt_handle = INVALID_HANDLE;
     Result rc = serviceDispatch(&g_ommSrv, 1,
         .out_handle_attrs = { SfOutHandleAttr_HipcCopy },
@@ -57,7 +57,7 @@ Result ommGetOperationModeChangeEvent(Event *out) {
     );
 
     if (R_SUCCEEDED(rc))
-        eventLoadRemote(out, evt_handle, true);
+        eventLoadRemote(out, evt_handle, autoclear);
 
     return rc;
 }
