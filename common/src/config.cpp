@@ -1,4 +1,4 @@
-// Copyright (C) 2020 averne
+// Copyright (c) 2024 averne
 //
 // This file is part of Fizeau.
 //
@@ -24,137 +24,40 @@
 #include "fizeau.h"
 #include "config.hpp"
 
-namespace fz::cfg {
-
-constexpr std::array config_locations = {
-    "/switch/Fizeau/config.ini",
-    "/config/Fizeau/config.ini"
-};
+namespace fz {
 
 #define COMMENT ";"
 
-#define MATCH(s1, s2)     (std::strcmp(s1, s2) == 0)
-#define MATCH_ENTRY(s, n) (MATCH(section, (s)) && MATCH(name, (n)))
-
-static int ini_handler(void *user, const char *section, const char *name, const char *value) {
-    Config *config = static_cast<Config *>(user);
-
-    auto profile_name_to_id = [](const std::string_view &str) -> FizeauProfileId {
-        return static_cast<FizeauProfileId>(str.back() - '0' - 1);
-    };
-
-    auto parse_filter = [](const std::string_view &str) -> ColorFilter {
-        if (strcasecmp(str.data(), "red") == 0)
-            return ColorFilter_Red;
-        else if (strcasecmp(str.data(), "green") == 0)
-            return ColorFilter_Green;
-        else if (strcasecmp(str.data(), "blue") == 0)
-            return ColorFilter_Blue;
-        return ColorFilter_None;
-    };
-
-    auto parse_time = [](const std::string_view &str) -> Time {
-        Time t = {};
-        t.h = std::atoi(str.data());
-        t.m = std::atoi(str.substr(str.find(':') + 1).data());
-        return t;
-    };
-
-    auto parse_range = [](const std::string_view &str) -> ColorRange {
-        ColorRange r = {};
-        r.lo = std::atof(str.data());
-        r.hi = std::atof(str.substr(str.find('-') + 1).data());
-        return r;
-    };
-
-    if (MATCH_ENTRY("", "active")) {
-        if (MATCH(value, "1") || strcasecmp(value, "true") == 0)
-            config->active = true;
-        else
-            config->active = false;
-        config->has_active_override = true;
-    } else if (MATCH_ENTRY("", "handheld_profile")) {
-        config->active_internal_profile = profile_name_to_id(value);
-    } else if (MATCH_ENTRY("", "docked_profile")) {
-        config->active_external_profile = profile_name_to_id(value);
-    } else if (std::strcmp(section, "profile") > 0) {
-        auto id = profile_name_to_id(section);
-        if (config->cur_profile_id != id) {
-            if (config->cur_profile.s.session)
-                if (auto rc = apply(*config); R_FAILED(rc))
-                    LOG("Failed to apply config: %#x\n", rc);
-            bool saved_active = config->active;
-            if (auto rc = open_profile(*config, id); R_FAILED(rc))
-                LOG("Failed to open profile: %#x\n", rc);
-            config->active = saved_active;
-        }
-
-        if (MATCH(name, "dusk_begin"))
-            config->dusk_begin        = parse_time(value);
-        else if (MATCH(name, "dusk_end"))
-            config->dusk_end          = parse_time(value);
-        else if (MATCH(name, "dawn_begin"))
-            config->dawn_begin        = parse_time(value);
-        else if (MATCH(name, "dawn_end"))
-            config->dawn_end          = parse_time(value);
-        else if (MATCH(name, "temperature_day"))
-            config->temperature_day   = std::atoi(value);
-        else if (MATCH(name, "temperature_night"))
-            config->temperature_night = std::atoi(value);
-        else if (MATCH(name, "filter_day"))
-            config->filter_day        = parse_filter(value);
-        else if (MATCH(name, "filter_night"))
-            config->filter_night      = parse_filter(value);
-        else if (MATCH(name, "brightness_day"))
-            config->brightness_day    = std::atof(value);
-        else if (MATCH(name, "brightness_night"))
-            config->brightness_night  = std::atof(value);
-        else if (MATCH(name, "gamma_day"))
-            config->gamma_day         = std::atof(value);
-        else if (MATCH(name, "gamma_night"))
-            config->gamma_night       = std::atof(value);
-        else if (MATCH(name, "saturation_day"))
-            config->sat_day           = std::atof(value);
-        else if (MATCH(name, "saturation_night"))
-            config->sat_night         = std::atof(value);
-        else if (MATCH(name, "luminance_day"))
-            config->luminance_day     = std::atof(value);
-        else if (MATCH(name, "luminance_night"))
-            config->luminance_night   = std::atof(value);
-        else if (MATCH(name, "range_day"))
-            config->range_day         = parse_range(value);
-        else if (MATCH(name, "range_night"))
-            config->range_night       = parse_range(value);
-        else if (MATCH(name, "dimming_timeout")) {
-            auto t = parse_time(value);
-            config->dimming_timeout   = { 0, t.h, t.m };
-        } else
-            return 0;
-    } else {
-        return 0;
-    }
-    return 1;
-}
-
-std::string_view find_config() {
+std::string_view Config::find_config() {
     struct stat tmp;
     for (auto loc: config_locations) {
-        if (stat(loc, &tmp) == 0)
+        if (::stat(loc.data(), &tmp) == 0)
             return loc;
     }
     return config_locations[1];
 };
 
-Config read() {
-    Config config{};
-    ini_parse(find_config().data(), ini_handler, &config);
-    if (config.cur_profile_id != FizeauProfileId_Invalid)
-        if (auto rc = apply(config); R_FAILED(rc))
+void Config::read() {
+    if (!this->parse_profile_switch_action) {
+        this->parse_profile_switch_action = +[](Config *self, FizeauProfileId profile_id) {
+            if (self->cur_profile_id != FizeauProfileId_Invalid)
+                if (auto rc = self->apply(); R_FAILED(rc))
+                    LOG("Failed to apply config: %#x\n", rc);
+            if (auto rc = self->open_profile(profile_id); R_FAILED(rc))
+                LOG("Failed to open profile: %#x\n", rc);
+        };
+    }
+
+    auto loc = Config::find_config();
+    ini_parse(loc.data(), Config::ini_handler, this);
+
+    if (this->cur_profile_id != FizeauProfileId_Invalid) {
+        if (auto rc = this->apply(); R_FAILED(rc))
             LOG("Failed to apply config: %#x\n", rc);
-    return config;
+    }
 }
 
-bool validate(Config &config) {
+bool Config::validate() {
     auto validate_minmax = []<typename T>(T val, T min, T max) {
         return (min <= val) && (val <= max);
     };
@@ -167,51 +70,47 @@ bool validate(Config &config) {
         return validate_minmax(range.lo, MIN_RANGE, MAX_RANGE) && validate_minmax(range.hi, MIN_RANGE, MAX_RANGE);
     };
 
-    if ((config.active_external_profile > FizeauProfileId_Profile4)
-            || (config.active_internal_profile > FizeauProfileId_Profile4))
+    if ((this->external_profile > FizeauProfileId_Profile4)
+            || (this->internal_profile > FizeauProfileId_Profile4))
         return false;
 
     for (int id = FizeauProfileId_Profile1; id < FizeauProfileId_Total; ++id) {
-        if (auto rc = open_profile(config, static_cast<FizeauProfileId>(id)); R_FAILED(rc))
-            return false;
-        if (auto rc = update(config); R_FAILED(rc))
+        if (auto rc = this->open_profile(static_cast<FizeauProfileId>(id)); R_FAILED(rc))
             return false;
 
-        if (!validate_time(config.dusk_begin) || !validate_time(config.dusk_end)
-                || !validate_time(config.dawn_begin) || !validate_time(config.dawn_end))
+        if (!validate_time(this->profile.dusk_begin) || !validate_time(this->profile.dusk_end)
+                || !validate_time(this->profile.dawn_begin) || !validate_time(this->profile.dawn_end))
             return false;
 
-        if (!validate_minmax(config.temperature_day, MIN_TEMP, MAX_TEMP)
-                || !validate_minmax(config.temperature_night, MIN_TEMP, MAX_TEMP))
+        if (!validate_minmax(this->profile.day_settings.temperature, MIN_TEMP, MAX_TEMP)
+                || !validate_minmax(this->profile.night_settings.temperature, MIN_TEMP, MAX_TEMP))
             return false;
 
-        if ((config.filter_day > ColorFilter_Blue) || (config.filter_night > ColorFilter_Blue))
+        if ((this->profile.day_settings.filter > ColorFilter_Blue) || (
+                    this->profile.night_settings.filter > ColorFilter_Blue))
             return false;
 
-        if (!validate_minmax(config.gamma_day, MIN_GAMMA, MAX_GAMMA)
-                || !validate_minmax(config.gamma_night, MIN_GAMMA, MAX_GAMMA))
+        if (!validate_minmax(this->profile.day_settings.gamma, MIN_GAMMA, MAX_GAMMA)
+                || !validate_minmax(this->profile.night_settings.gamma, MIN_GAMMA, MAX_GAMMA))
             return false;
 
-        if (!validate_minmax(config.sat_day, MIN_SAT, MAX_SAT)
-                || !validate_minmax(config.sat_night, MIN_SAT, MAX_SAT))
+        if (!validate_minmax(this->profile.day_settings.saturation, MIN_SAT, MAX_SAT)
+                || !validate_minmax(this->profile.night_settings.saturation, MIN_SAT, MAX_SAT))
             return false;
 
-        if (!validate_minmax(config.luminance_day, MIN_LUMA, MAX_LUMA)
-                || !validate_minmax(config.luminance_night, MIN_LUMA, MAX_LUMA))
+        if (!validate_minmax(this->profile.day_settings.luminance, MIN_LUMA, MAX_LUMA)
+                || !validate_minmax(this->profile.night_settings.luminance, MIN_LUMA, MAX_LUMA))
             return false;
 
-        if (!validate_colorrange(config.range_day) || !validate_colorrange(config.range_night))
-            return false;
-
-        if (!validate_minmax(config.brightness_day, MIN_BRIGHTNESS, MAX_BRIGHTNESS)
-                || !validate_minmax(config.brightness_night, MIN_BRIGHTNESS, MAX_BRIGHTNESS))
+        if (!validate_colorrange(this->profile.day_settings.range)
+                || !validate_colorrange(this->profile.night_settings.range))
             return false;
     }
 
     return true;
 }
 
-inline std::string make(Config &config) {
+std::string Config::make() {
     auto format = []<typename ...Args>(const std::string_view &fmt, Args &&...args) -> std::string {
         std::string str(std::snprintf(nullptr, 0, fmt.data(), args...), 0);
         std::snprintf(str.data(), str.capacity(), fmt.data(), args...);
@@ -241,48 +140,43 @@ inline std::string make(Config &config) {
 
     std::string str;
 
-    str += std::string(config.has_active_override ? "" : COMMENT) + "active            = " + (config.active ? "true" : "false") + '\n';
+    str += std::string(this->has_active_override ? "" : COMMENT) + "active            = " + (this->active ? "true" : "false") + '\n';
     str += '\n';
 
-    str += "handheld_profile  = " + format_profile(config.active_internal_profile) + '\n';
-    str += "docked_profile    = " + format_profile(config.active_external_profile) + '\n';
+    str += "handheld_profile  = " + format_profile(this->internal_profile) + '\n';
+    str += "docked_profile    = " + format_profile(this->external_profile) + '\n';
     str += '\n';
 
     for (int id = FizeauProfileId_Profile1; id < FizeauProfileId_Total; ++id) {
-        if (auto rc = open_profile(config, static_cast<FizeauProfileId>(id)); R_FAILED(rc))
+        if (auto rc = this->open_profile(static_cast<FizeauProfileId>(id)); R_FAILED(rc))
             LOG("Failed to open profile %u: %#x\n", id, rc);
-        if (auto rc = update(config); R_FAILED(rc))
-            LOG("Failed to update profile: %#x\n", rc);
 
-        str += "[profile" + std::to_string(config.cur_profile_id + 1) + "]\n";
+        str += "[profile" + std::to_string(this->cur_profile_id + 1) + "]\n";
 
-        str += "dusk_begin        = " + format_time(config.dusk_begin)           + '\n';
-        str += "dusk_end          = " + format_time(config.dusk_end)             + '\n';
-        str += "dawn_begin        = " + format_time(config.dawn_begin)           + '\n';
-        str += "dawn_end          = " + format_time(config.dawn_end)             + '\n';
+        str += "dusk_begin        = " + format_time(this->profile.dusk_begin)                    + '\n';
+        str += "dusk_end          = " + format_time(this->profile.dusk_end)                      + '\n';
+        str += "dawn_begin        = " + format_time(this->profile.dawn_begin)                    + '\n';
+        str += "dawn_end          = " + format_time(this->profile.dawn_end)                      + '\n';
 
-        str += "temperature_day   = " + std::to_string(config.temperature_day)   + '\n';
-        str += "temperature_night = " + std::to_string(config.temperature_night) + '\n';
+        str += "temperature_day   = " + std::to_string(this->profile.day_settings.temperature)   + '\n';
+        str += "temperature_night = " + std::to_string(this->profile.night_settings.temperature) + '\n';
 
-        str += "filter_day        = " + format_filter(config.filter_day)         + '\n';
-        str += "filter_night      = " + format_filter(config.filter_night)       + '\n';
+        str += "filter_day        = " + format_filter(this->profile.day_settings.filter)         + '\n';
+        str += "filter_night      = " + format_filter(this->profile.night_settings.filter)       + '\n';
 
-        str += "brightness_day    = " + std::to_string(config.brightness_day)    + '\n';
-        str += "brightness_night  = " + std::to_string(config.brightness_night)  + '\n';
+        str += "gamma_day         = " + std::to_string(this->profile.day_settings.gamma)         + '\n';
+        str += "gamma_night       = " + std::to_string(this->profile.night_settings.gamma)       + '\n';
 
-        str += "gamma_day         = " + std::to_string(config.gamma_day)         + '\n';
-        str += "gamma_night       = " + std::to_string(config.gamma_night)       + '\n';
+        str += "saturation_day    = " + std::to_string(this->profile.day_settings.saturation)    + '\n';
+        str += "saturation_night  = " + std::to_string(this->profile.night_settings.saturation)  + '\n';
 
-        str += "saturation_day    = " + std::to_string(config.sat_day)           + '\n';
-        str += "saturation_night  = " + std::to_string(config.sat_night)         + '\n';
+        str += "luminance_day     = " + std::to_string(this->profile.day_settings.luminance)     + '\n';
+        str += "luminance_night   = " + std::to_string(this->profile.night_settings.luminance)   + '\n';
 
-        str += "luminance_day     = " + std::to_string(config.luminance_day)     + '\n';
-        str += "luminance_night   = " + std::to_string(config.luminance_night)   + '\n';
+        str += "range_day         = " + format_range(this->profile.day_settings.range)           + '\n';
+        str += "range_night       = " + format_range(this->profile.night_settings.range)         + '\n';
 
-        str += "range_day         = " + format_range(config.range_day)           + '\n';
-        str += "range_night       = " + format_range(config.range_night)         + '\n';
-
-        str += "dimming_timeout   = " + format_time({ config.dimming_timeout.m, config.dimming_timeout.s }) + '\n';
+        str += "dimming_timeout   = " + format_time({ this->profile.dimming_timeout.m, this->profile.dimming_timeout.s }) + '\n';
 
         str += '\n';
     }
@@ -290,11 +184,11 @@ inline std::string make(Config &config) {
     return str;
 }
 
-void dump(Config &config) {
-    if (!validate(config))
+void Config::write() {
+    if (!this->validate())
         return;
 
-    auto str = make(config);
+    auto str = this->make();
     FILE *fp = fopen(find_config().data(), "w");
     if (fp)
         fwrite(str.c_str(), str.length(), 1, fp);
@@ -302,53 +196,41 @@ void dump(Config &config) {
 }
 
 Result update(Config &config) {
-    R_TRY(fizeauGetIsActive(&config.active));
-    R_TRY(fizeauGetActiveInternalProfileId(&config.active_internal_profile));
-    R_TRY(fizeauGetActiveExternalProfileId(&config.active_external_profile));
+    if (auto rc = fizeauGetIsActive(&config.active); R_FAILED(rc))
+        return rc;
 
-    R_TRY(fizeauProfileGetDuskTime(&config.cur_profile, &config.dusk_begin, &config.dusk_end));
-    R_TRY(fizeauProfileGetDawnTime(&config.cur_profile, &config.dawn_begin, &config.dawn_end));
-    R_TRY(fizeauProfileGetCmuTemperature(&config.cur_profile, &config.temperature_day, &config.temperature_night));
-    R_TRY(fizeauProfileGetCmuColorFilter(&config.cur_profile, &config.filter_day, &config.filter_night));
-    R_TRY(fizeauProfileGetCmuGamma(&config.cur_profile, &config.gamma_day, &config.gamma_night));
-    R_TRY(fizeauProfileGetCmuSaturation(&config.cur_profile, &config.sat_day, &config.sat_night));
-    R_TRY(fizeauProfileGetCmuLuminance(&config.cur_profile, &config.luminance_day, &config.luminance_night));
-    R_TRY(fizeauProfileGetCmuColorRange(&config.cur_profile, &config.range_day, &config.range_night));
-    R_TRY(fizeauProfileGetScreenBrightness(&config.cur_profile, &config.brightness_day, &config.brightness_night));
-    R_TRY(fizeauProfileGetDimmingTimeout(&config.cur_profile, &config.dimming_timeout));
+    if (auto rc = fizeauGetActiveProfileId(false, &config.internal_profile); R_FAILED(rc))
+        return rc;
+
+    if (auto rc = fizeauGetActiveProfileId(true,  &config.external_profile); R_FAILED(rc))
+        return rc;
+
+    if (auto rc = fizeauGetProfile(config.internal_profile, &config.profile); R_FAILED(rc))
+        return rc;
+
     return 0;
 }
 
-Result apply(cfg::Config &config) {
-    R_TRY(fizeauProfileSetDuskTime(&config.cur_profile, config.dusk_begin, config.dusk_end));
-    R_TRY(fizeauProfileSetDawnTime(&config.cur_profile, config.dawn_begin, config.dawn_end));
-    R_TRY(fizeauProfileSetCmuTemperature(&config.cur_profile, config.temperature_day, config.temperature_night));
-    R_TRY(fizeauProfileSetCmuColorFilter(&config.cur_profile, config.filter_day, config.filter_night));
-    R_TRY(fizeauProfileSetCmuGamma(&config.cur_profile, config.gamma_day, config.gamma_night));
-    R_TRY(fizeauProfileSetCmuSaturation(&config.cur_profile, config.sat_day, config.sat_night));
-    R_TRY(fizeauProfileSetCmuLuminance(&config.cur_profile, config.luminance_day, config.luminance_night));
-    R_TRY(fizeauProfileSetCmuColorRange(&config.cur_profile, config.range_day, config.range_night));
-    R_TRY(fizeauProfileSetScreenBrightness(&config.cur_profile, config.brightness_day, config.brightness_night));
-    R_TRY(fizeauProfileSetDimmingTimeout(&config.cur_profile, config.dimming_timeout));
+Result Config::apply() {
+    return fizeauSetProfile(this->cur_profile_id, &this->profile);
+}
+
+Result Config::reset() {
+    this->profile.day_settings.temperature = DEFAULT_TEMP,     this->profile.night_settings.temperature = DEFAULT_TEMP;
+    this->profile.day_settings.gamma       = DEFAULT_GAMMA,    this->profile.night_settings.gamma       = DEFAULT_GAMMA;
+    this->profile.day_settings.saturation  = DEFAULT_SAT,      this->profile.night_settings.saturation  = DEFAULT_SAT;
+    this->profile.day_settings.luminance   = DEFAULT_LUMA,     this->profile.night_settings.luminance   = DEFAULT_LUMA;
+    this->profile.day_settings.range       = DEFAULT_RANGE,    this->profile.night_settings.range       = DEFAULT_RANGE;
+    this->profile.day_settings.filter      = ColorFilter_None, this->profile.night_settings.filter      = ColorFilter_None;
+    return this->apply();
+}
+
+Result Config::open_profile(FizeauProfileId id) {
+    if (auto rc = fizeauGetProfile(id, &this->profile); R_FAILED(rc))
+        return rc;
+
+    this->cur_profile_id = id;
     return 0;
 }
 
-Result reset(Config &config) {
-    config.temperature_day = DEFAULT_TEMP,   config.temperature_night = DEFAULT_TEMP;
-    config.gamma_day       = DEFAULT_GAMMA,  config.gamma_night       = DEFAULT_GAMMA;
-    config.sat_day         = DEFAULT_SAT,    config.sat_night         = DEFAULT_SAT;
-    config.luminance_day   = DEFAULT_LUMA,   config.luminance_night   = DEFAULT_LUMA;
-    config.range_day       = DEFAULT_RANGE,  config.range_night       = DEFAULT_RANGE;
-    config.brightness_day  = MAX_BRIGHTNESS, config.brightness_night  = MAX_BRIGHTNESS;
-    return apply(config);
-}
-
-Result open_profile(Config &config, FizeauProfileId id) {
-    if (config.cur_profile.s.session != 0)
-        fizeauProfileClose(&config.cur_profile);
-    R_TRY(fizeauOpenProfile(&config.cur_profile, id));
-    config.cur_profile_id = id;
-    return update(config);
-}
-
-} // namespace fz::cfg
+} // namespace fz

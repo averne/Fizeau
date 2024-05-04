@@ -1,4 +1,4 @@
-// Copyright (C) 2020 averne
+// Copyright (c) 2024 averne
 //
 // This file is part of Fizeau.
 //
@@ -15,10 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Fizeau.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <algorithm>
 #include <tuple>
 #include <imgui.h>
 #include <imgui_deko3d.h>
-#include <stratosphere.hpp>
 #include <common.hpp>
 
 #include "swkbd.hpp"
@@ -60,7 +60,7 @@ bool new_slider(auto name, auto label, T &val, T min, T max, auto fmt, Args &&..
     auto slider_pos = im::GetWindowPos().x + 0.04f * width;
     bool ret = false;
     im::PushItemWidth(im::GetWindowWidth() - 0.08f * width);
-    ON_SCOPE_EXIT { im::PopItemWidth(); };
+    FZ_SCOPEGUARD([] { im::PopItemWidth(); });
     im::TextUnformatted(name); im::SameLine(); im::SetCursorPosX(slider_pos);
     if constexpr (std::is_floating_point_v<T>) {
         ret |= im::SliderFloat(label, reinterpret_cast<float *>(&val), min, max, fmt);
@@ -82,7 +82,7 @@ bool new_combo(auto name, auto label, auto &val, const std::array<const char *, 
 
 bool new_times(auto name, auto labelh, auto labelm, Time &t) {
     im::PushItemWidth(im::GetWindowWidth() * 0.2f);
-    ON_SCOPE_EXIT { im::PopItemWidth(); };
+    FZ_SCOPEGUARD([] { im::PopItemWidth(); });
 
     bool ret = false;
     im::SetCursorPosX(50.0f);
@@ -101,7 +101,7 @@ bool new_times(auto name, auto labelh, auto labelm, Time &t) {
 
 bool new_range(auto name, auto labelcb, auto labello, auto labelhi, ColorRange &range) {
     im::PushItemWidth(im::GetWindowWidth() * 0.2f);
-    ON_SCOPE_EXIT { im::PopItemWidth(); };
+    FZ_SCOPEGUARD([] { im::PopItemWidth(); });
 
     bool is_full_range = (range.lo == MIN_RANGE) && (range.hi == MAX_RANGE);
     bool ret = false;
@@ -164,31 +164,38 @@ void new_plot(float *data, std::size_t data_size, const ImVec2 &scale, const ImV
     }
 }
 
-Result draw_profile_tab(cfg::Config &ctx) {
+Result draw_profile_tab(Config &ctx) {
     if (!im::BeginTabItem("Profile"))
         return 0;
 
     im::TextUnformatted("Active handheld profile:");
-    if (im::Combo("##activeintp", reinterpret_cast<int *>(&ctx.active_internal_profile), profile_names.data(), profile_names.size()))
-        R_TRY(fizeauSetActiveInternalProfileId(ctx.active_internal_profile));
+    if (im::Combo("##activeintp", reinterpret_cast<int *>(&ctx.internal_profile), profile_names.data(), profile_names.size())) {
+        if (auto rc = fizeauSetActiveProfileId(false, ctx.internal_profile); R_FAILED(rc))
+            return rc;
+    }
 
     im::TextUnformatted("Active docked profile:");
-    if (im::Combo("##activeextp", reinterpret_cast<int *>(&ctx.active_external_profile), profile_names.data(), profile_names.size()))
-        R_TRY(fizeauSetActiveExternalProfileId(ctx.active_external_profile));
+    if (im::Combo("##activeextp", reinterpret_cast<int *>(&ctx.external_profile), profile_names.data(), profile_names.size())) {
+        if (auto rc = fizeauSetActiveProfileId(true, ctx.external_profile); R_FAILED(rc))
+            return rc;
+    }
 
     im::Separator();
     im::TextUnformatted("Currently editing profile:");
-    if (im::Combo("##editp", reinterpret_cast<int *>(&ctx.cur_profile_id), profile_names.data(), profile_names.size()))
-        R_TRY(cfg::open_profile(ctx, ctx.cur_profile_id));
+    if (im::Combo("##editp", reinterpret_cast<int *>(&ctx.cur_profile_id), profile_names.data(), profile_names.size())) {
+        if (auto rc = ctx.open_profile(ctx.cur_profile_id); R_FAILED(rc))
+            return rc;
+    }
 
     if (im::Button("Apply")) {
-        R_TRY(cfg::apply(ctx));
+        if (auto rc = ctx.apply(); R_FAILED(rc))
+            return rc;
         ctx.is_editing_day_profile = ctx.is_editing_night_profile = false;
     }
 
     im::SameLine();
     if (im::Button("Reset")) {
-        R_TRY(cfg::reset(ctx));
+        ctx.reset();
         ctx.is_editing_day_profile = ctx.is_editing_night_profile = false;
     }
 
@@ -196,68 +203,64 @@ Result draw_profile_tab(cfg::Config &ctx) {
     return 0;
 }
 
-Result draw_color_tab(cfg::Config &ctx) {
+Result draw_color_tab(Config &ctx) {
     if (!im::BeginTabItem("Colors"))
         return 0;
 
     static bool enable_extra_hot_temps = false;
-    if ((ctx.temperature_day > D65_TEMP) ||(ctx.temperature_night > D65_TEMP))
+    if ((ctx.profile.day_settings.temperature > D65_TEMP) ||(ctx.profile.night_settings.temperature > D65_TEMP))
         enable_extra_hot_temps = true;
 
-    // Temperature slider
+    // Temperature sliders
     im::TextUnformatted("Temperature");
     auto max_temp = enable_extra_hot_temps ? MAX_TEMP : D65_TEMP;
-    ctx.is_editing_day_profile   |= new_slider("Day:",   "##tempd", ctx.temperature_day,   MIN_TEMP, max_temp, "%d°K");
-    ctx.is_editing_night_profile |= new_slider("Night:", "##tempn", ctx.temperature_night, MIN_TEMP, max_temp, "%d°K");
+    ctx.is_editing_day_profile   |= new_slider("Day:",   "##tempd", ctx.profile.day_settings.temperature,   MIN_TEMP, max_temp, "%d°K");
+    ctx.is_editing_night_profile |= new_slider("Night:", "##tempn", ctx.profile.night_settings.temperature, MIN_TEMP, max_temp, "%d°K");
     im::Checkbox("Enable blue temperatures", &enable_extra_hot_temps);
 
     im::Separator();
-    im::TextUnformatted("Filter");
-    ctx.is_editing_day_profile   |= new_combo("Day:",   "##filterd", ctx.filter_day,   filters_names);
-    ctx.is_editing_night_profile |= new_combo("Night:", "##filtern", ctx.filter_night, filters_names);
 
-    // Brightness slider
-    if (ctx.cur_profile_id != ctx.active_external_profile) {
-        im::Separator();
-        im::TextUnformatted("Screen brightness");
-        ctx.is_editing_day_profile   |= new_slider("Day:",   "##brightd", ctx.brightness_day,   MIN_BRIGHTNESS, MAX_BRIGHTNESS, "%.2f");
-        ctx.is_editing_night_profile |= new_slider("Night:", "##brightn", ctx.brightness_night, MIN_BRIGHTNESS, MAX_BRIGHTNESS, "%.2f");
-    }
+    // Filter combos
+    im::TextUnformatted("Filter");
+    ctx.is_editing_day_profile   |= new_combo("Day:",   "##filterd", ctx.profile.day_settings.filter,   filters_names);
+    ctx.is_editing_night_profile |= new_combo("Night:", "##filtern", ctx.profile.night_settings.filter, filters_names);
 
     im::EndTabItem();
     return 0;
 }
 
-Result draw_correction_tab(cfg::Config &ctx) {
+Result draw_correction_tab(Config &ctx) {
     if (!im::BeginTabItem("Correction"))
         return 0;
 
-    // Gamma slider
+    // Gamma sliders
     im::TextUnformatted("Gamma");
-    ctx.is_editing_day_profile   |= new_slider("Day:",   "##gammad", ctx.gamma_day,   MIN_GAMMA, MAX_GAMMA, "%.2f");
-    ctx.is_editing_night_profile |= new_slider("Night:", "##gamman", ctx.gamma_night, MIN_GAMMA, MAX_GAMMA, "%.2f");
+    ctx.is_editing_day_profile   |= new_slider("Day:",   "##gammad", ctx.profile.day_settings.gamma,   MIN_GAMMA, MAX_GAMMA, "%.2f");
+    ctx.is_editing_night_profile |= new_slider("Night:", "##gamman", ctx.profile.night_settings.gamma, MIN_GAMMA, MAX_GAMMA, "%.2f");
 
+    // Saturation sliders
     im::TextUnformatted("Saturation");
-    ctx.is_editing_day_profile   |= new_slider("Day:",   "##satd", ctx.sat_day,   MIN_SAT, MAX_SAT, "%.2f");
-    ctx.is_editing_night_profile |= new_slider("Night:", "##satn", ctx.sat_night, MIN_SAT, MAX_SAT, "%.2f");
+    ctx.is_editing_day_profile   |= new_slider("Day:",   "##satd", ctx.profile.day_settings.saturation,   MIN_SAT, MAX_SAT, "%.2f");
+    ctx.is_editing_night_profile |= new_slider("Night:", "##satn", ctx.profile.night_settings.saturation, MIN_SAT, MAX_SAT, "%.2f");
 
-    // Luminance slider
     im::Separator();
+
+    // Luminance sliders
     im::TextUnformatted("Luminance");
-    ctx.is_editing_day_profile   |= new_slider("Day:",   "##lumad", ctx.luminance_day,   MIN_LUMA, MAX_LUMA, "%.2f", true);
-    ctx.is_editing_night_profile |= new_slider("Night:", "##luman", ctx.luminance_night, MIN_LUMA, MAX_LUMA, "%.2f", true);
+    ctx.is_editing_day_profile   |= new_slider("Day:",   "##lumad", ctx.profile.day_settings.luminance,   MIN_LUMA, MAX_LUMA, "%.2f", true);
+    ctx.is_editing_night_profile |= new_slider("Night:", "##luman", ctx.profile.night_settings.luminance, MIN_LUMA, MAX_LUMA, "%.2f", true);
 
     // Color range sliders
     im::Separator();
     im::TextUnformatted("Color range:");
-    ctx.is_editing_day_profile   |= new_range("Day:",   "Full range##d", "##rangeld", "##ranghd", ctx.range_day);
-    ctx.is_editing_night_profile |= new_range("Night:", "Full range##n", "##rangeln", "##ranghn", ctx.range_night);
+    ctx.is_editing_day_profile   |= new_range("Day:",   "Full range##d", "##rangeld", "##ranghd", ctx.profile.day_settings.range);
+    ctx.is_editing_night_profile |= new_range("Night:", "Full range##n", "##rangeln", "##ranghn", ctx.profile.night_settings.range);
 
     im::EndTabItem();
     return 0;
 }
 
-Result draw_time_tab(cfg::Config &ctx) {
+Result draw_time_tab(Config &ctx) {
     if (!im::BeginTabItem("Time"))
         return 0;
 
@@ -269,12 +272,12 @@ Result draw_time_tab(cfg::Config &ctx) {
     // Dusk
     im::Separator();
     im::TextUnformatted("Dusk:");
-    has_changed |= new_times("Start:", "##dush", "##dusm", ctx.dusk_begin);
-    has_changed |= new_times("End:",   "##dueh", "##duem", ctx.dusk_end);
+    has_changed |= new_times("Start:", "##dush", "##dusm", ctx.profile.dusk_begin);
+    has_changed |= new_times("End:",   "##dueh", "##duem", ctx.profile.dusk_end);
 
-    if (ctx.dusk_end >= ctx.dusk_begin) {
-        auto diff = ctx.dusk_end - ctx.dusk_begin;
-        im::Text("Dusk will begin at %02u:%02u and last for %02uh%02um", ctx.dusk_begin.h, ctx.dusk_begin.m, diff.h, diff.m);
+    if (ctx.profile.dusk_end >= ctx.profile.dusk_begin) {
+        auto diff = ctx.profile.dusk_end - ctx.profile.dusk_begin;
+        im::Text("Dusk will begin at %02u:%02u and last for %02uh%02um", ctx.profile.dusk_begin.h, ctx.profile.dusk_begin.m, diff.h, diff.m);
     } else {
         im::TextColored({ 1.00f, 0.33f, 0.33f, 1.0f }, "Invalid dusk transition times!");
     }
@@ -282,12 +285,12 @@ Result draw_time_tab(cfg::Config &ctx) {
     // Dawn
     im::Separator();
     im::TextUnformatted("Dawn:");
-    has_changed |= new_times("Start:", "##dash", "##dasm", ctx.dawn_begin);
-    has_changed |= new_times("End:",   "##daeh", "##daem", ctx.dawn_end);
+    has_changed |= new_times("Start:", "##dash", "##dasm", ctx.profile.dawn_begin);
+    has_changed |= new_times("End:",   "##daeh", "##daem", ctx.profile.dawn_end);
 
-    if (ctx.dawn_end >= ctx.dawn_begin) {
-        auto diff = ctx.dawn_end - ctx.dawn_begin;
-        im::Text("Dawn will begin at %02u:%02u and last for %02uh%02um", ctx.dawn_begin.h, ctx.dawn_begin.m, diff.h, diff.m);
+    if (ctx.profile.dawn_end >= ctx.profile.dawn_begin) {
+        auto diff = ctx.profile.dawn_end - ctx.profile.dawn_begin;
+        im::Text("Dawn will begin at %02u:%02u and last for %02uh%02um", ctx.profile.dawn_begin.h, ctx.profile.dawn_begin.m, diff.h, diff.m);
     } else {
         im::TextColored({ 1.00f, 0.33f, 0.33f, 1.0f }, "Invalid dawn transition times!");
     }
@@ -300,24 +303,24 @@ Result draw_time_tab(cfg::Config &ctx) {
         im::Separator();
         im::TextUnformatted("Dimming timeout:");
         im::PushItemWidth(im::GetWindowWidth() * 0.2f);
-        ON_SCOPE_EXIT { im::PopItemWidth(); };
+        FZ_SCOPEGUARD([] { im::PopItemWidth(); });
 
         im::SetCursorPosX(150.0f);
-        int int_m = ctx.dimming_timeout.m, int_s = ctx.dimming_timeout.s;
+        int int_m = ctx.profile.dimming_timeout.m, int_s = ctx.profile.dimming_timeout.s;
         im::DragInt("##dimm", &int_m, 0.05f, 0, 59, "%02dm");
         swkbd::handle("##dimm", &int_m, 0, 59);
         im::SameLine();
         im::DragInt("##dims", &int_s, 0.05f, 0, 59, "%02ds");
         swkbd::handle("##dims", &int_s, 0, 59);
 
-        ctx.dimming_timeout.m = static_cast<std::uint8_t>(int_m), ctx.dimming_timeout.s = static_cast<std::uint8_t>(int_s);
+        ctx.profile.dimming_timeout.m = static_cast<std::uint8_t>(int_m), ctx.profile.dimming_timeout.s = static_cast<std::uint8_t>(int_s);
     }
 
     im::EndTabItem();
     return 0;
 }
 
-Result draw_help_tab(cfg::Config &ctx) {
+Result draw_help_tab(Config &ctx) {
     if (!im::BeginTabItem("Help"))
         return 0;
 
@@ -365,15 +368,15 @@ setting.)");
 
 } // namespace
 
-void draw_background(cfg::Config &ctx, DkResHandle background_handle) {
+void draw_background(Config &ctx, DkResHandle background_handle) {
     im::GetBackgroundDrawList()->AddImage(im::deko3d::makeTextureID(background_handle), { 0, 0 }, im::GetIO().DisplaySize);
 }
 
-Result draw_main_window(cfg::Config &ctx) {
+Result draw_main_window(Config &ctx) {
     if (!im::Begin("Fizeau, version " VERSION "-" COMMIT, nullptr, ImGuiWindowFlags_NoResize |
             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove))
         return 0;
-    ON_SCOPE_EXIT { im::End(); };
+    FZ_SCOPEGUARD([] { im::End(); });
 
     auto [width, height] = im::GetIO().DisplaySize;
     im::SetWindowPos( { 0.03f * width, 0.09f * height }, ImGuiCond_Always);
@@ -384,7 +387,8 @@ Result draw_main_window(cfg::Config &ctx) {
 
     // Active checkbox
     if (im::Checkbox("Correction active", &ctx.active)) {
-        R_TRY(fizeauSetIsActive(ctx.active));
+        if (auto rc = fizeauSetIsActive(ctx.active); R_FAILED(rc))
+            return rc;
         ctx.has_active_override = true;
     }
 
@@ -395,17 +399,27 @@ Result draw_main_window(cfg::Config &ctx) {
     im::Text("Time: %02d:%02d:%02d - Fps: %.2f", time.h, time.m, time.s, im::GetIO().Framerate);
 
     im::BeginTabBar("##tab_bar", ImGuiTabBarFlags_NoTooltip);
-    ON_SCOPE_EXIT { im::EndTabBar(); };
-    R_TRY(draw_profile_tab(ctx));
-    R_TRY(draw_color_tab(ctx));
-    R_TRY(draw_correction_tab(ctx));
-    R_TRY(draw_time_tab(ctx));
-    R_TRY(draw_help_tab(ctx));
+    FZ_SCOPEGUARD([] { im::EndTabBar(); });
+
+    if (auto rc = draw_profile_tab(ctx); R_FAILED(rc))
+        return rc;
+
+    if (auto rc = draw_color_tab(ctx); R_FAILED(rc))
+        return rc;
+
+    if (auto rc = draw_correction_tab(ctx); R_FAILED(rc))
+        return rc;
+
+    if (auto rc = draw_time_tab(ctx); R_FAILED(rc))
+        return rc;
+
+    if (auto rc = draw_help_tab(ctx); R_FAILED(rc))
+        return rc;
 
     return 0;
 }
 
-void draw_preview_window(cfg::Config &ctx, DkResHandle preview_handle) {
+void draw_preview_window(Config &ctx, DkResHandle preview_handle) {
     std::array<char, 0x40> buf;
     std::snprintf(buf.data(), buf.size(), "Preview (%s)###preview",
         ctx.is_editing_day_profile ? "day" : ctx.is_editing_night_profile ? "night" : "none");
@@ -413,7 +427,7 @@ void draw_preview_window(cfg::Config &ctx, DkResHandle preview_handle) {
     if (!im::Begin(buf.data(), nullptr, ImGuiWindowFlags_NoResize |
             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove))
         return;
-    ON_SCOPE_EXIT { im::End(); };
+    FZ_SCOPEGUARD([] { im::End(); });
 
     auto [width, height] = im::GetIO().DisplaySize;
     im::SetWindowPos( { 0.47f * width, 0.05f * height }, ImGuiCond_Always);
@@ -424,9 +438,9 @@ void draw_preview_window(cfg::Config &ctx, DkResHandle preview_handle) {
 
     float r = 1.0f, g = 1.0f, b = 1.0f;
     if (ctx.is_editing_day_profile)
-        std::tie(r, g, b) = whitepoint(ctx.temperature_day);
+        std::tie(r, g, b) = whitepoint(ctx.profile.day_settings.temperature);
     else if (ctx.is_editing_night_profile)
-        std::tie(r, g, b) = whitepoint(ctx.temperature_night);
+        std::tie(r, g, b) = whitepoint(ctx.profile.night_settings.temperature);
 
     im::Image(im::deko3d::makeTextureID(preview_handle), { 0.23f * width, 0.23f * width });
     im::SameLine();
@@ -434,7 +448,7 @@ void draw_preview_window(cfg::Config &ctx, DkResHandle preview_handle) {
         { 0, 0 }, { 1, 1 }, { r, g, b, 1.0f });
 }
 
-void draw_graph_window(cfg::Config &ctx) {
+void draw_graph_window(Config &ctx) {
     std::array<char, 0x40> buf;
     std::snprintf(buf.data(), buf.size(), "Gamma ramps (%s)###gammaramp",
         ctx.is_editing_day_profile ? "day" : ctx.is_editing_night_profile ? "night" : "none");
@@ -442,7 +456,7 @@ void draw_graph_window(cfg::Config &ctx) {
     if (!im::Begin(buf.data(), nullptr, ImGuiWindowFlags_NoResize |
             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove))
         return;
-    ON_SCOPE_EXIT { im::End(); };
+    FZ_SCOPEGUARD([] { im::End(); });
 
     auto [width, height] = im::GetIO().DisplaySize;
     im::SetWindowPos( { 0.53f * width, 0.60f * height }, ImGuiCond_Always);
@@ -450,9 +464,9 @@ void draw_graph_window(cfg::Config &ctx) {
 
     Gamma gamma = DEFAULT_GAMMA; Luminance luma = DEFAULT_LUMA; ColorRange range = DEFAULT_RANGE;
     if (ctx.is_editing_day_profile)
-        gamma = ctx.gamma_day,   luma = ctx.luminance_day,   range = ctx.range_day;
+        gamma = ctx.profile.day_settings.gamma,   luma = ctx.profile.day_settings.luminance,   range = ctx.profile.day_settings.range;
     else if (ctx.is_editing_night_profile)
-        gamma = ctx.gamma_night, luma = ctx.luminance_night, range = ctx.range_night;
+        gamma = ctx.profile.night_settings.gamma, luma = ctx.profile.night_settings.luminance, range = ctx.profile.night_settings.range;
 
     // Calculate ramps
     std::array<std::uint16_t, 256> lut1;
@@ -500,11 +514,11 @@ void draw_graph_window(cfg::Config &ctx) {
     new_plot(lut2_float.data(), lut2_float.size(), { 0, 1 }, {  56.0f, 255.0f, 128.0f, 255.0f }, inner_bb);
 }
 
-void draw_error_window(cfg::Config &ctx, Result error) {
+void draw_error_window(Config &ctx, Result error) {
     if (!im::Begin("Fizeau, version " VERSION "-" COMMIT, nullptr, ImGuiWindowFlags_NoResize |
             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove))
         return;
-    ON_SCOPE_EXIT { im::End(); };
+    FZ_SCOPEGUARD([] { im::End(); });
 
     im::Text("Error: %#x (%04d-%04d)", error, R_MODULE(error) + 2000, R_DESCRIPTION(error));
     im::TextUnformatted(

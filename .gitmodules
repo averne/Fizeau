@@ -4,9 +4,6 @@
 [submodule "lib/inih/inih"]
 	path = lib/inih/inih
 	url = https://github.com/benhoyt/inih.git
-[submodule "lib/libstratosphere/libstratosphere"]
-	path = lib/libstratosphere/libstratosphere
-	url = https://github.com/averne/libstratosphere.git
 [submodule "lib/libtesla"]
 	path = lib/libtesla
 	url = https://github.com/WerWolv/libtesla.git

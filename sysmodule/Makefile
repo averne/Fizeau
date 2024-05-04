@@ -14,37 +14,21 @@ EXTENSION         =    nsp
 OUT               =    out
 BUILD             =    build
 SOURCES           =    src
-INCLUDES          =    include ../lib/libstratosphere/libstratosphere/include
-CUSTOM_LIBS       =    ../common ../lib/libstratosphere
+INCLUDES          =    include
+CUSTOM_LIBS       =    ../common ../lib/inih
 NPDM_JSON         =    config.json
 
-DEFINES           =    __SWITCH__ ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_NX           \
-                       ATMOSPHERE_ARCH_ARM64 ATMOSPHERE_OS_HORIZON SYSMODULE
+DEFINES           =    __SWITCH__ SYSMODULE
 ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
-FLAGS             =    -Wall -pipe -g -Os -ffunction-sections -fdata-sections                       \
+FLAGS             =    -Wall -pipe -g -Os -ffunction-sections -fdata-sections               		\
                        -fno-stack-protector -fno-common
 CFLAGS            =    -std=gnu11
 CXXFLAGS          =    -std=gnu++20 -fno-rtti -fno-exceptions -fno-non-call-exceptions              \
                        -fno-threadsafe-statics -fno-use-cxa-atexit                                  \
                        -fno-asynchronous-unwind-tables -fno-unwind-tables
 ASFLAGS           =
-LDFLAGS           =    -Wl,--wrap,__cxa_pure_virtual                                                \
-                       -Wl,--wrap,__cxa_throw                                                       \
-                       -Wl,--wrap,__cxa_rethrow                                                     \
-                       -Wl,--wrap,__cxa_allocate_exception                                          \
-                       -Wl,--wrap,__cxa_free_exception                                              \
-                       -Wl,--wrap,__cxa_begin_catch                                                 \
-                       -Wl,--wrap,__cxa_end_catch                                                   \
-                       -Wl,--wrap,__cxa_call_unexpected                                             \
-                       -Wl,--wrap,__cxa_call_terminate                                              \
-                       -Wl,--wrap,__gxx_personality_v0                                              \
-                       -Wl,--wrap,_Unwind_Resume                                                    \
-                       -Wl,--wrap,_ZSt19__throw_logic_errorPKc                                      \
-                       -Wl,--wrap,_ZSt20__throw_length_errorPKc                                     \
-                       -Wl,--wrap,_ZNSt11logic_errorC2EPKc                                          \
-                       -Wl,-pie -specs=$(DEVKITPRO)/libnx/switch.specs -g -Os                       \
-                       -flto -fuse-linker-plugin
-LINKS             =    -lcommon -lstratosphere -lnx
+LDFLAGS           =    -Wl,-pie -g -Os -specs=$(DEVKITPRO)/libnx/switch.specs
+LINKS             =    -lcommon -linih -lnx
 
 PREFIX            =    aarch64-none-elf-
 CC                =    $(PREFIX)gcc

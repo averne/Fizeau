@@ -1,4 +1,4 @@
-// Copyright (C) 2020 averne
+// Copyright (c) 2024 averne
 //
 // This file is part of Fizeau.
 //
@@ -19,103 +19,51 @@
 
 #include <cstdint>
 #include <array>
+
 #include <common.hpp>
 
+#include "context.hpp"
+#include "nvdisp.hpp"
+
 namespace fz {
-
-enum class ProfileId: std::uint32_t {
-    Profile1,
-    Profile2,
-    Profile3,
-    Profile4,
-    Total,
-    Invalid = 0xffff,
-};
-
-struct Profile {
-    Temperature temperature_day = DEFAULT_TEMP,     temperature_night = DEFAULT_TEMP;
-    ColorFilter filter_day      = ColorFilter_None, filter_night      = ColorFilter_None;
-    Gamma       gamma_day       = DEFAULT_GAMMA,    gamma_night       = DEFAULT_GAMMA;
-    Saturation  sat_day         = DEFAULT_SAT,      sat_night         = DEFAULT_SAT;
-    Luminance   luminance_day   = DEFAULT_LUMA,     luminance_night   = DEFAULT_LUMA;
-    ColorRange  range_day       = DEFAULT_RANGE,    range_night       = DEFAULT_RANGE;
-    Brightness  brightness_day  = 1.0f,             brightness_night  = 1.0f;
-
-    Time dusk_begin = { 21, 00, 00 }, dusk_end = { 21, 30, 00 };
-    Time dawn_begin = { 07, 00, 00 }, dawn_end = { 07, 30, 00 };
-
-    Time dimming_timeout = { 00, 05, 00 };
-
-    bool is_transitionning = false;
-
-    Profile interpolate(float factor, bool from_day);
-};
 
 constexpr float dimmed_luma_internal = -0.1f, dimmed_luma_external = -0.7f; // Official values used in 6.0.0 am
 
 class ProfileManager {
     public:
-        static ams::Result initialize();
-        static ams::Result finalize();
+        ProfileManager(Context &context, DisplayController &disp): context(context), disp(disp) { }
 
-        static ams::Result commit(bool force_apply_brightness = true);
-        static ams::Result on_profile_updated(ProfileId id);
+        Result initialize();
+        Result finalize();
 
-        static bool get_is_active();
-        static ams::Result set_is_active(bool active);
-
-        static Profile &get_profile(ProfileId id) {
-            return ProfileManager::profiles[static_cast<std::size_t>(id)];
-        }
-
-        static Profile &get_active_internal_profile() {
-            return get_profile(ProfileManager::active_internal_profile);
-        }
-
-        static Profile &get_active_external_profile() {
-            return get_profile(ProfileManager::active_external_profile);
-        }
-
-        static ProfileId get_active_internal_profile_id() {
-            return ProfileManager::active_internal_profile;
-        }
-
-        static void set_active_internal_profile_id(ProfileId id) {
-            ProfileManager::active_internal_profile = id;
-        }
-
-        static ProfileId get_active_external_profile_id() {
-            return ProfileManager::active_external_profile;
-        }
-
-        static void set_active_external_profile_id(ProfileId id) {
-            ProfileManager::active_external_profile = id;
-        }
+        Result apply();
+        Result update_active();
 
     private:
         static void transition_thread_func(void *args);
         static void event_monitor_thread_func(void *args);
 
     private:
-        static inline bool is_lite   = false;
-        static inline bool is_active = false;
-        static inline bool should_poll_mmio = true;
+        Context &context;
+        DisplayController &disp;
 
-        static inline ams::os::StaticThread<2 * ams::os::MemoryPageSize> transition_thread;
-        static inline ams::os::StaticThread<ams::os::MemoryPageSize> event_monitor_thread;
-        static inline std::stop_source stop;
-        static inline PscPmModule psc_module;
-        static inline Event operation_mode_event;
-        static inline AppletOperationMode operation_mode;
-        static inline Event activity_event;
-        static inline std::uint64_t activity_tick;
-        static inline bool is_dimming = false;
+        UEvent thread_exit_event = {};
+        Thread transition_thread, event_monitor_thread;
+        std::uint8_t transition_thread_stack[0x2000] alignas(0x1000),
+            event_monitor_thread_stack[0x1000] alignas(0x1000);
 
-        static inline ProfileId active_internal_profile = ProfileId::Profile1, active_external_profile = ProfileId::Profile2;
-        static inline std::array<Profile, static_cast<std::size_t>(ProfileId::Total)> profiles;
-        static inline std::array<std::uint16_t, 9> saved_internal_csc, saved_external_csc;
+        PscPmModule psc_module;
+        bool mmio_available = true;
+        std::uint64_t disp_va_base = 0;
 
-        static inline ams::os::Mutex commit_mutex, mmio_mutex;
+        Event operation_mode_event;
+        AppletOperationMode operation_mode;
+
+        Event activity_event;
+        std::uint64_t activity_tick;
+        bool is_dimming = false;
+
+        Mutex commit_mutex = {};
 };
 
 } // namespace fz

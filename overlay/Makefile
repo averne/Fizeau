@@ -17,13 +17,11 @@ EXTENSION         =    ovl
 OUT               =    out
 BUILD             =    build
 SOURCES           =    src
-INCLUDES          =    include ../lib/libtesla/include ../lib/libstratosphere/libstratosphere/include
+INCLUDES          =    include ../lib/libtesla/include
 CUSTOM_LIBS       =    ../common ../lib/inih
 ROMFS             =
 
-DEFINES           =    __SWITCH__ VERSION=\"$(FZ_VERSION)\" COMMIT=\"$(FZ_COMMIT)\"      \
-                       ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_NX           \
-                       ATMOSPHERE_ARCH_ARM64 ATMOSPHERE_OS_HORIZON
+DEFINES           =    __SWITCH__ VERSION=\"$(FZ_VERSION)\" COMMIT=\"$(FZ_COMMIT)\"
 ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
 FLAGS             =    -Wall -pipe -g -O2 -ffunction-sections -fdata-sections
 CFLAGS            =    -std=gnu11

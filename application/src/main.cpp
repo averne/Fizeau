@@ -1,4 +1,4 @@
-// Copyright (C) 2020 averne
+// Copyright (c) 2024 averne
 //
 // This file is part of Fizeau.
 //
@@ -19,7 +19,6 @@
 #include <vector>
 #include <string>
 #include <switch.h>
-#include <stratosphere.hpp>
 #include <nvjpg.hpp>
 #include <common.hpp>
 
@@ -55,7 +54,7 @@ extern "C" void userAppExit(void) {
     appletUnlockExit();
 }
 
-fz::cfg::Config config;
+fz::Config config;
 
 int main(int argc, char **argv) {
     LOG("Starting Fizeau\n");
@@ -117,10 +116,19 @@ int main(int argc, char **argv) {
         rc = fizeauInitialize();
 
     if (R_SUCCEEDED(rc))
-        config = fz::cfg::read();
+        config.read();
 
     if (R_SUCCEEDED(rc))
-        rc = fz::cfg::open_profile(config, FizeauProfileId_Profile1);
+        rc = fizeauSetIsActive(config.active);
+
+    if (R_SUCCEEDED(rc))
+        rc = fizeauSetActiveProfileId(false, config.internal_profile);
+
+    if (R_SUCCEEDED(rc))
+        rc = fizeauSetActiveProfileId(true, config.external_profile);
+
+    if (R_SUCCEEDED(rc))
+        rc = config.open_profile(config.internal_profile);
 
     if (R_SUCCEEDED(rc))
         rc = fz::Clock::initialize();
@@ -148,10 +156,9 @@ int main(int argc, char **argv) {
         fz::gfx::render();
     }
 
-    fz::cfg::dump(config);
+    config.write();
 
     LOG("Exiting Fizeau\n");
-    fizeauProfileClose(&config.cur_profile);
     fizeauExit();
     fz::gui::exit();
 

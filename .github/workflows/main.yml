@@ -5,7 +5,7 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: devkitpro/devkita64:20220216
+    container: devkitpro/devkita64:latest
 
     steps:
     - name: Install 7z
@@ -19,7 +19,6 @@ jobs:
       run: |
         make -C common -j$(nproc)
         make dist -j$(nproc)
-        make dist-chl -j$(nproc)
 
     - uses: actions/upload-artifact@master
       with:

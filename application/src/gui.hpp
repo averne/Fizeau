@@ -1,4 +1,4 @@
-// Copyright (C) 2020 averne
+// Copyright (c) 2024 averne
 //
 // This file is part of Fizeau.
 //
@@ -28,10 +28,10 @@ namespace im = ImGui;
 void init();
 void exit();
 
-void draw_background(cfg::Config &ctx, DkResHandle background_handle);
-Result draw_main_window(cfg::Config &ctx);
-void draw_preview_window(cfg::Config &ctx, DkResHandle preview_handle);
-void draw_graph_window(cfg::Config &ctx);
-void draw_error_window(cfg::Config &ctx, Result error);
+void draw_background(Config &ctx, DkResHandle background_handle);
+Result draw_main_window(Config &ctx);
+void draw_preview_window(Config &ctx, DkResHandle preview_handle);
+void draw_graph_window(Config &ctx);
+void draw_error_window(Config &ctx, Result error);
 
 } // namespace fz::gui

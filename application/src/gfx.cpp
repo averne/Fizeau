@@ -1,4 +1,4 @@
-// Copyright (C) 2020 averne
+// Copyright (c) 2024 averne
 //
 // This file is part of Fizeau.
 //
@@ -259,7 +259,7 @@ void exit() {
     deko3dExit();
 }
 
-void register_texture(dk::MemBlock memblk, dk::Image &image, const nj::Surface &surf, std::uint32_t sampler_id, std::uint32_t image_id) {
+void register_texture(dk::MemBlock &memblk, dk::Image &image, const nj::Surface &surf, std::uint32_t sampler_id, std::uint32_t image_id) {
     // upload data to deko3d
     std::tie(memblk, image) = surf.to_deko3d(s_device, 0);
 

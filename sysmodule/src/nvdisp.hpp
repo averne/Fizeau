@@ -1,4 +1,4 @@
-// Copyright (C) 2020 averne
+// Copyright (c) 2024 averne
 //
 // This file is part of Fizeau.
 //
@@ -23,7 +23,9 @@
 #include <atomic>
 #include <bit>
 #include <concepts>
+
 #include <switch.h>
+
 #include <common.hpp>
 
 namespace fz {
@@ -96,12 +98,12 @@ struct Cmu {
 };
 ASSERT_SIZE(Cmu, 2458);
 
-static inline Result nvioctlNvDisp_SetCmu(u32 fd, Cmu &cmu) {
-    return nvIoctl(fd, _NV_IOWR(2, 14, Cmu), &cmu);
+static inline Result nvioctlNvDisp_SetCmu(u32 fd, Cmu *cmu) {
+    return nvIoctl(fd, _NV_IOWR(2, 14, Cmu), cmu);
 }
 
 // Defined in CEA-861-D table 11
-enum class RgbQuantRange {
+enum RgbQuantRange {
     Default = 0,
     Limited = 1,
     Full    = 2,
@@ -132,46 +134,33 @@ struct AviInfoframe {
 };
 ASSERT_SIZE(AviInfoframe, 96);
 
-static inline Result nvioctlNvDisp_GetAviInfoframe(u32 fd, AviInfoframe &infoframe) {
-    return nvIoctl(fd, _NV_IOR(2, 16, AviInfoframe), &infoframe);
+static inline Result nvioctlNvDisp_GetAviInfoframe(u32 fd, AviInfoframe *infoframe) {
+    return nvIoctl(fd, _NV_IOR(2, 16, AviInfoframe), infoframe);
 }
 
-static inline Result nvioctlNvDisp_SetAviInfoframe(u32 fd, AviInfoframe &infoframe) {
-    return nvIoctl(fd, _NV_IOW(2, 17, AviInfoframe), &infoframe);
+static inline Result nvioctlNvDisp_SetAviInfoframe(u32 fd, AviInfoframe *infoframe) {
+    return nvIoctl(fd, _NV_IOW(2, 17, AviInfoframe), infoframe);
 }
 
-class DispControlManager {
+class DisplayController {
     public:
-        static ams::Result initialize() {
-            return nvOpen(&DispControlManager::disp0_fd, "/dev/nvdisp-disp0") | nvOpen(&DispControlManager::disp1_fd, "/dev/nvdisp-disp1");
+        using Csc = std::array<std::uint16_t, 9>;
+
+    public:
+        Result initialize() {
+            return nvOpen(&this->disp0_fd, "/dev/nvdisp-disp0") || nvOpen(&this->disp1_fd, "/dev/nvdisp-disp1");
         }
 
-        static ams::Result finalize() {
-            return nvClose(DispControlManager::disp0_fd) | nvClose(DispControlManager::disp1_fd);
+        Result finalize() const {
+            return nvClose(this->disp0_fd) || nvClose(this->disp1_fd);
         }
 
-        static ams::Result set_cmu(std::uint32_t fd, Temperature temp, ColorFilter filter, Gamma gamma,
-            Saturation sat, Luminance luma, ColorRange range, std::array<std::uint16_t, 9> &saved_csc);
-
-        static inline ams::Result set_cmu_internal(Temperature temp, ColorFilter filter, Gamma gamma,
-                Saturation sat, Luminance luma, ColorRange range, std::array<std::uint16_t, 9> &saved_csc) {
-            return DispControlManager::set_cmu(DispControlManager::disp0_fd, temp, filter, gamma, sat, luma, range, saved_csc);
-        }
-
-        static inline ams::Result set_cmu_external(Temperature temp, ColorFilter filter, Gamma gamma,
-                Saturation sat, Luminance luma, ColorRange range, std::array<std::uint16_t, 9> &saved_csc) {
-            return DispControlManager::set_cmu(DispControlManager::disp1_fd, temp, filter, gamma, sat, luma, range, saved_csc);
-        }
-
-        static ams::Result set_hdmi_color_range(ColorRange range, bool disable = false);
-
-        static ams::Result disable(bool internal);
+        Result disable(bool external) const;
+        Result apply_color_profile(bool external, FizeauSettings &settings, Csc &saved_csc) const;
+        Result set_hdmi_color_range(bool external, ColorRange range) const;
 
     private:
-        static inline Cmu           cmu;
-        static inline AviInfoframe  infoframe;
-        static inline std::uint32_t disp0_fd;
-        static inline std::uint32_t disp1_fd;
+        std::uint32_t disp0_fd, disp1_fd;
 };
 
 } // namespace fz

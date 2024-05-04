@@ -1,4 +1,4 @@
-// Copyright (C) 2020 averne
+// Copyright (c) 2024 averne
 //
 // This file is part of Fizeau.
 //
@@ -47,14 +47,14 @@ class FizeauOverlayGui: public tsl::Gui {
 
         virtual void update() final override;
 
-        cfg::Config &get_config() {
-            return *this->config;
+        Config &get_config() {
+            return this->config;
         }
 
     private:
         Result rc;
         bool is_day;
-        std::unique_ptr<cfg::Config> config = std::make_unique<cfg::Config>();
+        Config config = {};
 
         tsl::elm::CustomDrawer      *info_header;
         tsl::elm::ListItem          *active_button;

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2020 averne
+ * Copyright (c) 2024 averne
  *
  * This file is part of Fizeau.
  *
@@ -20,6 +20,14 @@
 #pragma once
 
 #include <stdio.h>
+
+
+#define _FZ_CAT(x, y) x ## y
+#define  FZ_CAT(x, y) _FZ_CAT(x, y)
+#define _FZ_STR(x) #x
+#define  FZ_STR(x) _FZ_STR(x)
+
+#define FZ_ANONYMOUS FZ_CAT(var, __COUNTER__)
 
 #define ASSERT_SIZE(x, sz)        static_assert(sizeof(x) == (sz), "Wrong size in " #x)
 #define ASSERT_STANDARD_LAYOUT(x) static_assert(std::is_standard_layout_v<x>, #x " is not standard layout")
@@ -78,3 +86,34 @@ __attribute__((unused)) static void hexdump(void *mem, unsigned int len) {
         }
     }
 }
+
+#ifdef __cplusplus
+
+#define FZ_SCOPEGUARD(f) auto FZ_ANONYMOUS = ::fz::ScopeGuard(f)
+
+namespace fz {
+
+template <typename F>
+struct ScopeGuard {
+    [[nodiscard]] ScopeGuard(F &&f): f(std::move(f)) { }
+
+    ScopeGuard(const ScopeGuard &) = delete;
+    ScopeGuard &operator =(const ScopeGuard &) = delete;
+
+    ~ScopeGuard() {
+        if (this->want_run)
+            this->f();
+    }
+
+    void cancel() {
+        this->want_run = false;
+    }
+
+    private:
+        bool want_run = true;
+        F f;
+};
+
+} // namespace fz
+
+#endif // __cplusplus

@@ -12,7 +12,7 @@ SOURCES           =    inih -maxdepth 1
 INCLUDES          =    include
 LIBS              =
 
-DEFINES           =    __SWITCH__
+DEFINES           =    __SWITCH__ INI_USE_STACK
 ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
 FLAGS             =    -Wall -Wno-stringop-truncation -pipe -g -O2 -ffunction-sections -fdata-sections
 CFLAGS            =    -std=gnu11

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2020 averne
+ * Copyright (c) 2024 averne
  *
  * This file is part of Fizeau.
  *

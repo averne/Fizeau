@@ -12,8 +12,7 @@ SOURCES           =    src
 INCLUDES          =    include ../lib/libstratosphere/libstratosphere/include
 LIBS              =    ../lib/inih
 
-DEFINES           =    __SWITCH__ ATMOSPHERE_IS_STRATOSPHERE ATMOSPHERE_BOARD_NINTENDO_NX           \
-                       ATMOSPHERE_ARCH_ARM64 ATMOSPHERE_OS_HORIZON
+DEFINES           =    __SWITCH__ NXLINK
 ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
 FLAGS             =    -Wall -pipe -g -O2 -ffunction-sections -fdata-sections                       \
                        -fno-stack-protector -fno-common

@@ -6,6 +6,4 @@
         "*.nacp": true,
         "*.nro": true
     },
-    "licenser.license": "GPLv2",
-    "licenser.projectName": "Fizeau",
 }

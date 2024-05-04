@@ -1,4 +1,4 @@
-// Copyright (C) 2021 averne
+// Copyright (c) 2024 averne
 //
 // This file is part of Fizeau.
 //
@@ -16,7 +16,6 @@
 // along with Fizeau.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstdint>
-#include <stratosphere.hpp>
 
 #define DISP_IO_BASE 0x54200000
 #define DISP_IO_SIZE (0x80000)

@@ -1,4 +1,4 @@
-// Copyright (C) 2020 averne
+// Copyright (c) 2024 averne
 //
 // This file is part of Fizeau.
 //
@@ -19,7 +19,6 @@
 
 #include <cstdint>
 #include <switch.h>
-#include <stratosphere.hpp>
 
 #include "types.h"
 
@@ -28,27 +27,36 @@ namespace fz {
 class Clock {
     public:
         static Result initialize() {
-            R_TRY(smInitialize());
-            ON_SCOPE_EXIT { smExit(); };
-            R_TRY(timeInitialize());
-            ON_SCOPE_EXIT { timeExit(); };
+            Result rc;
+            if (rc = timeInitialize(); R_FAILED(rc))
+                goto exit;
+
+            Clock::tick = armGetSystemTick();
 
             std::uint64_t time;
+            if (rc = timeGetCurrentTime(TimeType_Default, &time); R_FAILED(rc))
+                goto exit;
+
             TimeCalendarTime caltime;
-            Clock::tick = armGetSystemTick();
-            R_TRY(timeGetCurrentTime(TimeType_Default, &time));
-            R_TRY(timeToCalendarTimeWithMyRule(time, &caltime, nullptr));
-            Clock::timestamp = ams::TimeSpan::FromSeconds(60 * 60 * caltime.hour + 60 * caltime.minute + caltime.second);
-            return 0;
+            if (rc = timeToCalendarTimeWithMyRule(time, &caltime, nullptr); R_FAILED(rc))
+                goto exit;
+
+            Clock::timestamp = 1'000'000'000ull * (60 * 60 * caltime.hour + 60 * caltime.minute + caltime.second);
+
+            rc = 0;
+
+exit:
+            timeExit();
+            return rc;
         }
 
         static Time get_current_time() {
-            auto ts = Clock::timestamp + ams::TimeSpan::FromNanoSeconds(armTicksToNs(armGetSystemTick() - Clock::tick));
-            return {static_cast<std::uint8_t>(ts.GetHours() % 24),
-                static_cast<std::uint8_t>(ts.GetMinutes() % 60), static_cast<std::uint8_t>(ts.GetSeconds() % 60)};
+            auto ts = Clock::timestamp + armTicksToNs(armGetSystemTick() - Clock::tick);
+            auto [h, m, s]  = from_timestamp(ts / 1'000'000'000);
+            return { std::uint8_t(h % 24), m, s };
         }
 
-        static bool is_in_interval(const Time &cur, const Time &lo, const Time &hi) {
+        static constexpr bool is_in_interval(const Time &cur, const Time &lo, const Time &hi) {
             return (lo <= cur) && (cur < hi);
         }
 
@@ -58,7 +66,7 @@ class Clock {
 
     private:
         static inline std::uint64_t tick      = 0;
-        static inline ams::TimeSpan timestamp = 0;
+        static inline std::uint64_t timestamp = 0;
 };
 
 } // namespace fz

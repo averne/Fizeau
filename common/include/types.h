@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2020 averne
+ * Copyright (c) 2024 averne
  *
  * This file is part of Fizeau.
  *
@@ -61,10 +61,6 @@ typedef struct {
 #define DEFAULT_RANGE         { MIN_RANGE,         MAX_RANGE }
 #define DEFAULT_LIMITED_RANGE { MIN_LIMITED_RANGE, MAX_LIMITED_RANGE}
 
-typedef float Brightness;
-#define MIN_BRIGHTNESS 0.0f
-#define MAX_BRIGHTNESS 1.0f
-
 typedef uint64_t Timestamp;
 typedef struct {
     uint8_t h, m, s;
@@ -80,12 +76,22 @@ NX_CONSTEXPR Time from_timestamp(Timestamp s) {
 
 #ifdef __cplusplus
 
+#include <compare>
+
+constexpr auto operator ==(const Time &l, const Time &r) {
+    return to_timestamp(l) == to_timestamp(r);
+}
+
 constexpr auto operator <=>(const Time &l, const Time &r) {
     return to_timestamp(l) <=> to_timestamp(r);
 }
 
 constexpr Time operator -(const Time &l, const Time &r) {
     return from_timestamp(to_timestamp(l) - to_timestamp(r));
+}
+
+constexpr auto operator ==(const ColorRange &l, const ColorRange &r) {
+    return (l.hi == r.hi) && (l.lo == r.lo);
 }
 
 #endif // __cplusplus

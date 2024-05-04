@@ -17,12 +17,26 @@
 
 #pragma once
 
-#ifdef __cplusplus
-#   include "color.hpp"
-#   include "config.hpp"
-#   include "time.hpp"
-#endif // __cplusplus
+#include <array>
 
-#include "fizeau.h"
-#include "types.h"
-#include "utils.h"
+#include <common.hpp>
+
+#include "nvdisp.hpp"
+
+namespace fz {
+
+struct Context {
+    bool is_lite = false;
+
+    bool is_active = false;
+
+    FizeauProfileId internal_profile = FizeauProfileId_Invalid,
+        external_profile = FizeauProfileId_Invalid;
+
+    std::array<FizeauProfile, FizeauProfileId_Total> profiles = {};
+
+    DisplayController::Csc saved_internal_csc = {},
+        saved_external_csc = {};
+};
+
+} // namespace fz

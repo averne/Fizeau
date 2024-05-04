@@ -46,6 +46,7 @@
             "command": "make",
             "args": [
                 "application",
+                "overlay",
                 "sysmodule",
                 "clean"
             ],
@@ -61,102 +62,6 @@
             "command": "make",
             "args": [
                 "mrproper"
-            ],
-            "presentation": {
-                "panel": "shared",
-                "reveal": "never"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "application all",
-            "type": "shell",
-            "command": "make",
-            "args": [
-                "application",
-                "-j$(nproc)"
-            ],
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared",
-                "clear": true
-            },
-            "problemMatcher": {
-                "base": "$gcc",
-                "fileLocation": "absolute"
-            }
-        },
-        {
-            "label": "application clean",
-            "type": "shell",
-            "command": "make",
-            "args": [
-                "application",
-                "clean"
-            ],
-            "presentation": {
-                "panel": "shared",
-                "reveal": "never"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "sysmodule all",
-            "type": "shell",
-            "command": "make",
-            "args": [
-                "sysmodule",
-                "-j$(nproc)"
-            ],
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared",
-                "clear": true
-            },
-            "problemMatcher": {
-                "base": "$gcc",
-                "fileLocation": "absolute"
-            }
-        },
-        {
-            "label": "sysmodule clean",
-            "type": "shell",
-            "command": "make",
-            "args": [
-                "sysmodule",
-                "clean"
-            ],
-            "presentation": {
-                "panel": "shared",
-                "reveal": "never"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "overlay all",
-            "type": "shell",
-            "command": "make",
-            "args": [
-                "overlay",
-                "-j$(nproc)"
-            ],
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared",
-                "clear": true
-            },
-            "problemMatcher": {
-                "base": "$gcc",
-                "fileLocation": "absolute"
-            }
-        },
-        {
-            "label": "overlay clean",
-            "type": "shell",
-            "command": "make",
-            "args": [
-                "overlay",
-                "clean"
             ],
             "presentation": {
                 "panel": "shared",
