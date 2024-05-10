@@ -96,12 +96,14 @@ int main(int argc, char **argv) {
 
     decoder.wait(background_surf, preview_surf);
 
-    dk::UniqueMemBlock background_memblk, preview_memblk;
-    dk::Image background_img, preview_img;
-    DkResHandle background_hdl = dkMakeTextureHandle(1, 1), preview_hdl = dkMakeTextureHandle(2, 2);
+    dk::UniqueMemBlock background_memblk, preview_ref_memblk, preview_mat_memblk;
+    dk::Image background_img, preview_ref_img, preview_mat_img;
+    DkResHandle background_hdl = dkMakeTextureHandle(1, 1), preview_ref_hdl = dkMakeTextureHandle(2, 2),
+        preview_mat_hdl = dkMakeTextureHandle(3, 3);
 
-    fz::gfx::register_texture(background_memblk, background_img, background_surf, 1, 1);
-    fz::gfx::register_texture(preview_memblk,    preview_img,    preview_surf,    2, 2);
+    fz::gfx::register_texture(background_memblk,  background_img,  background_surf, 1, 1);
+    fz::gfx::register_texture(preview_ref_memblk, preview_ref_img, preview_surf,    2, 2);
+    fz::gfx::create_texture(preview_mat_memblk, preview_mat_img, preview.width, preview.height, DkImageFormat_RGBA8_Unorm, 3, 3);
 
     fz::gui::init();
 
@@ -128,32 +130,36 @@ int main(int argc, char **argv) {
         rc = fizeauSetActiveProfileId(true, config.external_profile);
 
     if (R_SUCCEEDED(rc))
-        rc = config.open_profile(config.internal_profile);
+        rc = config.open_profile(appletGetOperationMode() == AppletOperationMode_Handheld ?
+                                 config.internal_profile : config.external_profile);
 
     if (R_SUCCEEDED(rc))
         rc = fz::Clock::initialize();
 
     while (fz::gfx::loop()) {
+        auto slot = fz::gfx::dequeue();
+
         if (R_FAILED(rc)) {
             fz::gui::draw_error_window(config, rc);
-            fz::gfx::render();
-            continue;
+        } else {
+            fz::gui::draw_background(config, background_hdl);
+            fz::gui::draw_preview_window(config, preview_ref_hdl, preview_mat_hdl);
+            fz::gui::draw_graph_window(config);
+            rc = fz::gui::draw_main_window(config);
+
+            static bool prev_editing_day = false;
+            if (config.is_editing_day_profile && config.is_editing_night_profile) {
+                if (prev_editing_day)
+                    config.is_editing_day_profile   = false, prev_editing_day = false;
+                else
+                    config.is_editing_night_profile = false, prev_editing_day = true;
+            }
+
+            auto &settings = config.is_editing_day_profile ? config.profile.day_settings : config.profile.night_settings;
+            fz::gfx::render_preview(settings, preview.width, preview.height, 2, 3);
         }
 
-        fz::gui::draw_background(config, background_hdl);
-        fz::gui::draw_preview_window(config, preview_hdl);
-        fz::gui::draw_graph_window(config);
-        rc = fz::gui::draw_main_window(config);
-
-        static bool prev_editing_day = false;
-        if (config.is_editing_day_profile && config.is_editing_night_profile) {
-            if (prev_editing_day)
-                config.is_editing_day_profile   = false, prev_editing_day = false;
-            else
-                config.is_editing_night_profile = false, prev_editing_day = true;
-        }
-
-        fz::gfx::render();
+        fz::gfx::render(slot);
     }
 
     config.write();
@@ -162,7 +168,8 @@ int main(int argc, char **argv) {
     fizeauExit();
     fz::gui::exit();
 
-    background_memblk = nullptr, preview_memblk = nullptr;
+    fz::gfx::wait();
+    background_memblk = nullptr, preview_ref_memblk = nullptr, preview_mat_memblk = nullptr;
     fz::gfx::exit();
 
     return 0;

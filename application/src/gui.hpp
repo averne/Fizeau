@@ -30,7 +30,7 @@ void exit();
 
 void draw_background(Config &ctx, DkResHandle background_handle);
 Result draw_main_window(Config &ctx);
-void draw_preview_window(Config &ctx, DkResHandle preview_handle);
+void draw_preview_window(Config &ctx, DkResHandle preview_ref_handle, DkResHandle preview_mat_handle);
 void draw_graph_window(Config &ctx);
 void draw_error_window(Config &ctx, Result error);
 

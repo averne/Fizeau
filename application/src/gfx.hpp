@@ -26,9 +26,16 @@ namespace fz::gfx {
 
 bool init();
 bool loop();
-void render();
+int dequeue();
+void render(int slot);
+void wait();
 void exit();
 
-void register_texture(dk::MemBlock &memblk, dk::Image &image, const nj::Surface &surf, std::uint32_t sampler_id, std::uint32_t image_id);
+void render_preview(FizeauSettings &settings, int width, int height, int src_image_id, int dst_image_id);
+
+void create_texture(dk::MemBlock &memblk, dk::Image &image, int width, int height, DkImageFormat fmt,
+    std::uint32_t sampler_id, std::uint32_t image_id);
+void register_texture(dk::MemBlock &memblk, dk::Image &image, const nj::Surface &surf,
+    std::uint32_t sampler_id, std::uint32_t image_id);
 
 } // namespace fz::gfx

@@ -21,7 +21,7 @@ INCLUDES          =    include ../lib/libstratosphere/libstratosphere/include ..
 CUSTOM_LIBS       =    ../common ../lib/imgui-nx ../lib/imgui ../lib/inih ../lib/nvjpg
 ROMFS             =    res
 
-DEFINES           =    __SWITCH__ VERSION=\"$(FZ_VERSION)\" COMMIT=\"$(FZ_COMMIT)\"      \
+DEFINES           =    __SWITCH__ VERSION=\"$(FZ_VERSION)\" COMMIT=\"$(FZ_COMMIT)\" \
                        APPLICATION NXLINK
 ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
 FLAGS             =    -Wall -pipe -g -O2 -ffunction-sections -fdata-sections

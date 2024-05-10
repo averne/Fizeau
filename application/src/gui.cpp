@@ -382,6 +382,10 @@ Result draw_main_window(Config &ctx) {
     im::SetWindowPos( { 0.03f * width, 0.09f * height }, ImGuiCond_Always);
     im::SetWindowSize({ 0.40f * width, 0.82f * height }, ImGuiCond_Always);
 
+    auto *imctx = im::GetCurrentContext();
+    if (!imctx->NavWindow)
+        im::SetWindowFocus();
+
     // Leave edit field, or it will pop the swkbd again
     im::GetCurrentContext()->TempInputId = 0;
 
@@ -419,12 +423,12 @@ Result draw_main_window(Config &ctx) {
     return 0;
 }
 
-void draw_preview_window(Config &ctx, DkResHandle preview_handle) {
+void draw_preview_window(Config &ctx, DkResHandle preview_ref_handle, DkResHandle preview_mat_handle) {
     std::array<char, 0x40> buf;
     std::snprintf(buf.data(), buf.size(), "Preview (%s)###preview",
         ctx.is_editing_day_profile ? "day" : ctx.is_editing_night_profile ? "night" : "none");
 
-    if (!im::Begin(buf.data(), nullptr, ImGuiWindowFlags_NoResize |
+    if (!im::Begin(buf.data(), nullptr, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoResize |
             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove))
         return;
     FZ_SCOPEGUARD([] { im::End(); });
@@ -433,19 +437,12 @@ void draw_preview_window(Config &ctx, DkResHandle preview_handle) {
     im::SetWindowPos( { 0.47f * width, 0.05f * height }, ImGuiCond_Always);
     im::SetWindowSize({ 0.50f * width, 0.50f * height }, ImGuiCond_Always);
 
-    if (preview_handle == static_cast<DkResHandle>(-1))
+    if (preview_ref_handle == static_cast<DkResHandle>(-1) || preview_mat_handle == static_cast<DkResHandle>(-1))
         return;
 
-    float r = 1.0f, g = 1.0f, b = 1.0f;
-    if (ctx.is_editing_day_profile)
-        std::tie(r, g, b) = whitepoint(ctx.profile.day_settings.temperature);
-    else if (ctx.is_editing_night_profile)
-        std::tie(r, g, b) = whitepoint(ctx.profile.night_settings.temperature);
-
-    im::Image(im::deko3d::makeTextureID(preview_handle), { 0.23f * width, 0.23f * width });
+    im::Image(im::deko3d::makeTextureID(preview_ref_handle), { 0.23f * width, 0.23f * width });
     im::SameLine();
-    im::Image(im::deko3d::makeTextureID(preview_handle), { 0.23f * width, 0.23f * width },
-        { 0, 0 }, { 1, 1 }, { r, g, b, 1.0f });
+    im::Image(im::deko3d::makeTextureID(preview_mat_handle), { 0.23f * width, 0.23f * width });
 }
 
 void draw_graph_window(Config &ctx) {
@@ -453,7 +450,7 @@ void draw_graph_window(Config &ctx) {
     std::snprintf(buf.data(), buf.size(), "Gamma ramps (%s)###gammaramp",
         ctx.is_editing_day_profile ? "day" : ctx.is_editing_night_profile ? "night" : "none");
 
-    if (!im::Begin(buf.data(), nullptr, ImGuiWindowFlags_NoResize |
+    if (!im::Begin(buf.data(), nullptr, ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoResize |
             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove))
         return;
     FZ_SCOPEGUARD([] { im::End(); });
