@@ -104,21 +104,32 @@ void ProfileManager::transition_thread_func(void *args) {
         }
 
         auto profile_id = is_handheld ? self->context.internal_profile : self->context.external_profile;
+        auto profile = self->context.profiles      [profile_id];
+        auto state   = self->context.profile_states[profile_id];
+
         if (!need_apply && profile_id != FizeauProfileId_Invalid) {
-            auto &profile = self->context.profiles[profile_id];
+            auto dub = to_timestamp(profile.dusk_begin), due = to_timestamp(profile.dusk_end),
+                 dab = to_timestamp(profile.dawn_begin), dae = to_timestamp(profile.dawn_end);
 
-            auto time = Clock::get_current_time();
-            if (Clock::is_in_interval(time, profile.dusk_begin, profile.dusk_end) ||
-                    Clock::is_in_interval(time, profile.dawn_begin, profile.dawn_end))
+            auto ts = Clock::get_current_timestamp();
+            if (
+                (state == FizeauProfileState::Day   && ts >= dub) ||
+                (state == FizeauProfileState::Night && ts >= dab) ||
+                Clock::is_in_interval(ts, dub, due) ||
+                Clock::is_in_interval(ts, dab, dae)
+            )
                 need_apply = true;
+        }
 
-            std::uint64_t timeout = armNsToTicks(to_timestamp(profile.dimming_timeout) * 1e9),
-                delta = armGetSystemTick() - self->activity_tick;
+        if (!need_apply) {
+            std::uint64_t timeout = to_timestamp(profile.dimming_timeout),
+                delta = armTicksToNs(armGetSystemTick() - self->activity_tick) / 1'000'000'000;
 
-            if (!self->is_dimming && delta > timeout)
-                need_apply = true, self->is_dimming = true;
-            else if (self->is_dimming && delta <= timeout)
-                need_apply = true, self->is_dimming = false;
+            if (
+                (!self->is_dimming && delta >  timeout) ||
+                ( self->is_dimming && delta <= timeout)
+            )
+                need_apply = true;
         }
 
         if (need_apply) {
@@ -230,23 +241,29 @@ Result ProfileManager::apply() {
         return 0;
 
     auto apply_profile = [this](FizeauProfileId profile_id, bool dim, bool external) -> Result {
-        auto &profile = this->context.profiles[profile_id];
+        auto &profile = this->context.profiles      [profile_id];
+        auto &state   = this->context.profile_states[profile_id];
 
-        auto time = Clock::get_current_time();
         FizeauSettings settings;
 
-        if (Clock::is_in_interval(time, profile.dusk_begin, profile.dusk_end)) {
-            float factor = static_cast<float>(to_timestamp(profile.dusk_end - time))
-                / static_cast<float>(to_timestamp(profile.dusk_end - profile.dusk_begin));
+        auto dub = to_timestamp(profile.dusk_begin), due = to_timestamp(profile.dusk_end),
+             dab = to_timestamp(profile.dawn_begin), dae = to_timestamp(profile.dawn_end);
+
+        auto ts = Clock::get_current_timestamp();
+        if (Clock::is_in_interval(ts, dub, due)) {
+            float factor = static_cast<float>(due - ts) / static_cast<float>(due - dub);
             settings = interpolate_profile(profile, factor, false);
-        } else if (Clock::is_in_interval(time, profile.dawn_begin, profile.dawn_end)) {
-            float factor = static_cast<float>(to_timestamp(profile.dawn_end - time))
-                / static_cast<float>(to_timestamp(profile.dawn_end - profile.dawn_begin));
+            state    = FizeauProfileState::Night;
+        } else if (Clock::is_in_interval(ts, dab, dae)) {
+            float factor = static_cast<float>(dae - ts) / static_cast<float>(dae - dab);
             settings = interpolate_profile(profile, factor, true);
-        } else if (Clock::is_in_interval(time, profile.dawn_end, profile.dusk_begin)) {
+            state    = FizeauProfileState::Day;
+        } else if (Clock::is_in_interval(ts, dae, dub)) {
             settings = profile.day_settings;
+            state    = FizeauProfileState::Day;
         } else {
             settings = profile.night_settings;
+            state    = FizeauProfileState::Night;
         }
 
         if (dim)
@@ -273,6 +290,9 @@ Result ProfileManager::apply() {
     auto timeout = armTicksToNs(armGetSystemTick() - this->activity_tick) / 1'000'000'000;
     bool should_dim_internal = should_dim(this->context.internal_profile, timeout);
     bool should_dim_external = should_dim(this->context.external_profile, timeout);
+
+    auto is_handheld = this->operation_mode == AppletOperationMode_Handheld;
+    this->is_dimming = is_handheld ? should_dim_internal : should_dim_external;
 
     mutexLock(&this->commit_mutex);
     FZ_SCOPEGUARD([this] { mutexUnlock(&this->commit_mutex); });

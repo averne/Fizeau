@@ -25,6 +25,11 @@
 
 namespace fz {
 
+enum FizeauProfileState: std::uint32_t {
+    Day,
+    Night,
+};
+
 struct Context {
     bool is_lite = false;
 
@@ -33,7 +38,8 @@ struct Context {
     FizeauProfileId internal_profile = FizeauProfileId_Invalid,
         external_profile = FizeauProfileId_Invalid;
 
-    std::array<FizeauProfile, FizeauProfileId_Total> profiles = {};
+    std::array<FizeauProfile,      FizeauProfileId_Total> profiles       = {};
+    std::array<FizeauProfileState, FizeauProfileId_Total> profile_states = {};
 
     DisplayController::Csc saved_internal_csc = {},
         saved_external_csc = {};

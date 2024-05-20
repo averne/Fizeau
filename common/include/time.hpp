@@ -41,7 +41,7 @@ class Clock {
             if (rc = timeToCalendarTimeWithMyRule(time, &caltime, nullptr); R_FAILED(rc))
                 goto exit;
 
-            Clock::timestamp = 1'000'000'000ull * (60 * 60 * caltime.hour + 60 * caltime.minute + caltime.second);
+            Clock::timestamp = 60 * 60 * caltime.hour + 60 * caltime.minute + caltime.second;
 
             rc = 0;
 
@@ -50,13 +50,19 @@ exit:
             return rc;
         }
 
+        static std::uint64_t get_current_timestamp() {
+            return (Clock::timestamp + armTicksToNs(armGetSystemTick() - Clock::tick) / 1'000'000'000) % (24*60*60);
+        }
+
         static Time get_current_time() {
-            auto ts = Clock::timestamp + armTicksToNs(armGetSystemTick() - Clock::tick);
-            auto [h, m, s]  = from_timestamp(ts / 1'000'000'000);
-            return { std::uint8_t(h % 24), m, s };
+            return from_timestamp(Clock::get_current_timestamp());
         }
 
         static constexpr bool is_in_interval(const Time &cur, const Time &lo, const Time &hi) {
+            return (lo <= cur) && (cur < hi);
+        }
+
+        static constexpr bool is_in_interval(const Timestamp &cur, const Timestamp &lo, const Timestamp &hi) {
             return (lo <= cur) && (cur < hi);
         }
 
