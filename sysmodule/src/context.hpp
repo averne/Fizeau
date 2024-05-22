@@ -30,15 +30,40 @@ enum FizeauProfileState: std::uint32_t {
     Night,
 };
 
-struct Context {
-    bool is_lite = false;
+constexpr FizeauSettings default_settings = {
+    .temperature = DEFAULT_TEMP,
+    .gamma       = DEFAULT_GAMMA,
+    .saturation  = DEFAULT_SAT,
+    .luminance   = DEFAULT_LUMA,
+    .range       = DEFAULT_RANGE,
+    .filter      = ColorFilter_None,
+};
 
-    bool is_active = false;
+struct Context {
+    bool is_lite = false, is_active = false;
 
     FizeauProfileId internal_profile = FizeauProfileId_Invalid,
         external_profile = FizeauProfileId_Invalid;
 
-    std::array<FizeauProfile,      FizeauProfileId_Total> profiles       = {};
+    std::array<FizeauProfile, FizeauProfileId_Total> profiles = {
+        FizeauProfile{
+            .day_settings   = default_settings,
+            .night_settings = default_settings,
+        },
+        FizeauProfile{
+            .day_settings   = default_settings,
+            .night_settings = default_settings,
+        },
+        FizeauProfile{
+            .day_settings   = default_settings,
+            .night_settings = default_settings,
+        },
+        FizeauProfile{
+            .day_settings   = default_settings,
+            .night_settings = default_settings,
+        },
+    };
+
     std::array<FizeauProfileState, FizeauProfileId_Total> profile_states = {};
 
     DisplayController::Csc saved_internal_csc = {},

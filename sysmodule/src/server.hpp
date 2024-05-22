@@ -29,7 +29,7 @@ class Server: public IpcServer {
         constexpr static inline int ServiceNumSessions = 2;
 
     public:
-        Server(Context &context, ProfileManager &profile): context(context), profile(profile) { }
+        constexpr Server(Context &context, ProfileManager &profile): IpcServer(), context(context), profile(profile) { }
 
         Result initialize() {
             return ipcServerInit(this, Server::ServiceName.data(), Server::ServiceNumSessions);

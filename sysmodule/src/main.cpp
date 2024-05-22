@@ -118,10 +118,10 @@ extern "C" void __appExit(void) {
 
 } // extern "C"
 
-static fz::Context           context = {};
-static fz::DisplayController disp    = {};
-static fz::ProfileManager    profile(context, disp);
-static fz::Server            server (context, profile);
+static constinit fz::Context           context = {};
+static constinit fz::DisplayController disp    = {};
+static constinit fz::ProfileManager    profile(context, disp);
+static constinit fz::Server            server (context, profile);
 
 void delete_chainloader() {
     auto rc = fsInitialize();
