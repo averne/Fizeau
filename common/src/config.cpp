@@ -16,6 +16,7 @@
 // along with Fizeau.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstring>
+#include <algorithm>
 #include <string>
 #include <ini.h>
 #include <common.hpp>
@@ -57,57 +58,44 @@ void Config::read() {
     }
 }
 
-bool Config::validate() {
-    auto validate_minmax = []<typename T>(T val, T min, T max) {
-        return (min <= val) && (val <= max);
+void Config::sanitize_profile() {
+    auto sanitize_minmax = []<typename T>(T& val, auto min, auto max) {
+        val = std::clamp(val, static_cast<T>(min), static_cast<T>(max));
     };
 
-    auto validate_time = [](Time &time) {
-        return (time.h < 24) && (time.m < 60) && (time.s < 60);
+    auto sanitize_time = [&](Time &time) {
+        sanitize_minmax(time.h, 0, 24);
+        sanitize_minmax(time.m, 0, 60);
+        sanitize_minmax(time.s, 0, 60);
     };
 
-    auto validate_colorrange = [&](ColorRange range) {
-        return validate_minmax(range.lo, MIN_RANGE, MAX_RANGE) && validate_minmax(range.hi, MIN_RANGE, MAX_RANGE);
+    auto sanitize_colorrange = [&](ColorRange &range) {
+        sanitize_minmax(range.lo, MIN_RANGE, MAX_RANGE);
+        sanitize_minmax(range.hi, MIN_RANGE, MAX_RANGE);
     };
 
-    if ((this->external_profile > FizeauProfileId_Profile4)
-            || (this->internal_profile > FizeauProfileId_Profile4))
-        return false;
+    sanitize_time(this->profile.dusk_begin);
+    sanitize_time(this->profile.dusk_end);
+    sanitize_time(this->profile.dawn_begin);
+    sanitize_time(this->profile.dawn_end);
 
-    for (int id = FizeauProfileId_Profile1; id < FizeauProfileId_Total; ++id) {
-        if (auto rc = this->open_profile(static_cast<FizeauProfileId>(id)); R_FAILED(rc))
-            return false;
+    sanitize_minmax(this->profile.day_settings  .temperature, MIN_TEMP,  MAX_TEMP);
+    sanitize_minmax(this->profile.night_settings.temperature, MIN_TEMP,  MAX_TEMP);
 
-        if (!validate_time(this->profile.dusk_begin) || !validate_time(this->profile.dusk_end)
-                || !validate_time(this->profile.dawn_begin) || !validate_time(this->profile.dawn_end))
-            return false;
+    sanitize_minmax(this->profile.day_settings  .gamma,       MIN_GAMMA, MAX_GAMMA);
+    sanitize_minmax(this->profile.night_settings.gamma,       MIN_GAMMA, MAX_GAMMA);
 
-        if (!validate_minmax(this->profile.day_settings.temperature, MIN_TEMP, MAX_TEMP)
-                || !validate_minmax(this->profile.night_settings.temperature, MIN_TEMP, MAX_TEMP))
-            return false;
+    sanitize_minmax(this->profile.day_settings  .saturation,  MIN_SAT,   MAX_SAT);
+    sanitize_minmax(this->profile.night_settings.saturation,  MIN_SAT,   MAX_SAT);
 
-        if ((this->profile.day_settings.filter > ColorFilter_Blue) || (
-                    this->profile.night_settings.filter > ColorFilter_Blue))
-            return false;
+    sanitize_minmax(this->profile.day_settings  .luminance,   MIN_LUMA,  MAX_LUMA);
+    sanitize_minmax(this->profile.night_settings.luminance,   MIN_LUMA,  MAX_LUMA);
 
-        if (!validate_minmax(this->profile.day_settings.gamma, MIN_GAMMA, MAX_GAMMA)
-                || !validate_minmax(this->profile.night_settings.gamma, MIN_GAMMA, MAX_GAMMA))
-            return false;
+    sanitize_colorrange(this->profile.day_settings  .range);
+    sanitize_colorrange(this->profile.night_settings.range);
 
-        if (!validate_minmax(this->profile.day_settings.saturation, MIN_SAT, MAX_SAT)
-                || !validate_minmax(this->profile.night_settings.saturation, MIN_SAT, MAX_SAT))
-            return false;
-
-        if (!validate_minmax(this->profile.day_settings.luminance, MIN_LUMA, MAX_LUMA)
-                || !validate_minmax(this->profile.night_settings.luminance, MIN_LUMA, MAX_LUMA))
-            return false;
-
-        if (!validate_colorrange(this->profile.day_settings.range)
-                || !validate_colorrange(this->profile.night_settings.range))
-            return false;
-    }
-
-    return true;
+    sanitize_minmax(this->profile.day_settings  .filter, ColorFilter_None, ColorFilter_Blue);
+    sanitize_minmax(this->profile.night_settings.filter, ColorFilter_None, ColorFilter_Blue);
 }
 
 std::string Config::make() {
@@ -143,13 +131,18 @@ std::string Config::make() {
     str += std::string(this->has_active_override ? "" : COMMENT) + "active            = " + (this->active ? "true" : "false") + '\n';
     str += '\n';
 
-    str += "handheld_profile  = " + format_profile(this->internal_profile) + '\n';
-    str += "docked_profile    = " + format_profile(this->external_profile) + '\n';
+
+    if (this->internal_profile < FizeauProfileId_Total)
+        str += "handheld_profile  = " + format_profile(this->internal_profile) + '\n';
+    if (this->external_profile < FizeauProfileId_Total)
+        str += "docked_profile    = " + format_profile(this->external_profile) + '\n';
     str += '\n';
 
     for (int id = FizeauProfileId_Profile1; id < FizeauProfileId_Total; ++id) {
         if (auto rc = this->open_profile(static_cast<FizeauProfileId>(id)); R_FAILED(rc))
             LOG("Failed to open profile %u: %#x\n", id, rc);
+
+        this->sanitize_profile();
 
         str += "[profile" + std::to_string(this->cur_profile_id + 1) + "]\n";
 
@@ -185,14 +178,15 @@ std::string Config::make() {
 }
 
 void Config::write() {
-    if (!this->validate())
+    auto str = this->make();
+
+    auto loc = Config::find_config();
+    FILE *fp = std::fopen(loc.data(), "w");
+    FZ_SCOPEGUARD([&fp] { std::fclose(fp); });
+    if (!fp)
         return;
 
-    auto str = this->make();
-    FILE *fp = fopen(find_config().data(), "w");
-    if (fp)
-        fwrite(str.c_str(), str.length(), 1, fp);
-    fclose(fp);
+    std::fwrite(str.c_str(), str.length(), 1, fp);
 }
 
 Result update(Config &config) {

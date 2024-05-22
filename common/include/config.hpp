@@ -59,7 +59,7 @@ class Config {
         Result open_profile(FizeauProfileId id);
 
     private:
-        bool validate();
+        void sanitize_profile();
 };
 
 } // namespace fz

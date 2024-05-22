@@ -188,7 +188,7 @@ bool parse_config() {
                 return nullptr;
 
             read_ctx->off += read;
-            if (dat == '\n')
+            if (dat == '\n' || dat == '\r')
                 break;
 
             *p++ = dat;

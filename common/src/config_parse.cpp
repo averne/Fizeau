@@ -163,11 +163,11 @@ int Config::ini_handler(void *user, const char *section, const char *name, const
         else if (MATCH(name, "dimming_timeout")) {
             auto t = parse_time(value);
             config->profile.dimming_timeout            = { 0, t.h, t.m };
-        } else
-            return 0;
+        }
     } else {
         return 0;
     }
+
     return 1;
 }
 
