@@ -109,7 +109,7 @@ libs: $(CUSTOM_LIBS)
 
 shaders: ../lib/imgui-nx
 	@mkdir -p $(ROMFS)
-	$(shell find ../lib/imgui-nx/lib/ -type f -name '*.dksh' -exec cp -u {} $(ROMFS) \;)
+	$(shell find ../lib/imgui-nx/lib/ -type f -name '*.dksh' -exec rsync -u {} $(ROMFS) \;)
 
 $(CUSTOM_LIBS):
 	@$(MAKE) -s --no-print-directory -C $@
