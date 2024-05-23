@@ -134,8 +134,12 @@ std::string Config::make() {
 
     if (this->internal_profile < FizeauProfileId_Total)
         str += "handheld_profile  = " + format_profile(this->internal_profile) + '\n';
+    else
+        str += "handheld_profile  = " + format_profile(static_cast<FizeauProfileId>(0)) + '\n';
     if (this->external_profile < FizeauProfileId_Total)
         str += "docked_profile    = " + format_profile(this->external_profile) + '\n';
+    else
+        str += "docked_profile    = " + format_profile(static_cast<FizeauProfileId>(1)) + '\n';
     str += '\n';
 
     for (int id = FizeauProfileId_Profile1; id < FizeauProfileId_Total; ++id) {
