@@ -76,6 +76,7 @@ static_assert(atof("-00333.444") == -333.444);
 
 int Config::ini_handler(void *user, const char *section, const char *name, const char *value) {
     Config *config = static_cast<Config *>(user);
+    std::string_view v = value;
 
     auto profile_name_to_id = [](const std::string_view &str) -> FizeauProfileId {
         return static_cast<FizeauProfileId>(str.back() - '0' - 1);
@@ -118,9 +119,9 @@ int Config::ini_handler(void *user, const char *section, const char *name, const
             config->active = false;
         config->has_active_override = true;
     } else if (MATCH_ENTRY("", "handheld_profile")) {
-        config->internal_profile = profile_name_to_id(value);
+        config->internal_profile = profile_name_to_id(v);
     } else if (MATCH_ENTRY("", "docked_profile")) {
-        config->external_profile = profile_name_to_id(value);
+        config->external_profile = profile_name_to_id(v);
     } else if (std::strcmp(section, "profile") > 0) {
         auto id = profile_name_to_id(section);
         if (config->cur_profile_id != id && config->parse_profile_switch_action) {
@@ -128,41 +129,46 @@ int Config::ini_handler(void *user, const char *section, const char *name, const
             config->cur_profile_id = id;
         }
 
-        if (MATCH(name, "dusk_begin"))
-            config->profile.dusk_begin                 = parse_time(value);
-        else if (MATCH(name, "dusk_end"))
-            config->profile.dusk_end                   = parse_time(value);
-        else if (MATCH(name, "dawn_begin"))
-            config->profile.dawn_begin                 = parse_time(value);
-        else if (MATCH(name, "dawn_end"))
-            config->profile.dawn_end                   = parse_time(value);
-        else if (MATCH(name, "temperature_day"))
-            config->profile.day_settings.temperature   = atoi(value);
-        else if (MATCH(name, "temperature_night"))
-            config->profile.night_settings.temperature = atoi(value);
-        else if (MATCH(name, "filter_day"))
-            config->profile.day_settings.filter        = parse_filter(value);
-        else if (MATCH(name, "filter_night"))
-            config->profile.night_settings.filter      = parse_filter(value);
-        else if (MATCH(name, "gamma_day"))
-            config->profile.day_settings.gamma         = atof(value);
-        else if (MATCH(name, "gamma_night"))
-            config->profile.night_settings.gamma       = atof(value);
-        else if (MATCH(name, "saturation_day"))
-            config->profile.day_settings.saturation    = atof(value);
-        else if (MATCH(name, "saturation_night"))
-            config->profile.night_settings.saturation  = atof(value);
-        else if (MATCH(name, "luminance_day"))
-            config->profile.day_settings.luminance     = atof(value);
-        else if (MATCH(name, "luminance_night"))
-            config->profile.night_settings.luminance   = atof(value);
-        else if (MATCH(name, "range_day"))
-            config->profile.day_settings.range         = parse_range(value);
-        else if (MATCH(name, "range_night"))
-            config->profile.night_settings.range       = parse_range(value);
-        else if (MATCH(name, "dimming_timeout")) {
-            auto t = parse_time(value);
-            config->profile.dimming_timeout            = { 0, t.h, t.m };
+        void *target = nullptr;
+        #define MATCH_SET(s1, s2, t) (target = &t, MATCH(s1, s2))
+        #define SET(v) *reinterpret_cast<decltype(v) *>(target) = v
+
+        auto &p = config->profile;
+        if (
+            MATCH_SET(name, "dusk_begin", p.dusk_begin) ||
+            MATCH_SET(name, "dusk_end",   p.dusk_end)   ||
+            MATCH_SET(name, "dawn_begin", p.dawn_begin) ||
+            MATCH_SET(name, "dawn_end",   p.dawn_end)
+        ) {
+            SET(parse_time(v));
+        } else if (
+            MATCH_SET(name, "temperature_day",   p.day_settings  .temperature) ||
+            MATCH_SET(name, "temperature_night", p.night_settings.temperature)
+        ) {
+            SET(atoi(v));
+        } else if (
+            MATCH_SET(name, "filter_day",   p.day_settings  .filter) ||
+            MATCH_SET(name, "filter_night", p.night_settings.filter)
+        ) {
+            SET(parse_filter(v));
+        } else if (
+            MATCH_SET(name, "gamma_day",        p.day_settings  .gamma)      ||
+            MATCH_SET(name, "gamma_night",      p.night_settings.gamma)      ||
+            MATCH_SET(name, "saturation_day",   p.day_settings  .saturation) ||
+            MATCH_SET(name, "saturation_night", p.night_settings.saturation) ||
+            MATCH_SET(name, "luminance_day",    p.day_settings  .luminance)  ||
+            MATCH_SET(name, "luminance_night",  p.night_settings.luminance)
+        ) {
+            float f = atof(v);
+            SET(f);
+        } else if (
+            MATCH_SET(name, "range_day",   p.day_settings  .range) ||
+            MATCH_SET(name, "range_night", p.night_settings.range)
+        ) {
+            SET(parse_range(v));
+        } else if (MATCH(name, "dimming_timeout")) {
+            auto t = parse_time(v);
+            config->profile.dimming_timeout = { 0, t.h, t.m };
         }
     } else {
         return 0;
