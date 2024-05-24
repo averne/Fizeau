@@ -83,14 +83,11 @@ Result fizeauSetProfile(FizeauProfileId id, FizeauProfile *profile) {
 }
 
 Result fizeauGetActiveProfileId(bool is_external, FizeauProfileId *id) {
-    struct {
-        bool is_external;
-        FizeauProfileId id;
-    } tmp = { is_external };
-    Result rc = serviceDispatchOut(&g_fizeau_srv, FizeauCommandId_GetActiveProfileId, tmp);
+    FizeauProfileId tmp;
+    Result rc = serviceDispatchInOut(&g_fizeau_srv, FizeauCommandId_GetActiveProfileId, is_external, tmp);
 
-    if (R_SUCCEEDED(rc) && id)
-        *id = tmp.id;
+    if (R_SUCCEEDED(rc))
+        *id = tmp;
 
     return rc;
 }

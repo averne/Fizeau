@@ -64,11 +64,8 @@ FizeauOverlayGui::FizeauOverlayGui() {
     if (this->rc = apmGetPerformanceMode(&perf_mode); R_FAILED(this->rc))
         return;
 
-    FizeauProfileId id;
-    if (this->rc = fizeauGetActiveProfileId(perf_mode != ApmPerformanceMode_Normal, &id); R_FAILED(this->rc))
-        return;
-
-    if (this->rc = this->config.open_profile(id); R_FAILED(this->rc))
+    if (this->rc = this->config.open_profile(perf_mode == ApmPerformanceMode_Normal ?
+                                 config.internal_profile : config.external_profile); R_FAILED(this->rc))
         return;
 }
 
