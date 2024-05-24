@@ -29,6 +29,7 @@
 #include <imgui.h>
 
 #include <cstring>
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <functional>

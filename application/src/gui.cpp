@@ -220,6 +220,13 @@ Result draw_color_tab(Config &ctx) {
 
     im::Separator();
 
+    // Saturation sliders
+    im::TextUnformatted("Saturation");
+    ctx.is_editing_day_profile   |= new_slider("Day:",   "##satd", ctx.profile.day_settings.saturation,   MIN_SAT, MAX_SAT, "%.2f");
+    ctx.is_editing_night_profile |= new_slider("Night:", "##satn", ctx.profile.night_settings.saturation, MIN_SAT, MAX_SAT, "%.2f");
+
+    im::Separator();
+
     // Filter combos
     im::TextUnformatted("Filter");
     ctx.is_editing_day_profile   |= new_combo("Day:",   "##filterd", ctx.profile.day_settings.filter,   filters_names);
@@ -237,11 +244,6 @@ Result draw_correction_tab(Config &ctx) {
     im::TextUnformatted("Gamma");
     ctx.is_editing_day_profile   |= new_slider("Day:",   "##gammad", ctx.profile.day_settings.gamma,   MIN_GAMMA, MAX_GAMMA, "%.2f");
     ctx.is_editing_night_profile |= new_slider("Night:", "##gamman", ctx.profile.night_settings.gamma, MIN_GAMMA, MAX_GAMMA, "%.2f");
-
-    // Saturation sliders
-    im::TextUnformatted("Saturation");
-    ctx.is_editing_day_profile   |= new_slider("Day:",   "##satd", ctx.profile.day_settings.saturation,   MIN_SAT, MAX_SAT, "%.2f");
-    ctx.is_editing_night_profile |= new_slider("Night:", "##satn", ctx.profile.night_settings.saturation, MIN_SAT, MAX_SAT, "%.2f");
 
     im::Separator();
 
@@ -517,7 +519,11 @@ void draw_error_window(Config &ctx, Result error) {
         return;
     FZ_SCOPEGUARD([] { im::End(); });
 
-    im::Text("Error: %#x (%04d-%04d)", error, R_MODULE(error) + 2000, R_DESCRIPTION(error));
+    if (error == 1)
+        im::Text("The service is not active, check that all files are correctly installed.");
+    else
+        im::Text("Error: %#x (%04d-%04d)", error, R_MODULE(error) | 2000, R_DESCRIPTION(error));
+
     im::TextUnformatted(
 R"(An error happened.
 Please try rebooting your console, and checking your setup:

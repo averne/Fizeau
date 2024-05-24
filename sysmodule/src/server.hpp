@@ -50,7 +50,9 @@ class Server: public IpcServer {
                     case KERNELRESULT(ConnectionClosed):
                         break;
                     default:
-                        return rc;
+                        if (R_MODULE(rc) != FIZEAU_RC_MODULE)
+                            return rc;
+                        break;
                 }
             }
         }

@@ -47,7 +47,7 @@ typedef enum {
     FizeauProfileId_Invalid = 0xffff,
 } FizeauProfileId;
 
-#define FIZEAU_RC_MODULE 0xf12
+#define FIZEAU_RC_MODULE            R_MODULE(0xf12)
 #define FIZEAU_RC_INVALID_PROFILEID 1
 
 #define FIZEAU_MAKERESULT(r) MAKERESULT(FIZEAU_RC_MODULE, FIZEAU_RC_ ## r)

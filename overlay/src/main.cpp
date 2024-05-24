@@ -44,7 +44,7 @@ class FizeauOverlay: public tsl::Overlay {
         }
 
         virtual std::unique_ptr<tsl::Gui> loadInitialGui() final override {
-            return initially<fz::FizeauOverlayGui>();
+            return std::make_unique<fz::FizeauOverlayGui>();
         }
 
         virtual void onHide() final override {

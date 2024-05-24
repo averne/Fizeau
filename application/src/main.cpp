@@ -93,6 +93,7 @@ int main(int argc, char **argv) {
 
     if (!fz::gfx::init())
         LOG("Failed to init\n");
+    FZ_SCOPEGUARD([] { fz::gfx::exit(); });
 
     decoder.wait(background_surf, preview_surf);
 
@@ -106,6 +107,7 @@ int main(int argc, char **argv) {
     fz::gfx::create_texture(preview_mat_memblk, preview_mat_img, preview.width, preview.height, DkImageFormat_RGBA8_Unorm, 3, 3);
 
     fz::gui::init();
+    FZ_SCOPEGUARD([] { fz::gui::exit(); });
 
     bool is_active;
     Result rc = fizeauIsServiceActive(&is_active);
@@ -116,6 +118,7 @@ int main(int argc, char **argv) {
 
     if (R_SUCCEEDED(rc))
         rc = fizeauInitialize();
+    FZ_SCOPEGUARD([] { fizeauExit(); });
 
     if (R_SUCCEEDED(rc))
         config.read();
@@ -162,15 +165,9 @@ int main(int argc, char **argv) {
         fz::gfx::render(slot);
     }
 
-    config.write();
-
     LOG("Exiting Fizeau\n");
-    fizeauExit();
-    fz::gui::exit();
-
+    config.write();
     fz::gfx::wait();
-    background_memblk = nullptr, preview_ref_memblk = nullptr, preview_mat_memblk = nullptr;
-    fz::gfx::exit();
 
     return 0;
 }

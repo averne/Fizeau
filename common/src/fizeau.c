@@ -86,7 +86,7 @@ Result fizeauGetActiveProfileId(bool is_external, FizeauProfileId *id) {
     FizeauProfileId tmp;
     Result rc = serviceDispatchInOut(&g_fizeau_srv, FizeauCommandId_GetActiveProfileId, is_external, tmp);
 
-    if (R_SUCCEEDED(rc))
+    if (R_SUCCEEDED(rc) && id)
         *id = tmp;
 
     return rc;

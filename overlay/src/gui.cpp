@@ -67,6 +67,8 @@ FizeauOverlayGui::FizeauOverlayGui() {
     if (this->rc = this->config.open_profile(perf_mode == ApmPerformanceMode_Normal ?
                                  config.internal_profile : config.external_profile); R_FAILED(this->rc))
         return;
+
+    this->is_day = Clock::is_in_interval(this->config.profile.dawn_begin, this->config.profile.dusk_begin);
 }
 
 FizeauOverlayGui::~FizeauOverlayGui() {

@@ -140,7 +140,7 @@ FsFile find_config_file(FsFileSystem fs) {
     FsFile fp = {};
     char buf[FS_MAX_PATH];
     for (auto path: fz::Config::config_locations) {
-        std::strncpy(buf, path.data(), sizeof(buf));
+        std::strncpy(buf, path.data(), sizeof(buf) - 1);
         if (auto rc = fsFsOpenFile(&fs, buf, FsOpenMode_Read, &fp); R_SUCCEEDED(rc))
             break;
     }
