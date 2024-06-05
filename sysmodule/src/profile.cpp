@@ -104,6 +104,9 @@ void ProfileManager::transition_thread_func(void *args) {
         }
 
         auto profile_id = is_handheld ? self->context.internal_profile : self->context.external_profile;
+        if (profile_id >= FizeauProfileId_Total)
+            continue;
+
         auto profile = self->context.profiles      [profile_id];
         auto state   = self->context.profile_states[profile_id];
 
@@ -280,7 +283,7 @@ Result ProfileManager::apply() {
     };
 
     auto should_dim = [this](auto profile_id, auto timeout) {
-        if (profile_id == FizeauProfileId_Invalid)
+        if (profile_id >= FizeauProfileId_Total)
             return false;
 
         auto ts = to_timestamp(this->context.profiles[profile_id].dimming_timeout);
@@ -297,12 +300,12 @@ Result ProfileManager::apply() {
     mutexLock(&this->commit_mutex);
     FZ_SCOPEGUARD([this] { mutexUnlock(&this->commit_mutex); });
 
-    if (this->context.internal_profile != FizeauProfileId_Invalid) {
+    if (this->context.internal_profile < FizeauProfileId_Total) {
         if (auto rc = apply_profile(this->context.internal_profile, should_dim_internal, false); R_FAILED(rc))
             return rc;
     }
 
-    if (this->context.external_profile != FizeauProfileId_Invalid && !this->context.is_lite) {
+    if (this->context.external_profile < FizeauProfileId_Total && !this->context.is_lite) {
         if (auto rc = apply_profile(this->context.external_profile, should_dim_external, true); R_FAILED(rc))
             return rc;
     }

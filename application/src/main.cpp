@@ -117,6 +117,9 @@ int main(int argc, char **argv) {
     }
 
     if (R_SUCCEEDED(rc))
+        rc = fz::Clock::initialize();
+
+    if (R_SUCCEEDED(rc))
         rc = fizeauInitialize();
     FZ_SCOPEGUARD([] { fizeauExit(); });
 
@@ -127,17 +130,14 @@ int main(int argc, char **argv) {
         rc = fizeauSetIsActive(config.active);
 
     if (R_SUCCEEDED(rc))
-        rc = fizeauSetActiveProfileId(false, config.internal_profile);
+        fizeauSetActiveProfileId(false, config.internal_profile);
 
     if (R_SUCCEEDED(rc))
-        rc = fizeauSetActiveProfileId(true, config.external_profile);
+        fizeauSetActiveProfileId(true, config.external_profile);
 
     if (R_SUCCEEDED(rc))
-        rc = config.open_profile(appletGetOperationMode() == AppletOperationMode_Handheld ?
-                                 config.internal_profile : config.external_profile);
-
-    if (R_SUCCEEDED(rc))
-        rc = fz::Clock::initialize();
+        config.open_profile(appletGetOperationMode() == AppletOperationMode_Handheld ?
+                            config.internal_profile : config.external_profile);
 
     while (fz::gfx::loop()) {
         auto slot = fz::gfx::dequeue();

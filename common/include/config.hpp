@@ -28,6 +28,16 @@ namespace fz {
 
 class Config {
     public:
+        constexpr static FizeauSettings default_settings = {
+            .temperature = DEFAULT_TEMP,
+            .gamma       = DEFAULT_GAMMA,
+            .saturation  = DEFAULT_SAT,
+            .luminance   = DEFAULT_LUMA,
+            .range       = DEFAULT_RANGE,
+            .filter      = ColorFilter_None,
+        };
+
+    public:
         constinit static inline std::array config_locations = {
             std::string_view("/switch/Fizeau/config.ini"),
             std::string_view("/config/Fizeau/config.ini"),
@@ -37,10 +47,13 @@ class Config {
         bool active = true, has_active_override = false;
 
         FizeauProfileId cur_profile_id = FizeauProfileId_Invalid,
-            internal_profile = FizeauProfileId_Invalid, external_profile = FizeauProfileId_Invalid;
+            internal_profile = FizeauProfileId_Profile1, external_profile = FizeauProfileId_Profile1;
         bool is_editing_day_profile = false, is_editing_night_profile = false;
 
-        FizeauProfile profile = {};
+        FizeauProfile profile = {
+            .day_settings   = Config::default_settings,
+            .night_settings = Config::default_settings,
+        };
 
         void (*parse_profile_switch_action)(Config *, FizeauProfileId) = nullptr;
 

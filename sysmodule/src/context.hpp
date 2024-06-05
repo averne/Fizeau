@@ -30,15 +30,6 @@ enum FizeauProfileState: std::uint32_t {
     Night,
 };
 
-constexpr FizeauSettings default_settings = {
-    .temperature = DEFAULT_TEMP,
-    .gamma       = DEFAULT_GAMMA,
-    .saturation  = DEFAULT_SAT,
-    .luminance   = DEFAULT_LUMA,
-    .range       = DEFAULT_RANGE,
-    .filter      = ColorFilter_None,
-};
-
 struct Context {
     bool is_lite = false, is_active = false;
 
@@ -47,20 +38,20 @@ struct Context {
 
     std::array<FizeauProfile, FizeauProfileId_Total> profiles = {
         FizeauProfile{
-            .day_settings   = default_settings,
-            .night_settings = default_settings,
+            .day_settings   = Config::default_settings,
+            .night_settings = Config::default_settings,
         },
         FizeauProfile{
-            .day_settings   = default_settings,
-            .night_settings = default_settings,
+            .day_settings   = Config::default_settings,
+            .night_settings = Config::default_settings,
         },
         FizeauProfile{
-            .day_settings   = default_settings,
-            .night_settings = default_settings,
+            .day_settings   = Config::default_settings,
+            .night_settings = Config::default_settings,
         },
         FizeauProfile{
-            .day_settings   = default_settings,
-            .night_settings = default_settings,
+            .day_settings   = Config::default_settings,
+            .night_settings = Config::default_settings,
         },
     };
 
