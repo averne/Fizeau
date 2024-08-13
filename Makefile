@@ -1,4 +1,4 @@
-export FZ_VERSION =    2.5.3
+export FZ_VERSION =    2.5.4
 export FZ_COMMIT  =    $(shell git rev-parse --short HEAD)
 export FZ_TID     =    0100000000000F12
 
@@ -29,7 +29,7 @@ dist: $(DIST_TARGET)
 	@:
 
 $(DIST_TARGET): | all
-	@rm -rf $(OUT)/Fizeau-?.?.?-*.zip
+	@rm -rf $(OUT)/Fizeau-*-*.zip
 
 	@mkdir -p $(OUT)/config/Fizeau
 	@mkdir -p $(OUT)/switch/Fizeau
@@ -43,6 +43,9 @@ $(DIST_TARGET): | all
 	@cp sysmodule/out/Fizeau.nsp $(OUT)/atmosphere/contents/$(FZ_TID)/exefs.nsp
 	@cp sysmodule/toolbox.json $(OUT)/atmosphere/contents/$(FZ_TID)/toolbox.json
 	@touch $(OUT)/atmosphere/contents/$(FZ_TID)/flags/boot2.flag
+
+	@mkdir -p $(OUT)/atmosphere/exefs_patches/nvnflinger_cmu
+	@cp misc/patches/*.ips $(OUT)/atmosphere/exefs_patches/nvnflinger_cmu || :
 
 	@7z a $@ ./$(OUT)/atmosphere ./$(OUT)/config ./$(OUT)/switch >/dev/null
 	@rm -r $(OUT)/atmosphere $(OUT)/config $(OUT)/switch

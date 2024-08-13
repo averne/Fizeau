@@ -22,7 +22,7 @@
 **/release/
 **/debug/
 **/out/
+**/env/
 
+misc/patches
 !misc/default.ini
-
-dkp/
