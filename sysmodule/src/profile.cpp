@@ -85,48 +85,67 @@ void ProfileManager::transition_thread_func(void *args) {
 
         bool need_apply = false, is_handheld = self->operation_mode == AppletOperationMode_Handheld;
 
-        {
+        // CMU resets
+        if (!need_apply) {
             mutexLock(&self->commit_mutex);
             FZ_SCOPEGUARD([self] { mutexUnlock(&self->commit_mutex); });
 
-            if (self->mmio_available) {
-                // Poll DISPLAY_A in handheld mode, DISPLAY_B in docked mode
-                std::uint64_t iobase = self->disp_va_base + (is_handheld ? 0 : 0x40000);
+            // Poll DISPLAY_A in handheld mode, DISPLAY_B in docked mode
+            std::uint64_t iobase = self->disp_va_base + (is_handheld ? 0 : 0x40000);
 
-                auto &csc = is_handheld ? self->context.saved_internal_csc : self->context.saved_external_csc;
-                for (std::size_t i = 0; i < csc.size(); ++i) {
-                    if (csc[i] != READ(iobase + DC_COM_CMU_CSC_KRR + i * sizeof(std::uint32_t))) {
-                        need_apply = true;
-                        break;
-                    }
+            auto &shadow = is_handheld ? self->context.cmu_shadow_internal : self->context.cmu_shadow_external;
+            auto &csc    = shadow.csc;
+
+            if (!self->mmio_available)
+                goto cmu_end;
+
+            // There is a race when waking from reset, where the configuration
+            // sometimes gets applied before nvdrv internally disables the CMU
+            if (!(READ(iobase + DC_DISP_DISP_COLOR_CONTROL) & CMU_ENABLE)) {
+                need_apply = true;
+                goto cmu_end;
+            }
+
+            for (std::size_t i = 0; i < csc.size(); ++i) {
+                if (csc[i] != READ(iobase + DC_COM_CMU_CSC_KRR + i * sizeof(std::uint32_t))) {
+                    need_apply = true;
+                    goto cmu_end;
                 }
             }
         }
 
+cmu_end:
         auto profile_id = is_handheld ? self->context.internal_profile : self->context.external_profile;
         if (profile_id >= FizeauProfileId_Total)
             continue;
 
-        auto profile = self->context.profiles      [profile_id];
-        auto state   = self->context.profile_states[profile_id];
+        auto &profile = self->context.profiles      [profile_id];
+        auto &state   = self->context.profile_states[profile_id];
 
-        if (!need_apply && profile_id != FizeauProfileId_Invalid) {
+        // Period transitions
+        if (!need_apply) {
             auto dub = to_timestamp(profile.dusk_begin), due = to_timestamp(profile.dusk_end),
                  dab = to_timestamp(profile.dawn_begin), dae = to_timestamp(profile.dawn_end);
 
             auto ts = Clock::get_current_timestamp();
-            if (
-                (state == FizeauProfileState::Day   && ts >= dub) ||
-                (state == FizeauProfileState::Night && ts >= dab) ||
-                Clock::is_in_interval(ts, dub, due) ||
-                Clock::is_in_interval(ts, dab, dae)
-            )
+            if (ts >= due)
+                need_apply = state == FizeauProfileState::Day;
+            else if (ts >= dub)
                 need_apply = true;
+            else if (ts >= dae)
+                need_apply = state == FizeauProfileState::Night;
+            else if (ts >= dab)
+                need_apply = true;
+
+            // Increase next timeout to avoid calculating/applying the coefficients too frequently
+            if (need_apply)
+                timer.next_tick += armNsToTicks(std::chrono::nanoseconds(1s).count());
         }
 
+        // Dimming
         if (!need_apply) {
             std::uint64_t timeout = to_timestamp(profile.dimming_timeout),
-                delta = armTicksToNs(armGetSystemTick() - self->activity_tick) / 1'000'000'000;
+                delta = armTicksToNs(armGetSystemTick() - self->activity_tick) / std::chrono::nanoseconds(1s).count();
 
             if (
                 (!self->is_dimming && delta >  timeout) ||
@@ -135,12 +154,8 @@ void ProfileManager::transition_thread_func(void *args) {
                 need_apply = true;
         }
 
-        if (need_apply) {
+        if (need_apply)
             self->apply();
-
-            // Wait a second to avoid calculating/applying the coefficients too frequently
-            svcSleepThread(std::chrono::nanoseconds(1s).count());
-        }
     }
 }
 
@@ -272,8 +287,8 @@ Result ProfileManager::apply() {
         if (dim)
             settings.luminance = !external ? dimmed_luma_internal : dimmed_luma_external;
 
-        auto &csc = !external ? this->context.saved_internal_csc : this->context.saved_external_csc;
-        if (auto rc = this->disp.apply_color_profile(external, settings, csc); R_FAILED(rc))
+        auto &shadow = !external ? this->context.cmu_shadow_internal : this->context.cmu_shadow_external;
+        if (auto rc = this->disp.apply_color_profile(external, settings, shadow); R_FAILED(rc))
             return rc;
 
         if (auto rc = this->disp.set_hdmi_color_range(external, settings.range); R_FAILED(rc))

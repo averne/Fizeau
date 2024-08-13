@@ -43,6 +43,20 @@
 #define DC_COM_CMU_CSC_KRB         0xcc0
 #define DC_COM_CMU_CSC_KGB         0xcc4
 #define DC_COM_CMU_CSC_KBB         0xcc8
+#define DC_COM_CMU_LUT1            0xcd8
+#   define LUT1_ADDR(x)            ((x) & 0xff)
+#   define LUT1_DATA(x)            (((x) & 0xfff) << 16)
+#   define LUT1_READ_DATA(x)       (((x) >> 16) & 0xfff)
+#define DC_COM_CMU_LUT2            0xcdc
+#   define LUT2_ADDR(x)            ((x) & 0x3ff)
+#   define LUT2_DATA(x)            (((x) & 0xff) << 16)
+#   define LUT2_READ_DATA(x)       (((x) >> 16) & 0xff)
+#define DC_COM_CMU_LUT1_READ       0xce0
+#   define LUT1_READ_ADDR(x)       (((x) & 0xff) << 8)
+#   define LUT1_READ_EN            (1 << 0)
+#define DC_COM_CMU_LUT2_READ       0xce4
+#   define LUT2_READ_ADDR(x)       (((x) & 0x3ff) << 8)
+#   define LUT2_READ_EN            (1 << 0)
 #define DC_DISP_DISP_COLOR_CONTROL 0x10c0
 #   define DISP_COLOR_SWAP         (1 << 16)
 #   define BLANK_COLOR             (1 << 17)

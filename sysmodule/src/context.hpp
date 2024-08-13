@@ -57,8 +57,7 @@ struct Context {
 
     std::array<FizeauProfileState, FizeauProfileId_Total> profile_states = {};
 
-    DisplayController::Csc saved_internal_csc = {},
-        saved_external_csc = {};
+    DisplayController::CmuShadow cmu_shadow_internal = {}, cmu_shadow_external = {};
 };
 
 } // namespace fz

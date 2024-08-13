@@ -82,14 +82,14 @@ Result DisplayController::disable(bool external) const {
     return 0;
 }
 
-Result DisplayController::apply_color_profile(bool external, FizeauSettings &settings, Csc &saved_csc) const {
+Result DisplayController::apply_color_profile(bool external, FizeauSettings &settings, CmuShadow &shadow) const {
     Cmu cmu = calculate_cmu(settings);
 
     if (auto rc = nvioctlNvDisp_SetCmu(!external ? this->disp0_fd : this->disp1_fd, &cmu); R_FAILED(rc))
         return rc;
 
-    // Save csc matrix, to be used for change detection
-    std::transform(&cmu.krr, &cmu.krr + 9, saved_csc.begin(),
+    // Save cmu shadow, to be used for change detection
+    std::transform(&cmu.krr, &cmu.krr + 9, shadow.csc.begin(),
         [](QS18 c) -> std::uint16_t { return static_cast<Csc::value_type>(c) & QS18::BitMask; });
 
     return 0;

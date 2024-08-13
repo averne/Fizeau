@@ -85,8 +85,9 @@ struct Cmu {
     __nv_in std::array<std::uint16_t, 256> lut_1;
     __nv_in std::array<std::uint16_t, 960> lut_2;
 
-    __nv_out std::uint16_t enabled;
-    __nv_out std::array<std::uint8_t, 4> unk;
+    __nv_out std::uint16_t csc_modified;
+    __nv_out std::uint16_t lut1_modified;
+    __nv_out std::uint16_t lut2_modified;
 
     constexpr Cmu(bool enable = true, QS18 krr = 1.0, QS18 kgg = 1.0, QS18 kbb = 1.0):
         enable(enable), krr(krr), kgg(kgg), kbb(kbb) { }
@@ -144,7 +145,14 @@ static inline Result nvioctlNvDisp_SetAviInfoframe(u32 fd, AviInfoframe *infofra
 
 class DisplayController {
     public:
-        using Csc = std::array<std::uint16_t, 9>;
+        using Csc  = std::array<std::uint16_t, 9>;
+        using Lut1 = std::array<std::uint16_t, 256>;
+        using Lut2 = std::array<std::uint8_t,  960>;
+
+        // Lut1 and Lut2 ignored since they cannot be read back directly from registers
+        struct CmuShadow {
+            Csc csc;
+        };
 
     public:
         Result initialize() {
@@ -156,7 +164,7 @@ class DisplayController {
         }
 
         Result disable(bool external) const;
-        Result apply_color_profile(bool external, FizeauSettings &settings, Csc &saved_csc) const;
+        Result apply_color_profile(bool external, FizeauSettings &settings, CmuShadow &shadow) const;
         Result set_hdmi_color_range(bool external, ColorRange range) const;
 
     private:

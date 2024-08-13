@@ -51,11 +51,11 @@ Result __nx_nv_create_tmem(TransferMemory *t, u32 *out_size, Permission perm) {
     return tmemCreateFromMemory(t, nvdrv_tmem_data, NVDRV_TMEM_SIZE, perm);
 }
 
-extern "C" void __libnx_exception_handler(ThreadExceptionDump *ctx) {
+void __libnx_exception_handler(ThreadExceptionDump *ctx) {
     diagAbortWithResult(ctx->error_desc);
 }
 
-extern "C" void __appInit(void) {
+void __appInit(void) {
 #if defined(DEBUG) && !defined(TWILI)
     u64 has_debugger = 0;
     while (!has_debugger) {
@@ -101,7 +101,7 @@ extern "C" void __appInit(void) {
 #endif
 }
 
-extern "C" void __appExit(void) {
+void __appExit(void) {
     nvExit();
     pscmExit();
     ommExit();
