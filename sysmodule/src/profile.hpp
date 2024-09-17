@@ -47,14 +47,12 @@ class ProfileManager {
         Context &context;
         DisplayController &disp;
 
+        std::uint64_t clock_va_base = 0, disp_va_base = 0;
+
         UEvent thread_exit_event = {};
         Thread transition_thread = {}, event_monitor_thread = {};
         std::uint8_t transition_thread_stack[0x2000] alignas(0x1000) = {},
             event_monitor_thread_stack[0x1000] alignas(0x1000) = {};
-
-        PscPmModule psc_module = {};
-        bool mmio_available = true;
-        std::uint64_t disp_va_base = 0;
 
         Event operation_mode_event = {};
         AppletOperationMode operation_mode = {};

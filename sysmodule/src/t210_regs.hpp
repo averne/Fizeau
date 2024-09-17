@@ -17,6 +17,33 @@
 
 #include <cstdint>
 
+#define CLOCK_IO_BASE 0x60006000
+#define CLOCK_IO_SIZE (0x1000)
+
+#define CLK_RST_CONTROLLER_CLK_OUT_ENB_L 0x10
+#   define CLK_ENB_ISPB                  (1 << 3)
+#   define CLK_ENB_RTC                   (1 << 4)
+#   define CLK_ENB_TMR                   (1 << 5)
+#   define CLK_ENB_UARTA                 (1 << 6)
+#   define CLK_ENB_UARTB                 (1 << 7)
+#   define CLK_ENB_GPIO                  (1 << 8)
+#   define CLK_ENB_SDMMC2                (1 << 9)
+#   define CLK_ENB_SPDIF                 (1 << 10)
+#   define CLK_ENB_I2S2                  (1 << 11)
+#   define CLK_ENB_I2C1                  (1 << 12)
+#   define CLK_ENB_SDMMC1                (1 << 14)
+#   define CLK_ENB_SDMMC4                (1 << 15)
+#   define CLK_ENB_PWM                   (1 << 17)
+#   define CLK_ENB_I2S3                  (1 << 18)
+#   define CLK_ENB_VI                    (1 << 20)
+#   define CLK_ENB_USBD                  (1 << 22)
+#   define CLK_ENB_ISP                   (1 << 23)
+#   define CLK_ENB_DISP2                 (1 << 26)
+#   define CLK_ENB_DISP1                 (1 << 27)
+#   define CLK_ENB_HOST1X                (1 << 28)
+#   define CLK_ENB_I2S                   (1 << 30)
+#   define CLK_ENB_CACHE2                (1 << 31)
+
 #define DISP_IO_BASE 0x54200000
 #define DISP_IO_SIZE (0x80000)
 

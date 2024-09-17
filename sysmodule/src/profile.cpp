@@ -22,7 +22,7 @@
 #include <common.hpp>
 #include <omm.h>
 
-#include "disp1_regs.hpp"
+#include "t210_regs.hpp"
 #include "nvdisp.hpp"
 
 #include "profile.hpp"
@@ -87,7 +87,10 @@ void ProfileManager::transition_thread_func(void *args) {
 
         // CMU resets
         if (!need_apply) {
-            mutexLock(&self->commit_mutex);
+            if (!(READ(self->clock_va_base + CLK_RST_CONTROLLER_CLK_OUT_ENB_L) & (CLK_ENB_DISP1 | CLK_ENB_DISP2)) ||
+                    !mutexTryLock(&self->commit_mutex))
+                goto cmu_end;
+
             FZ_SCOPEGUARD([self] { mutexUnlock(&self->commit_mutex); });
 
             // Poll DISPLAY_A in handheld mode, DISPLAY_B in docked mode
@@ -95,9 +98,6 @@ void ProfileManager::transition_thread_func(void *args) {
 
             auto &shadow = is_handheld ? self->context.cmu_shadow_internal : self->context.cmu_shadow_external;
             auto &csc    = shadow.csc;
-
-            if (!self->mmio_available)
-                goto cmu_end;
 
             // There is a race when waking from reset, where the configuration
             // sometimes gets applied before nvdrv internally disables the CMU
@@ -167,7 +167,6 @@ void ProfileManager::event_monitor_thread_func(void *args) {
         auto rc = waitMulti(&idx, UINT64_MAX,
             waiterForEvent(&self->operation_mode_event),
             waiterForEvent(&self->activity_event),
-            waiterForEvent(&self->psc_module.event),
             waiterForUEvent(&self->thread_exit_event));
         if (R_FAILED(rc))
             return;
@@ -181,15 +180,7 @@ void ProfileManager::event_monitor_thread_func(void *args) {
                 insrGetLastTick(ins_evt_id, &self->activity_tick);
                 break;
             }
-            case 2: {
-                PscPmState state;
-                if (R_SUCCEEDED(pscPmModuleGetRequest(&self->psc_module, &state, nullptr)))
-                    self->mmio_available = state == PscPmState_Awake;
-
-                pscPmModuleAcknowledge(&self->psc_module, state);
-                break;
-            }
-            case 3:
+            case 2:
             default:
                 return;
         }
@@ -198,11 +189,10 @@ void ProfileManager::event_monitor_thread_func(void *args) {
 
 Result ProfileManager::initialize() {
     std::uint64_t size;
-    if (auto rc = svcQueryMemoryMapping(&this->disp_va_base, &size, DISP_IO_BASE, DISP_IO_SIZE); R_FAILED(rc))
+    if (auto rc = svcQueryMemoryMapping(&this->clock_va_base, &size, CLOCK_IO_BASE, CLOCK_IO_SIZE); R_FAILED(rc))
         diagAbortWithResult(rc);
 
-    std::array deps = { u32(PscPmModuleId_Display) };
-    if (auto rc = pscmGetPmModule(&this->psc_module, PscPmModuleId(125), deps.data(), deps.size(), true); R_FAILED(rc))
+    if (auto rc = svcQueryMemoryMapping(&this->disp_va_base, &size, DISP_IO_BASE, DISP_IO_SIZE); R_FAILED(rc))
         diagAbortWithResult(rc);
 
     if (auto rc = ommGetOperationModeChangeEvent(&this->operation_mode_event, false); R_FAILED(rc))
@@ -244,10 +234,6 @@ Result ProfileManager::finalize() {
     threadWaitForExit(&this->transition_thread);
     threadClose(&this->event_monitor_thread);
     threadClose(&this->transition_thread);
-
-    pscPmModuleFinalize(&this->psc_module);
-    pscPmModuleClose(&this->psc_module);
-    eventClose(&this->psc_module.event);
 
     eventClose(&this->operation_mode_event);
 

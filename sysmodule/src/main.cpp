@@ -83,9 +83,6 @@ void __appInit(void) {
     if (auto rc = nvInitialize(); R_FAILED(rc))
         diagAbortWithResult(rc);
 
-    if (auto rc = pscmInitialize(); R_FAILED(rc))
-        diagAbortWithResult(rc);
-
     if (auto rc = ommInitialize(); R_FAILED(rc))
         diagAbortWithResult(rc);
 
@@ -103,7 +100,6 @@ void __appInit(void) {
 
 void __appExit(void) {
     nvExit();
-    pscmExit();
     ommExit();
     insrExit();
 
