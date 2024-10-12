@@ -350,6 +350,9 @@ void render_preview(FizeauSettings &settings, int width, int height, int src_ima
     // Apply saturation
     coeffs = dot(coeffs, saturation_matrix(settings.saturation));
 
+    // Apply hue rotation
+    coeffs = dot(coeffs, hue_matrix(settings.hue));
+
     auto colormatrix = glm::mat4(
         coeffs[0], coeffs[1], coeffs[2], 0,
         coeffs[3], coeffs[4], coeffs[5], 0,

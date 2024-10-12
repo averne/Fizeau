@@ -88,6 +88,9 @@ void Config::sanitize_profile() {
     sanitize_minmax(this->profile.day_settings  .saturation,  MIN_SAT,   MAX_SAT);
     sanitize_minmax(this->profile.night_settings.saturation,  MIN_SAT,   MAX_SAT);
 
+    sanitize_minmax(this->profile.day_settings  .hue,         MIN_HUE,   MAX_HUE);
+    sanitize_minmax(this->profile.night_settings.hue,         MIN_HUE,   MAX_HUE);
+
     sanitize_minmax(this->profile.day_settings  .luminance,   MIN_LUMA,  MAX_LUMA);
     sanitize_minmax(this->profile.night_settings.luminance,   MIN_LUMA,  MAX_LUMA);
 
@@ -167,6 +170,9 @@ std::string Config::make() {
         str += "saturation_day    = " + std::to_string(this->profile.day_settings.saturation)    + '\n';
         str += "saturation_night  = " + std::to_string(this->profile.night_settings.saturation)  + '\n';
 
+        str += "hue_day           = " + std::to_string(this->profile.day_settings.hue)           + '\n';
+        str += "hue_night         = " + std::to_string(this->profile.night_settings.hue)         + '\n';
+
         str += "luminance_day     = " + std::to_string(this->profile.day_settings.luminance)     + '\n';
         str += "luminance_night   = " + std::to_string(this->profile.night_settings.luminance)   + '\n';
 
@@ -216,6 +222,7 @@ Result Config::apply() {
 Result Config::reset() {
     this->profile.day_settings.temperature = DEFAULT_TEMP,     this->profile.night_settings.temperature = DEFAULT_TEMP;
     this->profile.day_settings.gamma       = DEFAULT_GAMMA,    this->profile.night_settings.gamma       = DEFAULT_GAMMA;
+    this->profile.day_settings.hue         = DEFAULT_HUE,      this->profile.night_settings.hue         = DEFAULT_HUE;
     this->profile.day_settings.saturation  = DEFAULT_SAT,      this->profile.night_settings.saturation  = DEFAULT_SAT;
     this->profile.day_settings.luminance   = DEFAULT_LUMA,     this->profile.night_settings.luminance   = DEFAULT_LUMA;
     this->profile.day_settings.range       = DEFAULT_RANGE,    this->profile.night_settings.range       = DEFAULT_RANGE;

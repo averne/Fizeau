@@ -19,6 +19,7 @@
 #include <cmath>
 #include <algorithm>
 #include <tuple>
+#include <numbers>
 
 #include <common.hpp>
 
@@ -80,7 +81,25 @@ std::tuple<float, float, float> whitepoint(Temperature temperature) {
     };
 }
 
+ColorMatrix hue_matrix(Hue hue) {
+    if (hue == DEFAULT_HUE) // Fast path
+        return { 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f };
+
+    auto angle = hue * std::numbers::pi_v<float>;
+    auto c1 = (1.0f + 2.0f * std::cos(angle)) / 3.0f,
+        c2 = (1.0f - std::cos(angle)) / 3.0f,
+        c3 = std::sin(angle) / std::numbers::sqrt3_v<float>;
+    return {
+        c1,      c2 - c3, c2 + c3,
+        c2 + c3, c1,      c2 - c3,
+        c2 - c3, c2 + c3, c1,
+    };
+}
+
 ColorMatrix saturation_matrix(Saturation sat) {
+    if (sat == DEFAULT_SAT) // Fast path
+        return { 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f };
+
     return {
         (1.0f - sat) * 0.2126f + sat, (1.0f - sat) * 0.7152f      , (1.0f - sat) * 0.0722f,
         (1.0f - sat) * 0.2126f      , (1.0f - sat) * 0.7152f + sat, (1.0f - sat) * 0.0722f,

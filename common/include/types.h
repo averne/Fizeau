@@ -46,6 +46,11 @@ typedef float Luminance;
 #define MAX_LUMA     1.0f
 #define DEFAULT_LUMA 0.0f
 
+typedef float Hue;
+#define MIN_HUE     -1.0f
+#define MAX_HUE      1.0f
+#define DEFAULT_HUE  0.0f
+
 typedef float Saturation;
 #define MIN_SAT      0.0f
 #define MAX_SAT      2.0f

@@ -227,6 +227,13 @@ Result draw_color_tab(Config &ctx) {
 
     im::Separator();
 
+    // Hue sliders
+    im::TextUnformatted("Hue");
+    ctx.is_editing_day_profile   |= new_slider("Day:",   "##hued", ctx.profile.day_settings.hue,   MIN_HUE, MAX_HUE, "%.2f");
+    ctx.is_editing_night_profile |= new_slider("Night:", "##huen", ctx.profile.night_settings.hue, MIN_HUE, MAX_HUE, "%.2f");
+
+    im::Separator();
+
     // Filter combos
     im::TextUnformatted("Filter");
     ctx.is_editing_day_profile   |= new_combo("Day:",   "##filterd", ctx.profile.day_settings.filter,   filters_names);

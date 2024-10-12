@@ -55,6 +55,7 @@ typedef enum {
 typedef struct {
     Temperature temperature;
     Gamma       gamma;
+    Hue         hue;
     Saturation  saturation;
     Luminance   luminance;
     ColorRange  range;

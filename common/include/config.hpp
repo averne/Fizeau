@@ -31,6 +31,7 @@ class Config {
         constexpr static FizeauSettings default_settings = {
             .temperature = DEFAULT_TEMP,
             .gamma       = DEFAULT_GAMMA,
+            .hue         = DEFAULT_HUE,
             .saturation  = DEFAULT_SAT,
             .luminance   = DEFAULT_LUMA,
             .range       = DEFAULT_RANGE,

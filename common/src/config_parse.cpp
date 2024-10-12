@@ -156,6 +156,8 @@ int Config::ini_handler(void *user, const char *section, const char *name, const
             MATCH_SET(name, "gamma_night",      p.night_settings.gamma)      ||
             MATCH_SET(name, "saturation_day",   p.day_settings  .saturation) ||
             MATCH_SET(name, "saturation_night", p.night_settings.saturation) ||
+            MATCH_SET(name, "hue_day",          p.day_settings  .hue)        ||
+            MATCH_SET(name, "hue_night",        p.night_settings.hue)        ||
             MATCH_SET(name, "luminance_day",    p.day_settings  .luminance)  ||
             MATCH_SET(name, "luminance_night",  p.night_settings.luminance)
         ) {

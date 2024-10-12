@@ -42,6 +42,9 @@ Cmu calculate_cmu(FizeauSettings &settings) {
     // Apply saturation
     coeffs = dot(coeffs, saturation_matrix(settings.saturation));
 
+    // Apply hue rotation
+    coeffs = dot(coeffs, hue_matrix(settings.hue));
+
     // Copy color matrix to cmu format
     std::transform(coeffs.begin(), coeffs.end(), &cmu.krr, [](float c) -> QS18 { return c; });
 
