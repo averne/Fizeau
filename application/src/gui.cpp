@@ -180,7 +180,7 @@ Result draw_profile_tab(Config &ctx) {
             return rc;
     }
 
-    im::Separator();
+    im::SeparatorEx(ImGuiSeparatorFlags_Horizontal, 3.0f);
     im::TextUnformatted("Currently editing profile:");
     if (im::Combo("##editp", reinterpret_cast<int *>(&ctx.cur_profile_id), profile_names.data(), profile_names.size())) {
         if (auto rc = ctx.open_profile(ctx.cur_profile_id); R_FAILED(rc))
@@ -212,30 +212,24 @@ Result draw_color_tab(Config &ctx) {
         enable_extra_hot_temps = true;
 
     // Temperature sliders
-    im::TextUnformatted("Temperature");
+    im::SeparatorText("Temperature");
     auto max_temp = enable_extra_hot_temps ? MAX_TEMP : D65_TEMP;
     ctx.is_editing_day_profile   |= new_slider("Day:",   "##tempd", ctx.profile.day_settings.temperature,   MIN_TEMP, max_temp, "%d°K");
     ctx.is_editing_night_profile |= new_slider("Night:", "##tempn", ctx.profile.night_settings.temperature, MIN_TEMP, max_temp, "%d°K");
     im::Checkbox("Enable blue temperatures", &enable_extra_hot_temps);
 
-    im::Separator();
-
     // Saturation sliders
-    im::TextUnformatted("Saturation");
+    im::SeparatorText("Saturation");
     ctx.is_editing_day_profile   |= new_slider("Day:",   "##satd", ctx.profile.day_settings.saturation,   MIN_SAT, MAX_SAT, "%.2f");
     ctx.is_editing_night_profile |= new_slider("Night:", "##satn", ctx.profile.night_settings.saturation, MIN_SAT, MAX_SAT, "%.2f");
 
-    im::Separator();
-
     // Hue sliders
-    im::TextUnformatted("Hue");
+    im::SeparatorText("Hue");
     ctx.is_editing_day_profile   |= new_slider("Day:",   "##hued", ctx.profile.day_settings.hue,   MIN_HUE, MAX_HUE, "%.2f");
     ctx.is_editing_night_profile |= new_slider("Night:", "##huen", ctx.profile.night_settings.hue, MIN_HUE, MAX_HUE, "%.2f");
 
-    im::Separator();
-
     // Filter combos
-    im::TextUnformatted("Filter");
+    im::SeparatorText("Filter");
     ctx.is_editing_day_profile   |= new_combo("Day:",   "##filterd", ctx.profile.day_settings.filter,   filters_names);
     ctx.is_editing_night_profile |= new_combo("Night:", "##filtern", ctx.profile.night_settings.filter, filters_names);
 
@@ -248,20 +242,17 @@ Result draw_correction_tab(Config &ctx) {
         return 0;
 
     // Gamma sliders
-    im::TextUnformatted("Gamma");
+    im::SeparatorText("Gamma");
     ctx.is_editing_day_profile   |= new_slider("Day:",   "##gammad", ctx.profile.day_settings.gamma,   MIN_GAMMA, MAX_GAMMA, "%.2f");
     ctx.is_editing_night_profile |= new_slider("Night:", "##gamman", ctx.profile.night_settings.gamma, MIN_GAMMA, MAX_GAMMA, "%.2f");
 
-    im::Separator();
-
     // Luminance sliders
-    im::TextUnformatted("Luminance");
+    im::SeparatorText("Luminance");
     ctx.is_editing_day_profile   |= new_slider("Day:",   "##lumad", ctx.profile.day_settings.luminance,   MIN_LUMA, MAX_LUMA, "%.2f", true);
     ctx.is_editing_night_profile |= new_slider("Night:", "##luman", ctx.profile.night_settings.luminance, MIN_LUMA, MAX_LUMA, "%.2f", true);
 
     // Color range sliders
-    im::Separator();
-    im::TextUnformatted("Color range:");
+    im::SeparatorText("Color range:");
     ctx.is_editing_day_profile   |= new_range("Day:",   "Full range##d", "##rangeld", "##ranghd", ctx.profile.day_settings.range);
     ctx.is_editing_night_profile |= new_range("Night:", "Full range##n", "##rangeln", "##ranghn", ctx.profile.night_settings.range);
 
@@ -275,12 +266,8 @@ Result draw_time_tab(Config &ctx) {
 
     bool has_changed = false;
 
-    // Times
-    im::TextUnformatted("Hours (drag to set):");
-
     // Dusk
-    im::Separator();
-    im::TextUnformatted("Dusk:");
+    im::SeparatorText("Dusk:");
     has_changed |= new_times("Start:", "##dush", "##dusm", ctx.profile.dusk_begin);
     has_changed |= new_times("End:",   "##dueh", "##duem", ctx.profile.dusk_end);
 
@@ -292,8 +279,7 @@ Result draw_time_tab(Config &ctx) {
     }
 
     // Dawn
-    im::Separator();
-    im::TextUnformatted("Dawn:");
+    im::SeparatorText("Dawn:");
     has_changed |= new_times("Start:", "##dash", "##dasm", ctx.profile.dawn_begin);
     has_changed |= new_times("End:",   "##daeh", "##daem", ctx.profile.dawn_end);
 
@@ -309,8 +295,7 @@ Result draw_time_tab(Config &ctx) {
 
     // Dimming timeout
     {
-        im::Separator();
-        im::TextUnformatted("Dimming timeout:");
+        im::SeparatorText("Dimming timeout:");
         im::PushItemWidth(im::GetWindowWidth() * 0.2f);
         FZ_SCOPEGUARD([] { im::PopItemWidth(); });
 

@@ -12,7 +12,7 @@ SOURCES           =    imgui -maxdepth 1
 INCLUDES          =    include imgui ../glad/include ../glfw/include
 LIBS              =
 
-DEFINES           =    __SWITCH__
+DEFINES           =    __SWITCH__ IMGUI_DISABLE_DEFAULT_SHELL_FUNCTIONS
 ARCH              =    -march=armv8-a+crc+crypto+simd -mtune=cortex-a57 -mtp=soft -fpie
 FLAGS             =    -Wall -pipe -g -O2 -ffunction-sections -fdata-sections
 CFLAGS            =    -std=gnu11

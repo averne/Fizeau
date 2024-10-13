@@ -103,7 +103,7 @@ all: $(NX_TARGET)
 
 run: all
 	@echo "Running" $(NX_TARGET)
-	@nxlink -p Fizeau/Fizeau.nro -s $(NX_TARGET)
+	@nxlink -r 100 -p Fizeau/Fizeau.nro -s $(NX_TARGET)
 
 libs: $(CUSTOM_LIBS)
 

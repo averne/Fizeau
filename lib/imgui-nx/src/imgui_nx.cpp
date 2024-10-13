@@ -88,28 +88,57 @@ void updateTouch(ImGuiIO &io_) {
     io_.MouseDown[0] = true;
 }
 
-void updateKeys(ImGuiIO &io_) {
-    constexpr std::array mapping = {
-        std::pair(ImGuiNavInput_Activate,  HidNpadButton_A),
-        std::pair(ImGuiNavInput_Cancel,    HidNpadButton_B),
-        std::pair(ImGuiNavInput_Input,     HidNpadButton_X),
-        std::pair(ImGuiNavInput_Menu,      HidNpadButton_Y),
-        std::pair(ImGuiNavInput_FocusPrev, HidNpadButton_L),
-        std::pair(ImGuiNavInput_TweakSlow, HidNpadButton_L),
-        std::pair(ImGuiNavInput_FocusNext, HidNpadButton_R),
-        std::pair(ImGuiNavInput_TweakFast, HidNpadButton_R),
-        std::pair(ImGuiNavInput_DpadUp,    HidNpadButton_Up),
-        std::pair(ImGuiNavInput_DpadRight, HidNpadButton_Right),
-        std::pair(ImGuiNavInput_DpadDown,  HidNpadButton_Down),
-        std::pair(ImGuiNavInput_DpadLeft,  HidNpadButton_Left),
+/// \brief Update gamepad inputs
+/// \param io_ ImGui IO
+void updateGamepads (ImGuiIO &io_)
+{
+    // clear navigation inputs
+    std::memset (io_.NavInputs, 0, sizeof (io_.NavInputs));
+
+    constexpr static std::array buttonMapping = {
+        std::make_pair (HidNpadButton_A,     ImGuiKey_GamepadFaceDown),
+        std::make_pair (HidNpadButton_B,     ImGuiKey_GamepadFaceRight),
+        std::make_pair (HidNpadButton_X,     ImGuiKey_GamepadFaceUp),
+        std::make_pair (HidNpadButton_Y,     ImGuiKey_GamepadFaceLeft),
+        std::make_pair (HidNpadButton_L,     ImGuiKey_GamepadL1),
+        std::make_pair (HidNpadButton_R,     ImGuiKey_GamepadR1),
+        std::make_pair (HidNpadButton_ZL,    ImGuiKey_GamepadL2),
+        std::make_pair (HidNpadButton_ZR,    ImGuiKey_GamepadR2),
+        std::make_pair (HidNpadButton_Up,    ImGuiKey_GamepadDpadUp),
+        std::make_pair (HidNpadButton_Right, ImGuiKey_GamepadDpadRight),
+        std::make_pair (HidNpadButton_Down,  ImGuiKey_GamepadDpadDown),
+        std::make_pair (HidNpadButton_Left,  ImGuiKey_GamepadDpadLeft),
+        std::make_pair (HidNpadButton_Plus,  ImGuiKey_GamepadStart),
+        std::make_pair (HidNpadButton_Minus, ImGuiKey_GamepadBack),
     };
 
-    padUpdate(&s_pad);
-    auto down = padGetButtons(&s_pad);
+    padUpdate (&s_pad);
 
-    for (auto [im, nx]: mapping)
-        if (down & nx)
-            io_.NavInputs[im] = 1.0f;
+    // read buttons from primary controller
+    auto const keys = padGetButtons (&s_pad);
+    for (auto const &[in, out] : buttonMapping)
+        io_.AddKeyEvent (out, !!(keys & in));
+
+    // update joystick
+    auto const jsLeft = padGetStickPos (&s_pad, 0), jsRight = padGetStickPos (&s_pad, 1);
+    constexpr static auto thumb_dead_zone = 10000;
+    const std::array analogMapping = {
+        std::make_tuple (std::ref (jsLeft.x),  ImGuiKey_GamepadLStickLeft,  -thumb_dead_zone, JOYSTICK_MIN),
+        std::make_tuple (std::ref (jsLeft.x),  ImGuiKey_GamepadLStickRight, +thumb_dead_zone, JOYSTICK_MAX),
+        std::make_tuple (std::ref (jsLeft.y),  ImGuiKey_GamepadLStickUp,    +thumb_dead_zone, JOYSTICK_MAX),
+        std::make_tuple (std::ref (jsLeft.y),  ImGuiKey_GamepadLStickDown,  -thumb_dead_zone, JOYSTICK_MIN),
+        std::make_tuple (std::ref (jsRight.x), ImGuiKey_GamepadRStickLeft,  -thumb_dead_zone, JOYSTICK_MIN),
+        std::make_tuple (std::ref (jsRight.x), ImGuiKey_GamepadRStickRight, +thumb_dead_zone, JOYSTICK_MAX),
+        std::make_tuple (std::ref (jsRight.y), ImGuiKey_GamepadRStickUp,    +thumb_dead_zone, JOYSTICK_MAX),
+        std::make_tuple (std::ref (jsRight.y), ImGuiKey_GamepadRStickDown,  -thumb_dead_zone, JOYSTICK_MIN),
+    };
+
+    // read right joystick from primary controller
+    for (auto const &[in, out, min, max] : analogMapping)
+    {
+        auto const value = static_cast<float>(in - min) / static_cast<float>(max - min);
+        io_.AddKeyAnalogEvent (out, value > 0.1f, std::clamp(value, 0.0f, 1.0f));
+    }
 }
 
 } // namespace
@@ -187,7 +216,7 @@ std::uint64_t ImGui::nx::newFrame() {
 
     // update inputs
     updateTouch(io);
-    updateKeys(io);
+    updateGamepads(io);
 
     // clamp mouse to screen
     s_mousePos.x = std::clamp(s_mousePos.x, 0.0f, s_width);
