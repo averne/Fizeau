@@ -17,6 +17,7 @@
 
 #include <cstring>
 #include <algorithm>
+#include <bit>
 #include <string>
 #include <ini.h>
 #include <common.hpp>
@@ -74,6 +75,10 @@ void Config::sanitize_profile() {
         sanitize_minmax(range.hi, MIN_RANGE, MAX_RANGE);
     };
 
+    auto sanitize_filter = [&](Component filter) {
+        return std::popcount(static_cast<std::uint32_t>(filter)) >= 1;
+    };
+
     sanitize_time(this->profile.dusk_begin);
     sanitize_time(this->profile.dusk_end);
     sanitize_time(this->profile.dawn_begin);
@@ -82,23 +87,23 @@ void Config::sanitize_profile() {
     sanitize_minmax(this->profile.day_settings  .temperature, MIN_TEMP,  MAX_TEMP);
     sanitize_minmax(this->profile.night_settings.temperature, MIN_TEMP,  MAX_TEMP);
 
-    sanitize_minmax(this->profile.day_settings  .gamma,       MIN_GAMMA, MAX_GAMMA);
-    sanitize_minmax(this->profile.night_settings.gamma,       MIN_GAMMA, MAX_GAMMA);
-
     sanitize_minmax(this->profile.day_settings  .saturation,  MIN_SAT,   MAX_SAT);
     sanitize_minmax(this->profile.night_settings.saturation,  MIN_SAT,   MAX_SAT);
 
     sanitize_minmax(this->profile.day_settings  .hue,         MIN_HUE,   MAX_HUE);
     sanitize_minmax(this->profile.night_settings.hue,         MIN_HUE,   MAX_HUE);
 
+    sanitize_minmax(this->profile.components, Component_None, Component_All);
+    sanitize_filter(this->profile.filter);
+
+    sanitize_minmax(this->profile.day_settings  .gamma,       MIN_GAMMA, MAX_GAMMA);
+    sanitize_minmax(this->profile.night_settings.gamma,       MIN_GAMMA, MAX_GAMMA);
+
     sanitize_minmax(this->profile.day_settings  .luminance,   MIN_LUMA,  MAX_LUMA);
     sanitize_minmax(this->profile.night_settings.luminance,   MIN_LUMA,  MAX_LUMA);
 
     sanitize_colorrange(this->profile.day_settings  .range);
     sanitize_colorrange(this->profile.night_settings.range);
-
-    sanitize_minmax(this->profile.day_settings  .filter, ColorFilter_None, ColorFilter_Blue);
-    sanitize_minmax(this->profile.night_settings.filter, ColorFilter_None, ColorFilter_Blue);
 }
 
 std::string Config::make() {
@@ -112,12 +117,26 @@ std::string Config::make() {
         return format("profile%u", id + 1);
     };
 
-    auto format_filter = [](ColorFilter f) -> std::string {
+    auto format_filter = [](Component f) -> std::string {
         switch (f) {
-            case ColorFilter_Red:   return "red";
-            case ColorFilter_Green: return "green";
-            case ColorFilter_Blue:  return "blue";
-            default:                return "none";
+            case Component_Red:   return "red";
+            case Component_Green: return "green";
+            case Component_Blue:  return "blue";
+            default:              return "none";
+        }
+    };
+
+    auto format_components = [](Component c) -> std::string {
+        if (c == Component_None) {
+            return "none";
+        } else if (c == Component_All) {
+            return "all";
+        } else {
+            std::string s;
+            if (c & Component_Red)   s.push_back('r');
+            if (c & Component_Green) s.push_back('g');
+            if (c & Component_Blue)  s.push_back('b');
+            return s;
         }
     };
 
@@ -158,25 +177,26 @@ std::string Config::make() {
         str += "dawn_begin        = " + format_time(this->profile.dawn_begin)                    + '\n';
         str += "dawn_end          = " + format_time(this->profile.dawn_end)                      + '\n';
 
-        str += "temperature_day   = " + std::to_string(this->profile.day_settings.temperature)   + '\n';
+        str += "temperature_day   = " + std::to_string(this->profile.day_settings  .temperature) + '\n';
         str += "temperature_night = " + std::to_string(this->profile.night_settings.temperature) + '\n';
 
-        str += "filter_day        = " + format_filter(this->profile.day_settings.filter)         + '\n';
-        str += "filter_night      = " + format_filter(this->profile.night_settings.filter)       + '\n';
-
-        str += "gamma_day         = " + std::to_string(this->profile.day_settings.gamma)         + '\n';
-        str += "gamma_night       = " + std::to_string(this->profile.night_settings.gamma)       + '\n';
-
-        str += "saturation_day    = " + std::to_string(this->profile.day_settings.saturation)    + '\n';
+        str += "saturation_day    = " + std::to_string(this->profile.day_settings  .saturation)  + '\n';
         str += "saturation_night  = " + std::to_string(this->profile.night_settings.saturation)  + '\n';
 
-        str += "hue_day           = " + std::to_string(this->profile.day_settings.hue)           + '\n';
+        str += "hue_day           = " + std::to_string(this->profile.day_settings  .hue)         + '\n';
         str += "hue_night         = " + std::to_string(this->profile.night_settings.hue)         + '\n';
 
-        str += "luminance_day     = " + std::to_string(this->profile.day_settings.luminance)     + '\n';
+        str += "components        = " + format_components(this->profile.components)              + '\n';
+
+        str += "filter            = " + format_filter(this->profile.filter)                      + '\n';
+
+        str += "gamma_day         = " + std::to_string(this->profile.day_settings  .gamma)       + '\n';
+        str += "gamma_night       = " + std::to_string(this->profile.night_settings.gamma)       + '\n';
+
+        str += "luminance_day     = " + std::to_string(this->profile.day_settings  .luminance)   + '\n';
         str += "luminance_night   = " + std::to_string(this->profile.night_settings.luminance)   + '\n';
 
-        str += "range_day         = " + format_range(this->profile.day_settings.range)           + '\n';
+        str += "range_day         = " + format_range(this->profile.day_settings  .range)         + '\n';
         str += "range_night       = " + format_range(this->profile.night_settings.range)         + '\n';
 
         str += "dimming_timeout   = " + format_time({ this->profile.dimming_timeout.m, this->profile.dimming_timeout.s }) + '\n';
@@ -221,12 +241,13 @@ Result Config::apply() {
 
 Result Config::reset() {
     this->profile.day_settings.temperature = DEFAULT_TEMP,     this->profile.night_settings.temperature = DEFAULT_TEMP;
-    this->profile.day_settings.gamma       = DEFAULT_GAMMA,    this->profile.night_settings.gamma       = DEFAULT_GAMMA;
-    this->profile.day_settings.hue         = DEFAULT_HUE,      this->profile.night_settings.hue         = DEFAULT_HUE;
     this->profile.day_settings.saturation  = DEFAULT_SAT,      this->profile.night_settings.saturation  = DEFAULT_SAT;
+    this->profile.day_settings.hue         = DEFAULT_HUE,      this->profile.night_settings.hue         = DEFAULT_HUE;
+    this->profile.day_settings.gamma       = DEFAULT_GAMMA,    this->profile.night_settings.gamma       = DEFAULT_GAMMA;
     this->profile.day_settings.luminance   = DEFAULT_LUMA,     this->profile.night_settings.luminance   = DEFAULT_LUMA;
     this->profile.day_settings.range       = DEFAULT_RANGE,    this->profile.night_settings.range       = DEFAULT_RANGE;
-    this->profile.day_settings.filter      = ColorFilter_None, this->profile.night_settings.filter      = ColorFilter_None;
+    this->profile.components = Component_All;
+    this->profile.filter     = Component_None;
     return this->apply();
 }
 

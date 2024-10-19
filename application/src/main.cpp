@@ -159,7 +159,8 @@ int main(int argc, char **argv) {
             }
 
             auto &settings = config.is_editing_day_profile ? config.profile.day_settings : config.profile.night_settings;
-            fz::gfx::render_preview(settings, preview.width, preview.height, 2, 3);
+            fz::gfx::render_preview(settings, config.profile.components, config.profile.filter,
+                preview.width, preview.height, 2, 3);
         }
 
         fz::gfx::render(slot);

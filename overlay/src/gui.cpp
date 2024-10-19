@@ -125,22 +125,6 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
             val * ((enable_extra_hot_temps ? MAX_TEMP : D65_TEMP) - MIN_TEMP) / 100 + MIN_TEMP;
     });
 
-    this->gamma_slider = new tsl::elm::TrackBar("");
-    this->gamma_slider->setProgress(((this->is_day ? this->config.profile.day_settings.gamma : this->config.profile.night_settings.gamma) - MIN_GAMMA)
-        * 100 / (MAX_GAMMA - MIN_GAMMA));
-    this->gamma_slider->setClickListener([this](std::uint64_t keys) {
-        if (keys & HidNpadButton_Y) {
-            this->gamma_slider->setProgress((DEFAULT_GAMMA - MIN_GAMMA) * 100 / (MAX_GAMMA - MIN_GAMMA));
-            (this->is_day ? this->config.profile.day_settings.gamma : this->config.profile.night_settings.gamma) = DEFAULT_GAMMA;
-            return true;
-        }
-        return false;
-    });
-    this->gamma_slider->setValueChangedListener([this](std::uint8_t val) {
-        (this->is_day ? this->config.profile.day_settings.gamma : this->config.profile.night_settings.gamma) =
-            val * (MAX_GAMMA - MIN_GAMMA) / 100 + MIN_GAMMA;
-    });
-
     this->sat_slider = new tsl::elm::TrackBar("");
     this->sat_slider->setProgress(((this->is_day ? this->config.profile.day_settings.saturation : this->config.profile.night_settings.saturation) - MIN_SAT)
         * 100 / (MAX_SAT - MIN_SAT));
@@ -173,6 +157,50 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
             val * (MAX_HUE - MIN_HUE) / 100 + MIN_HUE;
     });
 
+    this->components_bar = new tsl::elm::NamedStepTrackBar("", { "None", "R", "G", "RG", "B", "RB", "GB", "All" });
+    this->components_bar->setProgress(static_cast<u8>(this->config.profile.components));
+    this->components_bar->setClickListener([this](std::uint64_t keys) {
+        if (keys & HidNpadButton_Y) {
+            this->components_bar->setProgress(Component_All);
+            this->config.profile.components = Component_All;
+            return true;
+        }
+        return false;
+    });
+    this->components_bar->setValueChangedListener([this](u8 val) {
+        this->config.profile.components = static_cast<Component>(val);
+    });
+
+    this->filter_bar = new tsl::elm::NamedStepTrackBar("", { "None", "Red", "Green", "Blue" });
+    this->filter_bar->setProgress((this->config.profile.filter == Component_None) ? 0 : std::countr_zero(static_cast<std::uint32_t>(this->config.profile.filter)) + 1);
+    this->filter_bar->setClickListener([this](std::uint64_t keys) {
+        if (keys & HidNpadButton_Y) {
+            this->filter_bar->setProgress(Component_None);
+            this->config.profile.filter = Component_None;
+            return true;
+        }
+        return false;
+    });
+    this->filter_bar->setValueChangedListener([this](u8 val) {
+        this->config.profile.filter = static_cast<Component>(static_cast<Component>(val ? BIT(val - 1) : val));
+    });
+
+    this->gamma_slider = new tsl::elm::TrackBar("");
+    this->gamma_slider->setProgress(((this->is_day ? this->config.profile.day_settings.gamma : this->config.profile.night_settings.gamma) - MIN_GAMMA)
+        * 100 / (MAX_GAMMA - MIN_GAMMA));
+    this->gamma_slider->setClickListener([this](std::uint64_t keys) {
+        if (keys & HidNpadButton_Y) {
+            this->gamma_slider->setProgress((DEFAULT_GAMMA - MIN_GAMMA) * 100 / (MAX_GAMMA - MIN_GAMMA));
+            (this->is_day ? this->config.profile.day_settings.gamma : this->config.profile.night_settings.gamma) = DEFAULT_GAMMA;
+            return true;
+        }
+        return false;
+    });
+    this->gamma_slider->setValueChangedListener([this](std::uint8_t val) {
+        (this->is_day ? this->config.profile.day_settings.gamma : this->config.profile.night_settings.gamma) =
+            val * (MAX_GAMMA - MIN_GAMMA) / 100 + MIN_GAMMA;
+    });
+
     this->luma_slider = new tsl::elm::TrackBar("");
     this->luma_slider->setProgress(((this->is_day ? this->config.profile.day_settings.luminance : this->config.profile.night_settings.luminance) - MIN_LUMA)
         * 100 / (MAX_LUMA - MIN_LUMA));
@@ -187,20 +215,6 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     this->luma_slider->setValueChangedListener([this](std::uint8_t val) {
         (this->is_day ? this->config.profile.day_settings.luminance : this->config.profile.night_settings.luminance) =
             val * (MAX_LUMA - MIN_LUMA) / 100 + MIN_LUMA;
-    });
-
-    this->filter_bar = new tsl::elm::NamedStepTrackBar("", { "None", "Red", "Green", "Blue" });
-    this->filter_bar->setProgress(static_cast<u8>(this->is_day ? this->config.profile.day_settings.filter : this->config.profile.night_settings.filter));
-    this->filter_bar->setClickListener([this](std::uint64_t keys) {
-        if (keys & HidNpadButton_Y) {
-            this->filter_bar->setProgress(0);
-            (this->is_day ? this->config.profile.day_settings.filter : this->config.profile.night_settings.filter) = ColorFilter_None;
-            return true;
-        }
-        return false;
-    });
-    this->filter_bar->setValueChangedListener([this](u8 val) {
-        (this->is_day ? this->config.profile.day_settings.filter : this->config.profile.night_settings.filter) = static_cast<ColorFilter>(val);
     });
 
     this->range_button = new tsl::elm::ListItem("Color range");
@@ -219,10 +233,11 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     this->range_button->setValue(is_full(this->is_day ? this->config.profile.day_settings.range : this->config.profile.night_settings.range) ? "Full" : "Limited");
 
     this->temp_header       = new tsl::elm::CategoryHeader("");
-    this->filter_header     = new tsl::elm::CategoryHeader("Filter");
-    this->gamma_header      = new tsl::elm::CategoryHeader("");
     this->sat_header        = new tsl::elm::CategoryHeader("");
     this->hue_header        = new tsl::elm::CategoryHeader("");
+    this->components_header = new tsl::elm::CategoryHeader("Components");
+    this->filter_header     = new tsl::elm::CategoryHeader("Filter");
+    this->gamma_header      = new tsl::elm::CategoryHeader("");
     this->luma_header       = new tsl::elm::CategoryHeader("");
 
     auto *frame = new tsl::elm::OverlayFrame("Fizeau", VERSION "-" COMMIT);
@@ -237,13 +252,15 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     list->addItem(this->sat_slider);
     list->addItem(this->hue_header);
     list->addItem(this->hue_slider);
+    list->addItem(this->components_header);
+    list->addItem(this->components_bar);
+    list->addItem(this->filter_header);
+    list->addItem(this->filter_bar);
 
     list->addItem(this->gamma_header);
     list->addItem(this->gamma_slider);
     list->addItem(this->luma_header);
     list->addItem(this->luma_slider);
-    list->addItem(this->filter_header);
-    list->addItem(this->filter_bar);
     list->addItem(this->range_button);
     frame->setContent(list);
     return frame;
@@ -257,12 +274,12 @@ void FizeauOverlayGui::update() {
 
     this->temp_header->setText(format("Temperature: %u°K",
         this->is_day ? this->config.profile.day_settings.temperature : this->config.profile.night_settings.temperature));
-    this->gamma_header->setText(format("Gamma: %.2f",
-        this->is_day ? this->config.profile.day_settings.gamma       : this->config.profile.night_settings.gamma));
     this->sat_header->setText(format("Saturation: %.2f",
         this->is_day ? this->config.profile.day_settings.saturation  : this->config.profile.night_settings.saturation));
     this->hue_header->setText(format("Hue: %.2f",
         this->is_day ? this->config.profile.day_settings.hue         : this->config.profile.night_settings.hue));
+    this->gamma_header->setText(format("Gamma: %.2f",
+        this->is_day ? this->config.profile.day_settings.gamma       : this->config.profile.night_settings.gamma));
     this->luma_header->setText(format("Luminance: %.2f",
         this->is_day ? this->config.profile.day_settings.luminance   : this->config.profile.night_settings.luminance));
 }

@@ -1,5 +1,6 @@
 #include <cstring>
 #include <cstdlib>
+#include <cstdint>
 
 #include "config.hpp"
 
@@ -82,14 +83,28 @@ int Config::ini_handler(void *user, const char *section, const char *name, const
         return static_cast<FizeauProfileId>(str.back() - '0' - 1);
     };
 
-    auto parse_filter = [](const std::string_view &str) -> ColorFilter {
+    auto parse_components = [](const std::string_view &str) -> Component {
+        if (strcasecmp(str.data(), "none") == 0) {
+            return Component_None;
+        } else if (strcasecmp(str.data(), "all") == 0) {
+            return Component_All;
+        } else {
+            std::uint32_t comp = 0;
+            if ((str.find('r') != std::string_view::npos) || (str.find('R') != std::string_view::npos)) comp |= Component_Red;
+            if ((str.find('g') != std::string_view::npos) || (str.find('G') != std::string_view::npos)) comp |= Component_Green;
+            if ((str.find('b') != std::string_view::npos) || (str.find('B') != std::string_view::npos)) comp |= Component_Blue;
+            return static_cast<Component>(comp);
+        }
+    };
+
+    auto parse_filter = [](const std::string_view &str) -> Component {
         if (strcasecmp(str.data(), "red") == 0)
-            return ColorFilter_Red;
+            return Component_Red;
         else if (strcasecmp(str.data(), "green") == 0)
-            return ColorFilter_Green;
+            return Component_Green;
         else if (strcasecmp(str.data(), "blue") == 0)
-            return ColorFilter_Blue;
-        return ColorFilter_None;
+            return Component_Blue;
+        return Component_None;
     };
 
     auto parse_time = [](const std::string_view &str) -> Time {
@@ -147,22 +162,29 @@ int Config::ini_handler(void *user, const char *section, const char *name, const
         ) {
             SET(atoi(v));
         } else if (
-            MATCH_SET(name, "filter_day",   p.day_settings  .filter) ||
-            MATCH_SET(name, "filter_night", p.night_settings.filter)
-        ) {
-            SET(parse_filter(v));
-        } else if (
-            MATCH_SET(name, "gamma_day",        p.day_settings  .gamma)      ||
-            MATCH_SET(name, "gamma_night",      p.night_settings.gamma)      ||
             MATCH_SET(name, "saturation_day",   p.day_settings  .saturation) ||
             MATCH_SET(name, "saturation_night", p.night_settings.saturation) ||
             MATCH_SET(name, "hue_day",          p.day_settings  .hue)        ||
             MATCH_SET(name, "hue_night",        p.night_settings.hue)        ||
+            MATCH_SET(name, "gamma_day",        p.day_settings  .gamma)      ||
+            MATCH_SET(name, "gamma_night",      p.night_settings.gamma)      ||
             MATCH_SET(name, "luminance_day",    p.day_settings  .luminance)  ||
             MATCH_SET(name, "luminance_night",  p.night_settings.luminance)
         ) {
             float f = atof(v);
             SET(f);
+        } else if (
+            MATCH_SET(name, "components",       p.components) ||
+            MATCH_SET(name, "components_day",   p.components) ||
+            MATCH_SET(name, "components_night", p.components)
+        ) {
+            SET(parse_components(v));
+        } else if (
+            MATCH_SET(name, "filter",       p.filter) ||
+            MATCH_SET(name, "filter_day",   p.filter) ||
+            MATCH_SET(name, "filter_night", p.filter)
+        ) {
+            SET(parse_filter(v));
         } else if (
             MATCH_SET(name, "range_day",   p.day_settings  .range) ||
             MATCH_SET(name, "range_night", p.night_settings.range)

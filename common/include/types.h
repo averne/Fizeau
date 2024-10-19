@@ -30,11 +30,12 @@ typedef uint32_t Temperature;
 #define DEFAULT_TEMP D65_TEMP
 
 typedef enum {
-    ColorFilter_None,
-    ColorFilter_Red,
-    ColorFilter_Green,
-    ColorFilter_Blue,
-} ColorFilter;
+    Component_None  = 0,
+    Component_Red   = BIT(0),
+    Component_Green = BIT(1),
+    Component_Blue  = BIT(2),
+    Component_All   = Component_Red | Component_Green | Component_Blue,
+} Component;
 
 typedef float Gamma;
 #define MIN_GAMMA     0.0f

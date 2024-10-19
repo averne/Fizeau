@@ -42,15 +42,14 @@ FizeauSettings interpolate_profile(FizeauProfile &in, float factor, bool from_da
 
     out = {
         .temperature     = static_cast<Temperature>(std::lerp(from.temperature, to.temperature, factor)),
-        .gamma           = std::lerp(from.gamma,      to.gamma,      factor),
-        .hue             = std::lerp(from.hue,        to.hue,        factor),
         .saturation      = std::lerp(from.saturation, to.saturation, factor),
+        .hue             = std::lerp(from.hue,        to.hue,        factor),
+        .gamma           = std::lerp(from.gamma,      to.gamma,      factor),
         .luminance       = std::lerp(from.luminance,  to.luminance,  factor),
         .range           = {
                            std::lerp(from.range.lo,   to.range.lo,   factor),
                            std::lerp(from.range.hi,   to.range.hi,   factor),
         },
-        .filter          = from.filter,
     };
 
     return out;
@@ -275,7 +274,7 @@ Result ProfileManager::apply() {
             settings.luminance = !external ? dimmed_luma_internal : dimmed_luma_external;
 
         auto &shadow = !external ? this->context.cmu_shadow_internal : this->context.cmu_shadow_external;
-        if (auto rc = this->disp.apply_color_profile(external, settings, shadow); R_FAILED(rc))
+        if (auto rc = this->disp.apply_color_profile(external, settings, profile.components, profile.filter, shadow); R_FAILED(rc))
             return rc;
 
         if (auto rc = this->disp.set_hdmi_color_range(external, settings.range); R_FAILED(rc))

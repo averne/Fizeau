@@ -338,9 +338,10 @@ void render(int slot) {
     s_queue.presentImage(s_swapchain, slot);
 }
 
-void render_preview(FizeauSettings &settings, int width, int height, int src_image_id, int dst_image_id) {
+void render_preview(FizeauSettings &settings, Component components, Component filter,
+        int width, int height, int src_image_id, int dst_image_id) {
     // Calculate initial coefficients
-    auto coeffs = filter_matrix(settings.filter);
+    auto coeffs = filter_matrix(filter);
 
     // Apply temperature color correction
     ColorMatrix wp = {};
@@ -353,12 +354,15 @@ void render_preview(FizeauSettings &settings, int width, int height, int src_ima
     // Apply hue rotation
     coeffs = dot(coeffs, hue_matrix(settings.hue));
 
-    auto colormatrix = glm::mat4(
-        coeffs[0], coeffs[1], coeffs[2], 0,
-        coeffs[3], coeffs[4], coeffs[5], 0,
-        coeffs[6], coeffs[7], coeffs[8], 0,
-        0,         0,         0,         1
-    );
+    auto colormatrix = glm::mat4(1.0f);
+
+    // Copy calculated coefficients if they are enabled
+    if (components & Component_Red)
+        std::copy_n(coeffs.begin() + 0, 3, &colormatrix[0][0]);
+    if (components & Component_Green)
+        std::copy_n(coeffs.begin() + 3, 3, &colormatrix[1][0]);
+    if (components & Component_Blue)
+        std::copy_n(coeffs.begin() + 6, 3, &colormatrix[2][0]);
 
     s_cmdBuf.pushConstants(s_uniformMemBlock.getGpuAddr(), s_uniformMemBlock.getSize(), 0, sizeof(colormatrix), &colormatrix);
     s_cmdBuf.bindUniformBuffer(DkStage_Compute, 0, s_uniformMemBlock.getGpuAddr(), s_uniformMemBlock.getSize());

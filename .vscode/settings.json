@@ -2,8 +2,10 @@
     "files.exclude": {
         "**/build": true,
         "**/out": true,
-        "*.elf": true,
-        "*.nacp": true,
-        "*.nro": true
+        "**/*.elf": true,
+        "**/*.nacp": true,
+        "**/*.nro": true,
+        "**/*.nso": true,
+        "**/*.ips": true,
     },
 }

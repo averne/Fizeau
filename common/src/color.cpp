@@ -25,14 +25,14 @@
 
 namespace fz {
 
-ColorMatrix filter_matrix(ColorFilter filter) {
+ColorMatrix filter_matrix(Component filter) {
     ColorMatrix arr = {};
 
     static constexpr std::array luma_components = {
         0.2126f, 0.7152f, 0.0722f,
     };
 
-    if (filter == ColorFilter_None) {
+    if (filter == Component_None) {
         arr[0] = arr[4] = arr[8] = 1.0f;
         return arr;
     }
@@ -40,9 +40,9 @@ ColorMatrix filter_matrix(ColorFilter filter) {
     std::size_t offset = 0;
     switch (filter) {
         default:
-        case ColorFilter_Red:   offset = 0; break;
-        case ColorFilter_Green: offset = 3; break;
-        case ColorFilter_Blue:  offset = 6; break;
+        case Component_Red:   offset = 0; break;
+        case Component_Green: offset = 3; break;
+        case Component_Blue:  offset = 6; break;
     }
 
     for (std::size_t i = 0; i < 3; ++i)

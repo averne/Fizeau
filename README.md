@@ -6,17 +6,17 @@ Adjust the color of the screen of your Nintendo Switch.
 
 # Features
   - Modify the color temperature, saturation and hue of the display.
-  - Filter colors to one single component.
-  - Apply color corrections: gamma, luminance, and color range.
-  - Schedule settings to be applied to dusk/dawn time, with smooth transitions.
+  - Selectively apply corrections to color channels, filter to one single component.
+  - Tone mapping with programmable gamma, luminance, and color range.
+  - Schedule settings to be applied at dusk/dawn, with smooth transitions.
   - Configurable screen dimming.
 
 # Images
 <p float="left">
-  <img src="https://github.com/averne/Fizeau/assets/45773016/028b1554-da6b-4efa-be76-af05ede066b0" width="400" />
-  <img src="https://github.com/averne/Fizeau/assets/45773016/561e17a3-cd71-4d9e-bbee-1d2a9408df37" width="400" />
-  <img src="https://github.com/averne/Fizeau/assets/45773016/b3ad91b6-3e6c-4d47-a2af-26ef58496aa7" width="400" />
-  <img src="https://github.com/averne/Fizeau/assets/45773016/a5c4e32d-c7cd-4ef4-8298-d33e4984b79a" width="400" />
+  <img src="https://github.com/user-attachments/assets/9c3fd0a2-1af2-44a8-a9a2-445b36610d7e" width="413" />
+  <img src="https://github.com/user-attachments/assets/3564a11f-b7eb-4d01-a20e-0491443b7978" width="413" />
+  <img src="https://github.com/user-attachments/assets/bb469aca-fee4-4a4b-8616-1d3258d837b8" width="413" />
+  <img src="https://github.com/averne/Fizeau/assets/45773016/a5c4e32d-c7cd-4ef4-8298-d33e4984b79a" width="413" />
 </p>
 
 # Installation

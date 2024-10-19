@@ -27,11 +27,11 @@ namespace fz {
 
 namespace {
 
-Cmu calculate_cmu(FizeauSettings &settings) {
+Cmu calculate_cmu(FizeauSettings &settings, Component components, Component filter) {
     Cmu cmu;
 
     // Calculate initial coefficients
-    auto coeffs = filter_matrix(settings.filter);
+    auto coeffs = filter_matrix(filter);
 
     // Apply temperature color correction
     ColorMatrix wp = {};
@@ -45,8 +45,13 @@ Cmu calculate_cmu(FizeauSettings &settings) {
     // Apply hue rotation
     coeffs = dot(coeffs, hue_matrix(settings.hue));
 
-    // Copy color matrix to cmu format
-    std::transform(coeffs.begin(), coeffs.end(), &cmu.krr, [](float c) -> QS18 { return c; });
+    // Copy calculated coefficients to the cmu matrix if they are enabled
+    if (components & Component_Red)
+        std::copy_n(coeffs.begin() + 0, 3, &cmu.krr);
+    if (components & Component_Green)
+        std::copy_n(coeffs.begin() + 3, 3, &cmu.krg);
+    if (components & Component_Blue)
+        std::copy_n(coeffs.begin() + 6, 3, &cmu.krb);
 
     // Calculate gamma ramps
     degamma_ramp(cmu.lut_1.data(), cmu.lut_1.size(), DEFAULT_GAMMA, 12);                           // Set the LUT1 with a fixed gamma corresponding to the incoming data
@@ -85,8 +90,9 @@ Result DisplayController::disable(bool external) const {
     return 0;
 }
 
-Result DisplayController::apply_color_profile(bool external, FizeauSettings &settings, CmuShadow &shadow) const {
-    Cmu cmu = calculate_cmu(settings);
+Result DisplayController::apply_color_profile(bool external, FizeauSettings &settings,
+        Component components, Component filter, CmuShadow &shadow) const {
+    Cmu cmu = calculate_cmu(settings, components, filter);
 
     if (auto rc = nvioctlNvDisp_SetCmu(!external ? this->disp0_fd : this->disp1_fd, &cmu); R_FAILED(rc))
         return rc;

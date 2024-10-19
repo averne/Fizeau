@@ -30,12 +30,11 @@ class Config {
     public:
         constexpr static FizeauSettings default_settings = {
             .temperature = DEFAULT_TEMP,
-            .gamma       = DEFAULT_GAMMA,
-            .hue         = DEFAULT_HUE,
             .saturation  = DEFAULT_SAT,
+            .hue         = DEFAULT_HUE,
+            .gamma       = DEFAULT_GAMMA,
             .luminance   = DEFAULT_LUMA,
             .range       = DEFAULT_RANGE,
-            .filter      = ColorFilter_None,
         };
 
     public:
@@ -54,6 +53,8 @@ class Config {
         FizeauProfile profile = {
             .day_settings   = Config::default_settings,
             .night_settings = Config::default_settings,
+            .components     = Component_All,
+            .filter         = Component_None,
         };
 
         void (*parse_profile_switch_action)(Config *, FizeauProfileId) = nullptr;

@@ -164,7 +164,8 @@ class DisplayController {
         }
 
         Result disable(bool external) const;
-        Result apply_color_profile(bool external, FizeauSettings &settings, CmuShadow &shadow) const;
+        Result apply_color_profile(bool external, FizeauSettings &settings,
+            Component components, Component filter, CmuShadow &shadow) const;
         Result set_hdmi_color_range(bool external, ColorRange range) const;
 
     private:

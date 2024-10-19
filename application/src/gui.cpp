@@ -16,6 +16,7 @@
 // along with Fizeau.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <algorithm>
+#include <bit>
 #include <tuple>
 #include <imgui.h>
 #include <imgui_deko3d.h>
@@ -71,14 +72,6 @@ bool new_slider(auto name, auto label, T &val, T min, T max, auto fmt, Args &&..
     }
     return ret;
 };
-
-template <std::size_t N>
-bool new_combo(auto name, auto label, auto &val, const std::array<const char *, N> &names) {
-    auto [width, height] = im::GetIO().DisplaySize;
-    auto slider_pos = im::GetWindowPos().x + 0.04f * width;
-    im::TextUnformatted(name); im::SameLine(); im::SetCursorPosX(slider_pos);
-    return im::Combo(label, reinterpret_cast<int *>(&val), names.data(), names.size());
-}
 
 bool new_times(auto name, auto labelh, auto labelm, Time &t) {
     auto [width, height] = im::GetIO().DisplaySize;
@@ -232,10 +225,23 @@ Result draw_color_tab(Config &ctx) {
     ctx.is_editing_day_profile   |= new_slider("Day:",   "##hued", ctx.profile.day_settings.hue,   MIN_HUE, MAX_HUE, "%.2f");
     ctx.is_editing_night_profile |= new_slider("Night:", "##huen", ctx.profile.night_settings.hue, MIN_HUE, MAX_HUE, "%.2f");
 
-    // Filter combos
-    im::SeparatorText("Filter");
-    ctx.is_editing_day_profile   |= new_combo("Day:",   "##filterd", ctx.profile.day_settings.filter,   filters_names);
-    ctx.is_editing_night_profile |= new_combo("Night:", "##filtern", ctx.profile.night_settings.filter, filters_names);
+    // Components checkboxes
+    im::SeparatorText("Channels");
+
+    auto items_pos = im::GetWindowPos().x + 0.09f * width;
+
+    std::uint32_t c = ctx.profile.components;
+    im::TextUnformatted("Components:");  im::SameLine(); im::SetCursorPosX(items_pos);
+    im::CheckboxFlags("Red##compr",   &c, Component_Red);   im::SameLine();
+    im::CheckboxFlags("Green##compg", &c, Component_Green); im::SameLine();
+    im::CheckboxFlags("Blue##compb",  &c, Component_Blue);
+    ctx.profile.components = static_cast<Component>(c);
+
+    int filter = (ctx.profile.filter == Component_None) ? 0 : std::countr_zero(static_cast<std::uint32_t>(ctx.profile.filter)) + 1;
+    im::TextUnformatted("Filter:"); im::SameLine(); im::SetCursorPosX(items_pos);
+    im::SetNextItemWidth(0.2f * width);
+    if (im::Combo("##filter", &filter, filters_names.data(), filters_names.size()))
+        ctx.profile.filter = static_cast<Component>(filter ? BIT(filter - 1) : filter);
 
     im::EndTabItem();
     return 0;
@@ -383,8 +389,8 @@ Result draw_main_window(Config &ctx) {
     FZ_SCOPEGUARD([] { im::End(); });
 
     auto [width, height] = im::GetIO().DisplaySize;
-    im::SetWindowPos( { 0.03f * width, 0.09f * height }, ImGuiCond_Always);
-    im::SetWindowSize({ 0.40f * width, 0.82f * height }, ImGuiCond_Always);
+    im::SetWindowPos( { 0.03f * width, 0.05f * height }, ImGuiCond_Always);
+    im::SetWindowSize({ 0.40f * width, 0.90f * height }, ImGuiCond_Always);
 
     auto *imctx = im::GetCurrentContext();
     if (!imctx->NavWindow)

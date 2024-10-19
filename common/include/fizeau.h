@@ -54,16 +54,17 @@ typedef enum {
 
 typedef struct {
     Temperature temperature;
-    Gamma       gamma;
-    Hue         hue;
     Saturation  saturation;
+    Hue         hue;
+    Gamma       gamma;
     Luminance   luminance;
     ColorRange  range;
-    ColorFilter filter;
 } FizeauSettings;
 
 typedef struct {
     FizeauSettings day_settings, night_settings;
+    Component components;
+    Component filter;
 
     Time dusk_begin, dusk_end;
     Time dawn_begin, dawn_end;

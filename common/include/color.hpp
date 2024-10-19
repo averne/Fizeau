@@ -35,7 +35,7 @@ constexpr ColorMatrix dot(const ColorMatrix &r, const ColorMatrix &l) {
     };
 }
 
-ColorMatrix filter_matrix(ColorFilter filter);
+ColorMatrix filter_matrix(Component filter);
 std::tuple<float, float, float> whitepoint(Temperature temperature);
 ColorMatrix hue_matrix(Hue hue);
 ColorMatrix saturation_matrix(Saturation sat);
