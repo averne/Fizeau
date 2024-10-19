@@ -81,13 +81,13 @@ bool new_combo(auto name, auto label, auto &val, const std::array<const char *, 
 }
 
 bool new_times(auto name, auto labelh, auto labelm, Time &t) {
+    auto [width, height] = im::GetIO().DisplaySize;
     im::PushItemWidth(im::GetWindowWidth() * 0.2f);
     FZ_SCOPEGUARD([] { im::PopItemWidth(); });
 
     bool ret = false;
-    im::SetCursorPosX(50.0f);
     im::TextUnformatted(name);
-    im::SameLine(); im::SetCursorPosX(150.0f);
+    im::SameLine(); im::SetCursorPosX(0.08f * width);
     int int_h = t.h, int_m = t.m;
     ret |= im::DragInt(labelh, &int_h, 0.05f, 0, 23, "%02dh");
     ret |= swkbd::handle(labelh, &int_h, 0, 23);
@@ -100,13 +100,14 @@ bool new_times(auto name, auto labelh, auto labelm, Time &t) {
 };
 
 bool new_range(auto name, auto labelcb, auto labello, auto labelhi, ColorRange &range) {
+    auto [width, height] = im::GetIO().DisplaySize;
     im::PushItemWidth(im::GetWindowWidth() * 0.2f);
     FZ_SCOPEGUARD([] { im::PopItemWidth(); });
 
     bool is_full_range = (range.lo == MIN_RANGE) && (range.hi == MAX_RANGE);
     bool ret = false;
     im::TextUnformatted(name);
-    im::SameLine(); im::SetCursorPosX(150.0f);
+    im::SameLine(); im::SetCursorPosX(0.08f * width);
     if (im::Checkbox(labelcb, &is_full_range)) {
         ret = true;
         if (is_full_range)
@@ -114,8 +115,9 @@ bool new_range(auto name, auto labelcb, auto labello, auto labelhi, ColorRange &
         else
             range = DEFAULT_LIMITED_RANGE;
     }
-    im::SetCursorPosX(50.0f);
+    im::SetCursorPosX(0.03f * width);
     im::TextUnformatted("Min:"); im::SameLine();
+    im::SetCursorPosX(0.08f * width);
     ret |= im::DragFloat(labello, &range.lo, 0.005f, 0.0f, range.hi, "%.02f");
     ret |= swkbd::handle(labello, &range.lo, 0.0f, range.hi, "%.02f");
     im::SameLine();
@@ -207,6 +209,8 @@ Result draw_color_tab(Config &ctx) {
     if (!im::BeginTabItem("Colors"))
         return 0;
 
+    auto [width, height] = im::GetIO().DisplaySize;
+
     static bool enable_extra_hot_temps = false;
     if ((ctx.profile.day_settings.temperature > D65_TEMP) ||(ctx.profile.night_settings.temperature > D65_TEMP))
         enable_extra_hot_temps = true;
@@ -252,7 +256,7 @@ Result draw_correction_tab(Config &ctx) {
     ctx.is_editing_night_profile |= new_slider("Night:", "##luman", ctx.profile.night_settings.luminance, MIN_LUMA, MAX_LUMA, "%.2f", true);
 
     // Color range sliders
-    im::SeparatorText("Color range:");
+    im::SeparatorText("Color range");
     ctx.is_editing_day_profile   |= new_range("Day:",   "Full range##d", "##rangeld", "##ranghd", ctx.profile.day_settings.range);
     ctx.is_editing_night_profile |= new_range("Night:", "Full range##n", "##rangeln", "##ranghn", ctx.profile.night_settings.range);
 
@@ -264,10 +268,12 @@ Result draw_time_tab(Config &ctx) {
     if (!im::BeginTabItem("Time"))
         return 0;
 
+    auto [width, height] = im::GetIO().DisplaySize;
+
     bool has_changed = false;
 
     // Dusk
-    im::SeparatorText("Dusk:");
+    im::SeparatorText("Dusk");
     has_changed |= new_times("Start:", "##dush", "##dusm", ctx.profile.dusk_begin);
     has_changed |= new_times("End:",   "##dueh", "##duem", ctx.profile.dusk_end);
 
@@ -279,7 +285,7 @@ Result draw_time_tab(Config &ctx) {
     }
 
     // Dawn
-    im::SeparatorText("Dawn:");
+    im::SeparatorText("Dawn");
     has_changed |= new_times("Start:", "##dash", "##dasm", ctx.profile.dawn_begin);
     has_changed |= new_times("End:",   "##daeh", "##daem", ctx.profile.dawn_end);
 
@@ -295,17 +301,21 @@ Result draw_time_tab(Config &ctx) {
 
     // Dimming timeout
     {
-        im::SeparatorText("Dimming timeout:");
+        im::SeparatorText("Dimming timeout");
         im::PushItemWidth(im::GetWindowWidth() * 0.2f);
         FZ_SCOPEGUARD([] { im::PopItemWidth(); });
 
-        im::SetCursorPosX(150.0f);
+        im::TextUnformatted("Timeout:");
+
+        im::SameLine(); im::SetCursorPosX(0.08f * width);
         int int_m = ctx.profile.dimming_timeout.m, int_s = ctx.profile.dimming_timeout.s;
         im::DragInt("##dimm", &int_m, 0.05f, 0, 59, "%02dm");
         swkbd::handle("##dimm", &int_m, 0, 59);
         im::SameLine();
         im::DragInt("##dims", &int_s, 0.05f, 0, 59, "%02ds");
         swkbd::handle("##dims", &int_s, 0, 59);
+
+        im::TextUnformatted("Set to 0 to use the system setting");
 
         ctx.profile.dimming_timeout.m = static_cast<std::uint8_t>(int_m), ctx.profile.dimming_timeout.s = static_cast<std::uint8_t>(int_s);
     }
