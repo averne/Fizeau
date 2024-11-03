@@ -84,23 +84,26 @@ void Config::sanitize_profile() {
     sanitize_time(this->profile.dawn_begin);
     sanitize_time(this->profile.dawn_end);
 
-    sanitize_minmax(this->profile.day_settings  .temperature, MIN_TEMP,  MAX_TEMP);
-    sanitize_minmax(this->profile.night_settings.temperature, MIN_TEMP,  MAX_TEMP);
+    sanitize_minmax(this->profile.day_settings  .temperature, MIN_TEMP,     MAX_TEMP);
+    sanitize_minmax(this->profile.night_settings.temperature, MIN_TEMP,     MAX_TEMP);
 
-    sanitize_minmax(this->profile.day_settings  .saturation,  MIN_SAT,   MAX_SAT);
-    sanitize_minmax(this->profile.night_settings.saturation,  MIN_SAT,   MAX_SAT);
+    sanitize_minmax(this->profile.day_settings  .saturation,  MIN_SAT,      MAX_SAT);
+    sanitize_minmax(this->profile.night_settings.saturation,  MIN_SAT,      MAX_SAT);
 
-    sanitize_minmax(this->profile.day_settings  .hue,         MIN_HUE,   MAX_HUE);
-    sanitize_minmax(this->profile.night_settings.hue,         MIN_HUE,   MAX_HUE);
+    sanitize_minmax(this->profile.day_settings  .hue,         MIN_HUE,      MAX_HUE);
+    sanitize_minmax(this->profile.night_settings.hue,         MIN_HUE,      MAX_HUE);
 
     sanitize_minmax(this->profile.components, Component_None, Component_All);
     sanitize_filter(this->profile.filter);
 
-    sanitize_minmax(this->profile.day_settings  .gamma,       MIN_GAMMA, MAX_GAMMA);
-    sanitize_minmax(this->profile.night_settings.gamma,       MIN_GAMMA, MAX_GAMMA);
+    sanitize_minmax(this->profile.day_settings  .contrast,    MIN_CONTRAST, MAX_CONTRAST);
+    sanitize_minmax(this->profile.night_settings.contrast,    MIN_CONTRAST, MAX_CONTRAST);
 
-    sanitize_minmax(this->profile.day_settings  .luminance,   MIN_LUMA,  MAX_LUMA);
-    sanitize_minmax(this->profile.night_settings.luminance,   MIN_LUMA,  MAX_LUMA);
+    sanitize_minmax(this->profile.day_settings  .gamma,       MIN_GAMMA,    MAX_GAMMA);
+    sanitize_minmax(this->profile.night_settings.gamma,       MIN_GAMMA,    MAX_GAMMA);
+
+    sanitize_minmax(this->profile.day_settings  .luminance,   MIN_LUMA,     MAX_LUMA);
+    sanitize_minmax(this->profile.night_settings.luminance,   MIN_LUMA,     MAX_LUMA);
 
     sanitize_colorrange(this->profile.day_settings  .range);
     sanitize_colorrange(this->profile.night_settings.range);
@@ -190,6 +193,9 @@ std::string Config::make() {
 
         str += "filter            = " + format_filter(this->profile.filter)                      + '\n';
 
+        str += "contrast_day      = " + std::to_string(this->profile.day_settings  .contrast)    + '\n';
+        str += "contrast_night    = " + std::to_string(this->profile.night_settings.contrast)    + '\n';
+
         str += "gamma_day         = " + std::to_string(this->profile.day_settings  .gamma)       + '\n';
         str += "gamma_night       = " + std::to_string(this->profile.night_settings.gamma)       + '\n';
 
@@ -243,6 +249,7 @@ Result Config::reset() {
     this->profile.day_settings.temperature = DEFAULT_TEMP,     this->profile.night_settings.temperature = DEFAULT_TEMP;
     this->profile.day_settings.saturation  = DEFAULT_SAT,      this->profile.night_settings.saturation  = DEFAULT_SAT;
     this->profile.day_settings.hue         = DEFAULT_HUE,      this->profile.night_settings.hue         = DEFAULT_HUE;
+    this->profile.day_settings.contrast    = DEFAULT_CONTRAST, this->profile.night_settings.contrast    = DEFAULT_CONTRAST;
     this->profile.day_settings.gamma       = DEFAULT_GAMMA,    this->profile.night_settings.gamma       = DEFAULT_GAMMA;
     this->profile.day_settings.luminance   = DEFAULT_LUMA,     this->profile.night_settings.luminance   = DEFAULT_LUMA;
     this->profile.day_settings.range       = DEFAULT_RANGE,    this->profile.night_settings.range       = DEFAULT_RANGE;

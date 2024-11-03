@@ -56,6 +56,7 @@ typedef struct {
     Temperature temperature;
     Saturation  saturation;
     Hue         hue;
+    Contrast    contrast;
     Gamma       gamma;
     Luminance   luminance;
     ColorRange  range;

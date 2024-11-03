@@ -185,6 +185,22 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
         this->config.profile.filter = static_cast<Component>(static_cast<Component>(val ? BIT(val - 1) : val));
     });
 
+    this->contrast_slider = new tsl::elm::TrackBar("");
+    this->contrast_slider->setProgress(((this->is_day ? this->config.profile.day_settings.contrast : this->config.profile.night_settings.contrast) - MIN_CONTRAST)
+        * 100 / (MAX_CONTRAST - MIN_CONTRAST));
+    this->contrast_slider->setClickListener([this](std::uint64_t keys) {
+        if (keys & HidNpadButton_Y) {
+            this->contrast_slider->setProgress((DEFAULT_CONTRAST - MIN_CONTRAST) * 100 / (MAX_CONTRAST - MIN_CONTRAST));
+            (this->is_day ? this->config.profile.day_settings.contrast : this->config.profile.night_settings.contrast) = DEFAULT_CONTRAST;
+            return true;
+        }
+        return false;
+    });
+    this->contrast_slider->setValueChangedListener([this](std::uint8_t val) {
+        (this->is_day ? this->config.profile.day_settings.contrast : this->config.profile.night_settings.contrast) =
+            val * (MAX_CONTRAST - MIN_CONTRAST) / 100 + MIN_CONTRAST;
+    });
+
     this->gamma_slider = new tsl::elm::TrackBar("");
     this->gamma_slider->setProgress(((this->is_day ? this->config.profile.day_settings.gamma : this->config.profile.night_settings.gamma) - MIN_GAMMA)
         * 100 / (MAX_GAMMA - MIN_GAMMA));
@@ -237,6 +253,7 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     this->hue_header        = new tsl::elm::CategoryHeader("");
     this->components_header = new tsl::elm::CategoryHeader("Components");
     this->filter_header     = new tsl::elm::CategoryHeader("Filter");
+    this->contrast_header   = new tsl::elm::CategoryHeader("");
     this->gamma_header      = new tsl::elm::CategoryHeader("");
     this->luma_header       = new tsl::elm::CategoryHeader("");
 
@@ -257,6 +274,8 @@ tsl::elm::Element *FizeauOverlayGui::createUI() {
     list->addItem(this->filter_header);
     list->addItem(this->filter_bar);
 
+    list->addItem(this->contrast_header);
+    list->addItem(this->contrast_slider);
     list->addItem(this->gamma_header);
     list->addItem(this->gamma_slider);
     list->addItem(this->luma_header);
@@ -278,6 +297,8 @@ void FizeauOverlayGui::update() {
         this->is_day ? this->config.profile.day_settings.saturation  : this->config.profile.night_settings.saturation));
     this->hue_header->setText(format("Hue: %.2f",
         this->is_day ? this->config.profile.day_settings.hue         : this->config.profile.night_settings.hue));
+    this->contrast_header->setText(format("Contrast: %.2f",
+        this->is_day ? this->config.profile.day_settings.contrast    : this->config.profile.night_settings.contrast));
     this->gamma_header->setText(format("Gamma: %.2f",
         this->is_day ? this->config.profile.day_settings.gamma       : this->config.profile.night_settings.gamma));
     this->luma_header->setText(format("Luminance: %.2f",

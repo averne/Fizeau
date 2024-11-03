@@ -344,9 +344,13 @@ void render_preview(FizeauSettings &settings, Component components, Component fi
     auto coeffs = filter_matrix(filter);
 
     // Apply temperature color correction
-    ColorMatrix wp = {};
-    std::tie(wp[0], wp[4], wp[8]) = whitepoint(settings.temperature);
-    coeffs = dot(coeffs, wp);
+    ColorMatrix m = {};
+    std::tie(m[0], m[4], m[8]) = whitepoint(settings.temperature);
+    coeffs = dot(coeffs, m);
+
+    // Apply contrast multiplier
+    m[0] = m[4] = m[8] = settings.contrast;
+    coeffs = dot(coeffs, m);
 
     // Apply saturation
     coeffs = dot(coeffs, saturation_matrix(settings.saturation));

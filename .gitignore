@@ -25,4 +25,5 @@
 **/env/
 
 misc/patches
+misc/icon.svg
 !misc/default.ini

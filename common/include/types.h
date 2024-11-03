@@ -29,6 +29,16 @@ typedef uint32_t Temperature;
 #define MAX_TEMP     10000u // °K
 #define DEFAULT_TEMP D65_TEMP
 
+typedef float Saturation;
+#define MIN_SAT      0.0f
+#define MAX_SAT      2.0f
+#define DEFAULT_SAT  1.0f
+
+typedef float Hue;
+#define MIN_HUE     -1.0f
+#define MAX_HUE      1.0f
+#define DEFAULT_HUE  0.0f
+
 typedef enum {
     Component_None  = 0,
     Component_Red   = BIT(0),
@@ -36,6 +46,11 @@ typedef enum {
     Component_Blue  = BIT(2),
     Component_All   = Component_Red | Component_Green | Component_Blue,
 } Component;
+
+typedef float Contrast;
+#define MIN_CONTRAST     0.0f
+#define MAX_CONTRAST     2.0f
+#define DEFAULT_CONTRAST 1.0f
 
 typedef float Gamma;
 #define MIN_GAMMA     0.0f
@@ -46,16 +61,6 @@ typedef float Luminance;
 #define MIN_LUMA    -1.0f
 #define MAX_LUMA     1.0f
 #define DEFAULT_LUMA 0.0f
-
-typedef float Hue;
-#define MIN_HUE     -1.0f
-#define MAX_HUE      1.0f
-#define DEFAULT_HUE  0.0f
-
-typedef float Saturation;
-#define MIN_SAT      0.0f
-#define MAX_SAT      2.0f
-#define DEFAULT_SAT  1.0f
 
 typedef struct {
     float lo, hi;

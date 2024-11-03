@@ -44,6 +44,7 @@ FizeauSettings interpolate_profile(FizeauProfile &in, float factor, bool from_da
         .temperature     = static_cast<Temperature>(std::lerp(from.temperature, to.temperature, factor)),
         .saturation      = std::lerp(from.saturation, to.saturation, factor),
         .hue             = std::lerp(from.hue,        to.hue,        factor),
+        .contrast        = std::lerp(from.contrast,   to.contrast,   factor),
         .gamma           = std::lerp(from.gamma,      to.gamma,      factor),
         .luminance       = std::lerp(from.luminance,  to.luminance,  factor),
         .range           = {

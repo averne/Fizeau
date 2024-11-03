@@ -43,19 +43,19 @@ ColorMatrix saturation_matrix(Saturation sat);
 float degamma(float x, Gamma gamma);
 float regamma(float x, Gamma gamma);
 
-void gamma_ramp(float (*func)(float, Gamma), std::uint16_t *array, std::size_t size, Gamma gamma, std::size_t nb_bits, float lo, float hi);
+void gamma_ramp(float (*func)(float, Gamma), std::uint16_t *array, std::size_t size, Gamma gamma, std::size_t nb_bits, float lo, float hi, float off);
 
 [[maybe_unused]]
-static inline void degamma_ramp(std::uint16_t *array, std::size_t size, Gamma gamma, std::size_t nb_bits, float lo = 0.0f, float hi = 1.0f) {
-    return gamma_ramp(degamma, array, size, gamma, nb_bits, lo, hi);
+static inline void degamma_ramp(std::uint16_t *array, std::size_t size, Gamma gamma, std::size_t nb_bits, float lo = 0.0f, float hi = 1.0f, float off = 0.0f) {
+    return gamma_ramp(degamma, array, size, gamma, nb_bits, lo, hi, off);
 }
 
 [[maybe_unused]]
-static inline void regamma_ramp(std::uint16_t *array, std::size_t size, Gamma gamma, std::size_t nb_bits, float lo = 0.0f, float hi = 1.0f) {
-    return gamma_ramp(regamma, array, size, gamma, nb_bits, lo, hi);
+static inline void regamma_ramp(std::uint16_t *array, std::size_t size, Gamma gamma, std::size_t nb_bits, float lo = 0.0f, float hi = 1.0f, float off = 0.0f) {
+    return gamma_ramp(regamma, array, size, gamma, nb_bits, lo, hi, off);
 }
 
-void apply_luma(std::uint16_t *array, std::size_t size, Luminance luma);
-void apply_range(std::uint16_t *array, std::size_t size, float lo, float hi);
+void apply_luma(std::uint16_t *array, std::size_t size, std::size_t nb_bits, Luminance luma);
+void apply_range(std::uint16_t *array, std::size_t size, std::size_t nb_bits, float lo, float hi);
 
 } // namespace fz

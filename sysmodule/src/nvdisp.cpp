@@ -34,10 +34,14 @@ Cmu calculate_cmu(FizeauSettings &settings, Component components, Component filt
     auto coeffs = filter_matrix(filter);
 
     // Apply temperature color correction
-    ColorMatrix wp = {};
-    std::tie(wp[0], wp[4], wp[8]) = whitepoint(settings.temperature);
-    wp[0] = degamma(wp[0], 2.4f), wp[4] = degamma(wp[4], 2.4f), wp[8] = degamma(wp[8], 2.4f);
-    coeffs = dot(coeffs, wp);
+    ColorMatrix m = {};
+    std::tie(m[0], m[4], m[8]) = whitepoint(settings.temperature);
+    m[0] = degamma(m[0], 2.4f), m[4] = degamma(m[4], 2.4f), m[8] = degamma(m[8], 2.4f);
+    coeffs = dot(coeffs, m);
+
+    // Apply contrast multiplier
+    m[0] = m[4] = m[8] = settings.contrast;
+    coeffs = dot(coeffs, m);
 
     // Apply saturation
     coeffs = dot(coeffs, saturation_matrix(settings.saturation));
@@ -53,16 +57,17 @@ Cmu calculate_cmu(FizeauSettings &settings, Component components, Component filt
     if (components & Component_Blue)
         std::copy_n(coeffs.begin() + 6, 3, &cmu.krb);
 
-    // Calculate gamma ramps
-    degamma_ramp(cmu.lut_1.data(), cmu.lut_1.size(), DEFAULT_GAMMA, 12);                           // Set the LUT1 with a fixed gamma corresponding to the incoming data
-    regamma_ramp(cmu.lut_2.data(), 512, settings.gamma, 8, 0.0f, 0.125f);                          // Set the first part of LUT2 (more precision in darker components)
-    regamma_ramp(cmu.lut_2.data() + 512, cmu.lut_2.size() - 512, settings.gamma, 8, 0.125f, 1.0f); // Set the second part of LUT2 (less precision in brighter components)
+    // Calculate gamma ramps, with contrast offset
+    float off = (1.0f - settings.contrast) / 2.0f;
+    degamma_ramp(cmu.lut_1.data(), cmu.lut_1.size(), DEFAULT_GAMMA, 12);                                // Set the LUT1 with a fixed gamma corresponding to the incoming data
+    regamma_ramp(cmu.lut_2.data(), 512, settings.gamma, 8, 0.0f, 0.125f, off);                          // Set the first part of LUT2 (more precision in darker components)
+    regamma_ramp(cmu.lut_2.data() + 512, cmu.lut_2.size() - 512, settings.gamma, 8, 0.125f, 1.0f, off); // Set the second part of LUT2 (less precision in brighter components)
 
     // Apply luminance
-    apply_luma(cmu.lut_2.data(), cmu.lut_2.size(), settings.luminance);
+    apply_luma(cmu.lut_2.data(), cmu.lut_2.size(), 8, settings.luminance);
 
     // Apply color range
-    apply_range(cmu.lut_2.data(), cmu.lut_2.size(),
+    apply_range(cmu.lut_2.data(), cmu.lut_2.size(), 8,
         settings.range.lo, std::min(settings.range.hi, cmu.lut_2.back() / 255.0f)); // Adjust max for luma
 
     return cmu;

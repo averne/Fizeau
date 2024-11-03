@@ -64,12 +64,13 @@ class FizeauOverlayGui: public tsl::Gui {
         tsl::elm::TrackBar          *hue_slider;
         tsl::elm::NamedStepTrackBar *components_bar;
         tsl::elm::NamedStepTrackBar *filter_bar;
+        tsl::elm::TrackBar          *contrast_slider;
         tsl::elm::TrackBar          *gamma_slider;
         tsl::elm::TrackBar          *luma_slider;
         tsl::elm::ListItem          *range_button;
 
         tsl::elm::CategoryHeader *temp_header, *sat_header, *hue_header,
-            *components_header, *filter_header, *gamma_header, *luma_header;
+            *components_header, *filter_header, *contrast_header, *gamma_header, *luma_header;
 };
 
 } // namespace fz

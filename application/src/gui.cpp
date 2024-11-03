@@ -211,18 +211,18 @@ Result draw_color_tab(Config &ctx) {
     // Temperature sliders
     im::SeparatorText("Temperature");
     auto max_temp = enable_extra_hot_temps ? MAX_TEMP : D65_TEMP;
-    ctx.is_editing_day_profile   |= new_slider("Day:",   "##tempd", ctx.profile.day_settings.temperature,   MIN_TEMP, max_temp, "%d°K");
+    ctx.is_editing_day_profile   |= new_slider("Day:",   "##tempd", ctx.profile.day_settings  .temperature, MIN_TEMP, max_temp, "%d°K");
     ctx.is_editing_night_profile |= new_slider("Night:", "##tempn", ctx.profile.night_settings.temperature, MIN_TEMP, max_temp, "%d°K");
     im::Checkbox("Enable blue temperatures", &enable_extra_hot_temps);
 
     // Saturation sliders
     im::SeparatorText("Saturation");
-    ctx.is_editing_day_profile   |= new_slider("Day:",   "##satd", ctx.profile.day_settings.saturation,   MIN_SAT, MAX_SAT, "%.2f");
+    ctx.is_editing_day_profile   |= new_slider("Day:",   "##satd", ctx.profile.day_settings  .saturation, MIN_SAT, MAX_SAT, "%.2f");
     ctx.is_editing_night_profile |= new_slider("Night:", "##satn", ctx.profile.night_settings.saturation, MIN_SAT, MAX_SAT, "%.2f");
 
     // Hue sliders
     im::SeparatorText("Hue");
-    ctx.is_editing_day_profile   |= new_slider("Day:",   "##hued", ctx.profile.day_settings.hue,   MIN_HUE, MAX_HUE, "%.2f");
+    ctx.is_editing_day_profile   |= new_slider("Day:",   "##hued", ctx.profile.day_settings  .hue, MIN_HUE, MAX_HUE, "%.2f");
     ctx.is_editing_night_profile |= new_slider("Night:", "##huen", ctx.profile.night_settings.hue, MIN_HUE, MAX_HUE, "%.2f");
 
     // Components checkboxes
@@ -251,19 +251,24 @@ Result draw_correction_tab(Config &ctx) {
     if (!im::BeginTabItem("Correction"))
         return 0;
 
+    // Contrast sliders
+    im::SeparatorText("Contrast");
+    ctx.is_editing_day_profile   |= new_slider("Day:",   "##contrastd", ctx.profile.day_settings  .contrast, MIN_CONTRAST, MAX_CONTRAST, "%.2f");
+    ctx.is_editing_night_profile |= new_slider("Night:", "##contrastn", ctx.profile.night_settings.contrast, MIN_CONTRAST, MAX_CONTRAST, "%.2f");
+
     // Gamma sliders
     im::SeparatorText("Gamma");
-    ctx.is_editing_day_profile   |= new_slider("Day:",   "##gammad", ctx.profile.day_settings.gamma,   MIN_GAMMA, MAX_GAMMA, "%.2f");
+    ctx.is_editing_day_profile   |= new_slider("Day:",   "##gammad", ctx.profile.day_settings  .gamma, MIN_GAMMA, MAX_GAMMA, "%.2f");
     ctx.is_editing_night_profile |= new_slider("Night:", "##gamman", ctx.profile.night_settings.gamma, MIN_GAMMA, MAX_GAMMA, "%.2f");
 
     // Luminance sliders
     im::SeparatorText("Luminance");
-    ctx.is_editing_day_profile   |= new_slider("Day:",   "##lumad", ctx.profile.day_settings.luminance,   MIN_LUMA, MAX_LUMA, "%.2f", true);
+    ctx.is_editing_day_profile   |= new_slider("Day:",   "##lumad", ctx.profile.day_settings  .luminance, MIN_LUMA, MAX_LUMA, "%.2f", true);
     ctx.is_editing_night_profile |= new_slider("Night:", "##luman", ctx.profile.night_settings.luminance, MIN_LUMA, MAX_LUMA, "%.2f", true);
 
     // Color range sliders
     im::SeparatorText("Color range");
-    ctx.is_editing_day_profile   |= new_range("Day:",   "Full range##d", "##rangeld", "##ranghd", ctx.profile.day_settings.range);
+    ctx.is_editing_day_profile   |= new_range("Day:",   "Full range##d", "##rangeld", "##ranghd", ctx.profile.day_settings  .range);
     ctx.is_editing_night_profile |= new_range("Night:", "Full range##n", "##rangeln", "##ranghn", ctx.profile.night_settings.range);
 
     im::EndTabItem();
@@ -469,20 +474,18 @@ void draw_graph_window(Config &ctx) {
     im::SetWindowPos( { 0.53f * width, 0.60f * height }, ImGuiCond_Always);
     im::SetWindowSize({ 0.38f * width, 0.35f * height }, ImGuiCond_Always);
 
-    Gamma gamma = DEFAULT_GAMMA; Luminance luma = DEFAULT_LUMA; ColorRange range = DEFAULT_RANGE;
-    if (ctx.is_editing_day_profile)
-        gamma = ctx.profile.day_settings.gamma,   luma = ctx.profile.day_settings.luminance,   range = ctx.profile.day_settings.range;
-    else if (ctx.is_editing_night_profile)
-        gamma = ctx.profile.night_settings.gamma, luma = ctx.profile.night_settings.luminance, range = ctx.profile.night_settings.range;
+    FizeauSettings set = ctx.is_editing_day_profile ? ctx.profile.day_settings : ctx.profile.night_settings;
 
     // Calculate ramps
     std::array<std::uint16_t, 256> lut1;
-    degamma_ramp(lut1.data(), lut1.size(), DEFAULT_GAMMA, 8);
     std::array<std::uint16_t, 960> lut2;
-    regamma_ramp(lut2.data(), lut2.size(), gamma, 8);
 
-    apply_luma(lut2.data(), lut2.size(), luma);
-    apply_range(lut2.data(), lut2.size(), range.lo, std::min(range.hi, lut2.back() / 255.0f));
+    float off = (1.0f - set.contrast) / 2.0f;
+    degamma_ramp(lut1.data(), lut1.size(), DEFAULT_GAMMA, 8);
+    regamma_ramp(lut2.data(), lut2.size(), set.gamma, 8, 0.0f, 1.0f, off);
+
+    apply_luma(lut2.data(), lut2.size(), 8, set.luminance);
+    apply_range(lut2.data(), lut2.size(), 8, set.range.lo, std::min(set.range.hi, lut2.back() / 255.0f));
 
     std::array<float, 2>           linear = { 0, 1 };
     std::array<float, lut1.size()> lut1_float;

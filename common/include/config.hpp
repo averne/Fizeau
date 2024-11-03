@@ -32,6 +32,7 @@ class Config {
             .temperature = DEFAULT_TEMP,
             .saturation  = DEFAULT_SAT,
             .hue         = DEFAULT_HUE,
+            .contrast    = DEFAULT_CONTRAST,
             .gamma       = DEFAULT_GAMMA,
             .luminance   = DEFAULT_LUMA,
             .range       = DEFAULT_RANGE,
