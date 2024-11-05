@@ -40,6 +40,7 @@ std::tuple<float, float, float> whitepoint(Temperature temperature);
 ColorMatrix hue_matrix(Hue hue);
 ColorMatrix saturation_matrix(Saturation sat);
 
+Contrast contrast_slant(Contrast c);
 float degamma(float x, Gamma gamma);
 float regamma(float x, Gamma gamma);
 

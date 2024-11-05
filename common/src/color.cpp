@@ -107,6 +107,11 @@ ColorMatrix saturation_matrix(Saturation sat) {
     };
 }
 
+Contrast contrast_slant(Contrast c) {
+    c -= DEFAULT_CONTRAST;
+    return c * c * c + DEFAULT_CONTRAST;
+}
+
 float degamma(float x, Gamma gamma) {
     if (x <= 0.040045f) // x * pow((0.040045 + 0.055) / (1.0 + 0.055), gamma) / 0.040045;
         return x * 24.972f * std::pow(0.090f, gamma);

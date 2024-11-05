@@ -40,7 +40,8 @@ Cmu calculate_cmu(FizeauSettings &settings, Component components, Component filt
     coeffs = dot(coeffs, m);
 
     // Apply contrast multiplier
-    m[0] = m[4] = m[8] = settings.contrast;
+    auto c = contrast_slant(settings.contrast);
+    m[0] = m[4] = m[8] = c;
     coeffs = dot(coeffs, m);
 
     // Apply saturation
@@ -58,7 +59,7 @@ Cmu calculate_cmu(FizeauSettings &settings, Component components, Component filt
         std::copy_n(coeffs.begin() + 6, 3, &cmu.krb);
 
     // Calculate gamma ramps, with contrast offset
-    float off = (1.0f - settings.contrast) / 2.0f;
+    float off = (1.0f - c) / 2.0f;
     degamma_ramp(cmu.lut_1.data(), cmu.lut_1.size(), DEFAULT_GAMMA, 12);                                // Set the LUT1 with a fixed gamma corresponding to the incoming data
     regamma_ramp(cmu.lut_2.data(), 512, settings.gamma, 8, 0.0f, 0.125f, off);                          // Set the first part of LUT2 (more precision in darker components)
     regamma_ramp(cmu.lut_2.data() + 512, cmu.lut_2.size() - 512, settings.gamma, 8, 0.125f, 1.0f, off); // Set the second part of LUT2 (less precision in brighter components)

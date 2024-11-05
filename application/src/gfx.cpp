@@ -349,7 +349,7 @@ void render_preview(FizeauSettings &settings, Component components, Component fi
     coeffs = dot(coeffs, m);
 
     // Apply contrast multiplier
-    m[0] = m[4] = m[8] = settings.contrast;
+    m[0] = m[4] = m[8] = contrast_slant(settings.contrast);
     coeffs = dot(coeffs, m);
 
     // Apply saturation

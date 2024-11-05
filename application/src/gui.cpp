@@ -480,7 +480,7 @@ void draw_graph_window(Config &ctx) {
     std::array<std::uint16_t, 256> lut1;
     std::array<std::uint16_t, 960> lut2;
 
-    float off = (1.0f - set.contrast) / 2.0f;
+    float off = (1.0f - contrast_slant(set.contrast)) / 2.0f;
     degamma_ramp(lut1.data(), lut1.size(), DEFAULT_GAMMA, 8);
     regamma_ramp(lut2.data(), lut2.size(), set.gamma, 8, 0.0f, 1.0f, off);
 
