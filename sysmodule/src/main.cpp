@@ -119,19 +119,6 @@ static constinit fz::DisplayController disp    = {};
 static constinit fz::ProfileManager    profile(context, disp);
 static constinit fz::Server            server (context, profile);
 
-void delete_chainloader() {
-    auto rc = fsInitialize();
-    FZ_SCOPEGUARD([] { fsExit(); });
-
-    FsFileSystem fs;
-    if (R_SUCCEEDED(rc))
-        rc = fsOpenSdCardFileSystem(&fs);
-    FZ_SCOPEGUARD([&fs] { fsFsClose(&fs); });
-
-    char buf[FS_MAX_PATH] = "/atmosphere/contents/010000000000CF12";
-    fsFsDeleteDirectoryRecursively(&fs, buf);
-}
-
 FsFile find_config_file(FsFileSystem fs) {
     FsFile fp = {};
     char buf[FS_MAX_PATH];
@@ -222,10 +209,6 @@ int main(int argc, char **argv) {
 
     if (parse_config())
         profile.apply();
-
-    // Delete the deprecated chainloader binaries if present
-    // TODO: Remove this in a future release
-    delete_chainloader();
 
     LOG("Starting server\n");
     if (auto rc = server.initialize(); R_FAILED(rc))

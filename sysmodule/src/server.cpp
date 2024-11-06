@@ -59,7 +59,7 @@ Result Server::command_handler(void *userdata, const IpcServerRequest *r, u8 *ou
             if (id < FizeauProfileId_Profile1 || id > FizeauProfileId_Profile4)
                 return FIZEAU_MAKERESULT(INVALID_PROFILEID);
 
-            self->context.profiles[id] = *(FizeauProfile *)((std::uint8_t *)r->data.ptr + std::max(alignof(bool), alignof(FizeauProfile)));
+            self->context.profiles[id] = *(FizeauProfile *)((std::uint8_t *)r->data.ptr + std::max(alignof(FizeauProfileId), alignof(FizeauProfile)));
 
             if (id == self->context.internal_profile || id == self->context.external_profile) {
                 if (auto rc = self->profile.apply(); R_FAILED(rc))
