@@ -8,9 +8,6 @@ jobs:
     container: devkitpro/devkita64:latest
 
     steps:
-    - name: Install 7z
-      run: sudo apt update && sudo apt install -y p7zip-full
-
     - uses: actions/checkout@v1
       with:
         submodules: recursive

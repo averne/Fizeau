@@ -25,10 +25,7 @@ MODULES           =    application sysmodule overlay
 all: $(MODULES)
 	@:
 
-dist: $(DIST_TARGET)
-	@:
-
-$(DIST_TARGET): | all
+dist: | all
 	@rm -rf $(OUT)/Fizeau-*-*.zip
 
 	@mkdir -p $(OUT)/config/Fizeau
@@ -47,9 +44,9 @@ $(DIST_TARGET): | all
 	@mkdir -p $(OUT)/atmosphere/exefs_patches/nvnflinger_cmu
 	@cp misc/patches/*.ips $(OUT)/atmosphere/exefs_patches/nvnflinger_cmu || :
 
-	@7z a $@ ./$(OUT)/atmosphere ./$(OUT)/config ./$(OUT)/switch >/dev/null
+	@cd $(OUT) && zip -qr $(notdir $(DIST_TARGET)) atmosphere config switch -x "*.DS_Store"
 	@rm -r $(OUT)/atmosphere $(OUT)/config $(OUT)/switch
-	@echo Compressed release to $@
+	@echo Compressed release to $(DIST_TARGET)
 
 clean:
 	@rm -rf out
