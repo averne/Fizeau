@@ -148,10 +148,10 @@ cmu_end:
             std::uint64_t timeout = to_timestamp(profile.dimming_timeout),
                 delta = armTicksToNs(armGetSystemTick() - self->activity_tick) / std::chrono::nanoseconds(1s).count();
 
-            if (
+            if (timeout && (
                 (!self->is_dimming && delta >  timeout) ||
                 ( self->is_dimming && delta <= timeout)
-            )
+            ))
                 need_apply = true;
         }
 
