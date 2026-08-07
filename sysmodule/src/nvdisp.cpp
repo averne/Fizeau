@@ -82,7 +82,7 @@ Result DisplayController::disable(bool external) const {
     if (auto rc = nvioctlNvDisp_SetCmu(!external ? this->disp0_fd : this->disp1_fd, &cmu))
         return rc;
 
-    if (external)
+    if (!external)
         return 0;
 
     AviInfoframe infoframe;
@@ -111,7 +111,7 @@ Result DisplayController::apply_color_profile(bool external, FizeauSettings &set
 }
 
 Result DisplayController::set_hdmi_color_range(bool external, ColorRange range) const {
-    if (external)
+    if (!external)
         return 0;
 
     auto is_limited = [](const ColorRange &range) {

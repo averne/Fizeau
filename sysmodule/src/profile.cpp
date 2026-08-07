@@ -88,7 +88,9 @@ void ProfileManager::transition_thread_func(void *args) {
 
         // CMU resets
         if (!need_apply) {
-            if (!(READ(self->clock_va_base + CLK_RST_CONTROLLER_CLK_OUT_ENB_L) & (CLK_ENB_DISP1 | CLK_ENB_DISP2)) ||
+            // Check the clock for the specific head we are about to poll: reading the
+            // registers of a clock-gated module stalls the bus, hanging the core (#104)
+            if (!(READ(self->clock_va_base + CLK_RST_CONTROLLER_CLK_OUT_ENB_L) & (is_handheld ? CLK_ENB_DISP1 : CLK_ENB_DISP2)) ||
                     !mutexTryLock(&self->commit_mutex))
                 goto cmu_end;
 
@@ -148,10 +150,10 @@ cmu_end:
             std::uint64_t timeout = to_timestamp(profile.dimming_timeout),
                 delta = armTicksToNs(armGetSystemTick() - self->activity_tick) / std::chrono::nanoseconds(1s).count();
 
-            if (
+            if (timeout && (
                 (!self->is_dimming && delta >  timeout) ||
                 ( self->is_dimming && delta <= timeout)
-            )
+            ))
                 need_apply = true;
         }
 
